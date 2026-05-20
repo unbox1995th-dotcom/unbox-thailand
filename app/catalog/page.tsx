@@ -72,6 +72,14 @@ export default function CatalogPage() {
       setReady(true)
     })()
   }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const adminParam = params.get('admin')
+    if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
+      setAdmin(adminParam)
+    }
+  }, [])
 
   const filtered = shirts.filter((s) => {
     if (activeNav === 'all') return true
