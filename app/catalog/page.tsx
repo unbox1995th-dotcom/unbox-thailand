@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
@@ -43,6 +43,11 @@ export default function CatalogPage() {
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
 
+  // Drag-and-drop state
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const saveSortTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const notify = useCallback((msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 2800)
@@ -54,7 +59,7 @@ export default function CatalogPage() {
       const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
         await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
-          supabase.from('shirts').select('*').order('created_at', { ascending: false }),
+          supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
@@ -78,6 +83,42 @@ export default function CatalogPage() {
     if (activeNav === 'photo') return s.category === 'photo'
     return true
   })
+
+  // Drag handlers — only active on "new" tab for admin
+  const canDrag = !!adminUser && activeNav === 'new'
+
+  const handleDragStart = (id: string) => {
+    setDragId(id)
+  }
+
+  const handleDragOver = (id: string) => {
+    if (!dragId || dragId === id) return
+    setDragOverId(id)
+    setShirts((prev) => {
+      const arr = [...prev]
+      const fromIdx = arr.findIndex((x) => x.id === dragId)
+      const toIdx = arr.findIndex((x) => x.id === id)
+      if (fromIdx === -1 || toIdx === -1) return prev
+      const [moved] = arr.splice(fromIdx, 1)
+      arr.splice(toIdx, 0, moved)
+      return arr
+    })
+  }
+
+  const handleDragEnd = async () => {
+    setDragId(null)
+    setDragOverId(null)
+    // Debounce save to Supabase
+    if (saveSortTimer.current) clearTimeout(saveSortTimer.current)
+    saveSortTimer.current = setTimeout(async () => {
+      const updates = shirts.map((s, i) => ({ id: s.id, sort_order: i }))
+      for (const u of updates) {
+        await supabase.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
+      }
+      notify('บันทึกลำดับแล้ว')
+    }, 800)
+  }
+
 
   if (!ready) return <LoadingScreen />
   if (view === 'admin-login') return (
@@ -186,6 +227,11 @@ export default function CatalogPage() {
 
           {/* Grid */}
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
+            {canDrag && (
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14 }}>☰</span> กดค้างที่การ์ดแล้วลากเพื่อเรียงลำดับ — บันทึกอัตโนมัติ
+              </div>
+            )}
             {filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
@@ -196,6 +242,12 @@ export default function CatalogPage() {
               <div className="grid-shirts">
                 {filtered.map((s) => (
                   <ShirtCard key={s.id} shirt={s} isAdmin={!!adminUser}
+                    isDragging={dragId === s.id}
+                    isDragOver={dragOverId === s.id}
+                    canDrag={canDrag}
+                    onDragStart={() => handleDragStart(s.id)}
+                    onDragOver={() => handleDragOver(s.id)}
+                    onDragEnd={handleDragEnd}
                     onEdit={() => setEditShirt(s)}
                     onDelete={async () => {
                       if (s.image_url) await deleteImage(s.image_url)
@@ -340,12 +392,49 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 }
 
 /* ── Shirt Card ── */
-function ShirtCard({ shirt, isAdmin, onEdit, onDelete, onDupe }: {
+function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe }: {
   shirt: Shirt, isAdmin: boolean,
+  canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
+  onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
   onEdit: () => void, onDelete: () => void, onDupe: () => void
 }) {
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchMoved = useRef(false)
+
+  const handleTouchStart = () => {
+    if (!canDrag) return
+    touchMoved.current = false
+    touchTimer.current = setTimeout(() => {
+      if (!touchMoved.current) onDragStart?.()
+    }, 400)
+  }
+  const handleTouchMove = () => { touchMoved.current = true }
+  const handleTouchEnd = () => {
+    if (touchTimer.current) clearTimeout(touchTimer.current)
+    if (isDragging) onDragEnd?.()
+  }
+
   return (
-    <div className="card-shirt">
+    <div
+      className="card-shirt"
+      draggable={canDrag}
+      onDragStart={canDrag ? onDragStart : undefined}
+      onDragOver={canDrag ? (e) => { e.preventDefault(); onDragOver?.() } : undefined}
+      onDragEnd={canDrag ? onDragEnd : undefined}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        opacity: isDragging ? 0.4 : 1,
+        transform: isDragOver ? 'scale(1.03)' : 'none',
+        border: isDragOver ? '2px dashed #c00' : undefined,
+        cursor: canDrag ? 'grab' : 'default',
+        transition: 'opacity 0.15s, transform 0.15s, border 0.15s',
+      }}
+    >
+      {canDrag && (
+        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>⠿</div>
+      )}
       <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
         {shirt.image_url
           ? <img src={shirt.image_url} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

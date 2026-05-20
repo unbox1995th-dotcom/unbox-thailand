@@ -74,7 +74,7 @@ body {
   border-color: #c00; background: rgba(200,0,0,0.09);
 }
 
-.card-shirt {
+.card-shirt { position: relative;
   background: #161616; border: 1px solid rgba(255,255,255,0.07);
   border-radius: 10px; overflow: hidden; transition: all .22s;
 }
