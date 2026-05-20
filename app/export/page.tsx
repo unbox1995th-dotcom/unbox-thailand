@@ -37,15 +37,6 @@ const SIZES = [
 
 export default function ExportPage() {
   const [adminUser, setAdminUser] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const adminParam = params.get('admin')
-    if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
-      setAdminUser(adminParam)
-    }
-  }, [])
   const [loginId, setLoginId] = useState('')
   const [loginPw, setLoginPw] = useState('')
   const [loginErr, setLoginErr] = useState('')
@@ -494,4 +485,3 @@ function rrBottom(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r)
   ctx.lineTo(x, y); ctx.closePath()
 }
-
