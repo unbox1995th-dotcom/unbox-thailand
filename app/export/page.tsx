@@ -289,7 +289,7 @@ const adminParam = params.get('admin') || sessionStorage.getItem('adminUser')
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-          href={`/catalog?admin=${encodeURIComponent(adminUser || '')}`} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a>
+          <a href={`/catalog?admin=${encodeURIComponent(adminUser || '')}`} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a> style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a>
         </div>
       </div>
     </div>
