@@ -44,7 +44,6 @@ export default function ExportPage() {
   // Auto-login from URL param passed by catalog page
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (typeof window === 'undefined') return
 const params = new URLSearchParams(window.location.search)
 const adminParam = params.get('admin') || sessionStorage.getItem('adminUser')
     if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
