@@ -77,7 +77,7 @@ export default function CatalogPage() {
     const params = new URLSearchParams(window.location.search)
     const adminParam = params.get('admin')
     if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
-      setAdmin(adminParam)
+      setAdminUser(adminParam)
     }
   }, [])
 
