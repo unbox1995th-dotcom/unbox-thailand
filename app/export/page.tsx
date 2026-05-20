@@ -328,7 +328,7 @@ const adminParam = params.get('admin') || sessionStorage.getItem('adminUser')
       <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 20px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <a href="/catalog" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>← กลับ</a>
+            href={`/catalog?admin=${encodeURIComponent(adminUser || '')}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>← กลับ</a>
             <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
             <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff' }}>S</div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Export Tool</div>
