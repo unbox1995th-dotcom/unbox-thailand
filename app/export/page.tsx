@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -289,7 +289,12 @@ export default function ExportPage() {
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-          <a href={'/catalog?admin=' + (adminUser || '')} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a>
+          <span
+  onClick={() => router.push('/catalog?admin=' + (adminUser || ''))}
+  style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}
+>
+  ← กลับหน้าหลัก
+</span>
         </div>
       </div>
     </div>
