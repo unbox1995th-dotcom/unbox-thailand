@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 ]
 
 type Toast = { msg: string; type: 'ok' | 'err' }
-type View = 'front' | 'admin-login' | 'cust-login' | 'register'
+type ContactSettings = { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string }
 
 export default function CatalogPage() {
   const [ready, setReady] = useState(false)
@@ -42,6 +42,9 @@ export default function CatalogPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
+  const [contact, setContact] = useState<ContactSettings | null>(null)
+  const [showContact, setShowContact] = useState(false)
+  const [showContactAdmin, setShowContactAdmin] = useState(false)
 
   // Drag-and-drop state
   const [dragId, setDragId] = useState<string | null>(null)
@@ -70,19 +73,21 @@ useEffect(() => {
   // Load all data from Supabase
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
-        await Promise.all([
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ct }] =
+  await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
           supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
+          supabase.from('contact_settings').select('*').limit(1).single(),
         ])
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
+      if (ct) setContact(ct)
       setReady(true)
     })()
   }, [])
@@ -474,7 +479,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
         {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
         {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
-        <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
+        <button className="btn-red sm" style={{ width: '100%', marginTop: 8, fontSize: 12, padding: '7px' }} onClick={e => { e.stopPropagation(); onContact(); }}>🛒 สนใจสั่งซื้อ</button>
         {isAdmin && (
           <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
             <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
