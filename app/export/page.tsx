@@ -44,14 +44,13 @@ export default function ExportPage() {
   const [loginErr, setLoginErr] = useState('')
 
   // Auto-login from URL param passed by catalog page
-  useEffect(() => {
+ useEffect(() => {
   if (typeof window === 'undefined') return
+  const saved = sessionStorage.getItem('adminUser')
+  if (saved) { setAdminUser(saved); return }
   const params = new URLSearchParams(window.location.search)
   const adminParam = decodeURIComponent(params.get('admin') || '')
-  console.log('adminParam decoded:', adminParam)
-  if (adminParam) {
-    setAdminUser(adminParam)
-  }
+  if (adminParam) { setAdminUser(adminParam); sessionStorage.setItem('adminUser', adminParam) }
 }, [])
 
   const [tab, setTab] = useState('collar')
@@ -284,16 +283,14 @@ export default function ExportPage() {
         </div>
         <input className="inp" placeholder="Name ID เช่น ceo edit00" value={loginId} onChange={e => setLoginId(e.target.value)} />
         <input className="inp" type="password" placeholder="Password" value={loginPw} onChange={e => setLoginPw(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
+         onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
         {loginErr && <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5 }}>{loginErr}</div>}
         <button style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '11px', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 14 }}
-          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}>
+          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-  <span onClick={() => { const params = new URLSearchParams(window.location.search); const admin = decodeURIComponent(adminUser || params.get('admin') || ''); 
-        window.location.href = '/catalog?admin=' + encodeURIComponent(admin) + '&nav=new'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', 
-        textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
+  <span onClick={() => { window.location.href = '/catalog'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
 </div>
         </div>
       </div>
