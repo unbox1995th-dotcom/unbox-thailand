@@ -333,6 +333,12 @@ useEffect(() => {
         <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
+      {showContact && contact && (
+  <ContactModal contact={contact} onClose={() => setShowContact(false)} />
+)}
+{showContactAdmin && (
+  <ContactAdminModal contact={contact} setContact={setContact} notify={notify} onClose={() => setShowContactAdmin(false)} />
+)}
     </div>
   )
 }
