@@ -417,11 +417,11 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 }
 
 /* ── Shirt Card ── */
-function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe }: {
+function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact }: {
   shirt: Shirt, isAdmin: boolean,
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
-  onEdit: () => void, onDelete: () => void, onDupe: () => void
+  onEdit: () => void, onDelete: () => void, onDupe: () => void, onContact: () => void
 }) {
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMoved = useRef(false)
