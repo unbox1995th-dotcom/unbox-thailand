@@ -37,6 +37,7 @@ const SIZES = [
 ]
 
 export default function ExportPage() {
+  const router = useRouter();
   const [adminUser, setAdminUser] = useState<string | null>(null)
   const [loginId, setLoginId] = useState('')
   const [loginPw, setLoginPw] = useState('')
