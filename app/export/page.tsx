@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Shirt } from '@/lib/supabase'
+import { useRouter } from 'next/navigation';
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
