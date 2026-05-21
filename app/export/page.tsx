@@ -292,8 +292,12 @@ export default function ExportPage() {
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
           <span
-  onClick={() => router.push('/catalog?admin=' + (adminUser || ''))}
-  style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}
+          onClick={() => {
+            const params = new URLSearchParams(window.location.search);
+            const admin = adminUser || params.get('admin') || '';
+            router.push('/catalog?admin=' + admin);
+  }}
+          style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}
 >
   ← กลับหน้าหลัก
 </span>
