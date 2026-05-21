@@ -298,8 +298,8 @@ export default function ExportPage() {
       const admin = decodeURIComponent(adminUser || params.get('admin') || '');
       window.location.href = '/catalog?admin=' + encodeURIComponent(admin) + '&nav=new';
     }}
-    style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}
-  >
+    <div style={{ marginTop: 14, textAlign: 'center' }}>
+  <span onClick={() => { const params = new URLSearchParams(window.location.search); const admin = decodeURIComponent(adminUser || params.get('admin') || ''); window.location.href = '/catalog?admin=' + encodeURIComponent(admin) + '&nav=new'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>
     ← กลับหน้าหลัก
   </span>
 </div>
