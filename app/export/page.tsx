@@ -47,10 +47,9 @@ export default function ExportPage() {
   useEffect(() => {
   if (typeof window === 'undefined') return
   const params = new URLSearchParams(window.location.search)
-  const adminParam = params.get('admin')
-  console.log('adminParam from URL:', adminParam)
-  console.log('adminUser state:', adminUser)
-  if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
+  const adminParam = decodeURIComponent(params.get('admin') || '')
+  console.log('adminParam decoded:', adminParam)
+  if (adminParam) {
     setAdminUser(adminParam)
   }
 }, [])
