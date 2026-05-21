@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Shirt } from '@/lib/supabase'
-import { useRouter } from 'next/navigation';
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
@@ -37,21 +36,19 @@ const SIZES = [
 ]
 
 export default function ExportPage() {
-  const router = useRouter();
   const [adminUser, setAdminUser] = useState<string | null>(null)
   const [loginId, setLoginId] = useState('')
   const [loginPw, setLoginPw] = useState('')
   const [loginErr, setLoginErr] = useState('')
 
-  // Auto-login from URL param passed by catalog page
- useEffect(() => {
-  if (typeof window === 'undefined') return
-  const saved = sessionStorage.getItem('adminUser')
-  if (saved) { setAdminUser(saved); return }
-  const params = new URLSearchParams(window.location.search)
-  const adminParam = decodeURIComponent(params.get('admin') || '')
-  if (adminParam) { setAdminUser(adminParam); sessionStorage.setItem('adminUser', adminParam) }
-}, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const saved = sessionStorage.getItem('adminUser')
+    if (saved) { setAdminUser(saved); return }
+    const params = new URLSearchParams(window.location.search)
+    const adminParam = decodeURIComponent(params.get('admin') || '')
+    if (adminParam) { setAdminUser(adminParam); sessionStorage.setItem('adminUser', adminParam) }
+  }, [])
 
   const [tab, setTab] = useState('collar')
   const [shirts, setShirts] = useState<Shirt[]>([])
@@ -76,7 +73,6 @@ export default function ExportPage() {
   const logoInputRef = useRef<HTMLInputElement>(null)
   const currentSize = SIZES.find(s => s.id === sizeId)!
 
-  // Load shirts
   useEffect(() => {
     if (!adminUser) return
     setLoading(true)
@@ -93,7 +89,6 @@ export default function ExportPage() {
     })
   }, [tab, adminUser])
 
-  // Auto title
   useEffect(() => {
     const t = TABS.find(t => t.id === tab)
     if (t) setTitle(t.label)
@@ -150,7 +145,6 @@ export default function ExportPage() {
     const pad = Math.round(CW * 0.025)
     const barW = Math.round(CW * 0.007)
 
-    // Header
     ctx.fillStyle = '#111111'
     ctx.fillRect(0, 0, CW, headerH)
     ctx.fillStyle = accentColor
@@ -158,7 +152,6 @@ export default function ExportPage() {
     ctx.fillRect(0, 0, barW, headerH)
     ctx.fillRect(CW - barW, 0, barW, headerH)
 
-    // Logo in header
     const logoSize = headerH * 0.7
     if (logoImg) {
       const lx = pad + barW + 10, ly = (headerH - logoSize) / 2
@@ -179,7 +172,6 @@ export default function ExportPage() {
     ctx.font = `400 ${Math.round(headerH * 0.22)}px 'Noto Sans Thai', sans-serif`
     ctx.fillText(subtitle, titleX, headerH * 0.82)
 
-    // Grid
     const cols = getCols(items.length)
     const rows = Math.ceil(items.length / cols)
     const gapX = Math.round(CW * 0.014), gapY = Math.round(CH * 0.012)
@@ -246,7 +238,6 @@ export default function ExportPage() {
       }
     })
 
-    // Footer
     ctx.fillStyle = '#111111'; ctx.fillRect(0, CH - footerH, CW, footerH)
     ctx.fillStyle = accentColor; ctx.fillRect(0, CH - footerH, CW, Math.round(CH * 0.003))
     if (logoImg) {
@@ -269,8 +260,8 @@ export default function ExportPage() {
     link.href = canvas.toDataURL('image/jpeg', 0.93)
     link.click()
     setExporting(false); setProgress('')
-    }, [shirts, selected, title, subtitle, brandText, accentColor, bgColor, layoutMode, sizeId, logoSrc, showNumbers, showPrice, showName, currentSize, loadImg, getCols, tab])
-  
+  }, [shirts, selected, title, subtitle, brandText, accentColor, bgColor, layoutMode, sizeId, logoSrc, showNumbers, showPrice, showName, currentSize, loadImg, getCols, tab])
+
   // Login gate
   if (!adminUser) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Noto Sans Thai','Sarabun',sans-serif" }}>
@@ -284,15 +275,14 @@ export default function ExportPage() {
         </div>
         <input className="inp" placeholder="Name ID เช่น ceo edit00" value={loginId} onChange={e => setLoginId(e.target.value)} />
         <input className="inp" type="password" placeholder="Password" value={loginPw} onChange={e => setLoginPw(e.target.value)}
-         onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
+          onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
         {loginErr && <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5 }}>{loginErr}</div>}
         <button style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '11px', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 14 }}
-          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}
+          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}>
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-  <span onClick={() => { window.location.href = '/catalog'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
-</div>
+          <span onClick={() => { window.location.href = '/catalog'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
         </div>
       </div>
     </div>
