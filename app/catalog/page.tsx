@@ -72,14 +72,6 @@ export default function CatalogPage() {
       setReady(true)
     })()
   }, [])
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const adminParam = params.get('admin')
-    if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
-      setAdminUser(adminParam)
-    }
-  }, [])
 
   const filtered = shirts.filter((s) => {
     if (activeNav === 'all') return true
@@ -226,7 +218,7 @@ export default function CatalogPage() {
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
                 <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
-                <a href="/export" target="_blank" onClick={() => localStorage.setItem('adminUser', adminUser || '')} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
+                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
                   📥 Export ภาพ
@@ -302,8 +294,14 @@ export default function CatalogPage() {
           onSave={async (data, imgFile) => {
             let image_url = editShirt.image_url
             if (imgFile) {
-              if (editShirt.image_url) await deleteImage(editShirt.image_url)
-              image_url = await uploadBase64Image(imgFile)
+              // Upload new image FIRST before deleting old one
+              const newUrl = await uploadBase64Image(imgFile)
+              if (newUrl) {
+                // Only delete old image AFTER new one is successfully uploaded
+                if (editShirt.image_url) await deleteImage(editShirt.image_url)
+                image_url = newUrl
+              }
+              // If upload failed, keep existing image_url (no data loss)
             }
             const { data: updated } = await supabase.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
             if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
