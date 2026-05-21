@@ -820,7 +820,7 @@ function ContactModal({ contact, onClose }: {
 
           {/* Facebook */}
           {contact.facebook_url && (
-            <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+            <a href={contact.facebook_url.startsWith('http') ? contact.facebook_url : `https://${contact.facebook_url}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1877f2', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
               onMouseOver={e => (e.currentTarget.style.opacity = '.85')}
               onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
@@ -908,10 +908,10 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
     }
     reader.readAsDataURL(file)
   }
-
+  const formatUrl = (url: string) => url && !url.startsWith('http') ? `https://${url}` : url
   const handleSave = async () => {
     setSaving(true)
-    const payload = { facebook_url: fbUrl, facebook_label: fbLabel, line_url: lineUrl, line_label: lineLabel, line_qr_url: lineQrUrl, address, updated_at: new Date().toISOString() }
+    const payload = { facebook_url: formatUrl(fbUrl), facebook_label: fbLabel, line_url: formatUrl(lineUrl), line_label: lineLabel, line_qr_url: lineQrUrl, address, updated_at: new Date().toISOString() }
     if (contact?.id) {
       const { data } = await supabase.from('contact_settings').update(payload).eq('id', contact.id).select().single()
       if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
