@@ -294,10 +294,10 @@ export default function ExportPage() {
         <div style={{ marginTop: 14, textAlign: 'center' }}>
           <span
   onClick={() => {
-    const params = new URLSearchParams(window.location.search);
-    const admin = adminUser || params.get('admin') || '';
-    router.push('/catalog?admin=' + admin);
-  }}
+  const params = new URLSearchParams(window.location.search);
+  const admin = adminUser || params.get('admin') || '';
+  window.location.href = '/catalog?admin=' + admin + '&nav=new';
+}}
   style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}
 >
   ← กลับหน้าหลัก
