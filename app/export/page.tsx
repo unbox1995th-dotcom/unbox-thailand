@@ -45,7 +45,7 @@ export default function ExportPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    const adminParam = params.get('admin') || localStorage.getItem('adminUser')
+    const adminParam = params.get('admin')
     if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
       setAdminUser(adminParam)
     }
@@ -289,7 +289,7 @@ export default function ExportPage() {
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-          href={`/catalog?admin=${encodeURIComponent(adminUser || '')}`} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a>
+          <a href="/catalog" style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>← กลับหน้าหลัก</a>
         </div>
       </div>
     </div>
