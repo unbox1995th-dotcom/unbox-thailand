@@ -58,6 +58,8 @@ useEffect(() => {
   const params = new URLSearchParams(window.location.search)
   const adminParam = decodeURIComponent(params.get('admin') || '')
   const navParam = params.get('nav')
+  console.log('catalog - adminParam:', adminParam)
+  console.log('catalog - adminUser after set:', adminParam)
   if (adminParam) {
     setAdminUser(adminParam)
   }
