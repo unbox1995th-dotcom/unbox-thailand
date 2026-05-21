@@ -793,3 +793,213 @@ function ErrMsg({ msg }: { msg: string }) {
 function fileToBase64(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
+// วางต่อท้ายไฟล์ catalog/page.tsx ก่อน closing brace สุดท้าย
+
+/* ── Contact Modal (สำหรับผู้ใช้ทั่วไป) ── */
+function ContactModal({ contact, onClose }: {
+  contact: { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string }
+  onClose: () => void
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      onClick={onClose}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, width: '100%', maxWidth: 460, overflow: 'hidden' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff' }}>📞 ช่องทางการติดต่อ</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+        </div>
+
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Facebook */}
+          {contact.facebook_url && (
+            <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1877f2', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
+              onMouseOver={e => (e.currentTarget.style.opacity = '.85')}
+              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>{contact.facebook_label || 'Facebook Page'}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
+              </div>
+              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.6)', fontSize: 18 }}>→</div>
+            </a>
+          )}
+
+          {/* Line */}
+          {contact.line_url && (
+            <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#06c755', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
+              onMouseOver={e => (e.currentTarget.style.opacity = '.85')}
+              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+              </svg>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>{contact.line_label || 'Line Official'}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+              </div>
+              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.6)', fontSize: 18 }}>→</div>
+            </a>
+          )}
+
+          {/* QR Code */}
+          {contact.line_qr_url && (
+            <div style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>📷 สแกน QR Code เพื่อเพิ่มเพื่อนใน Line</div>
+              <img src={contact.line_qr_url} alt="Line QR Code" style={{ width: 160, height: 160, borderRadius: 8, objectFit: 'contain', background: '#fff', padding: 8 }} />
+            </div>
+          )}
+
+          {/* Address */}
+          {contact.address && (
+            <div style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 18px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 22 }}>📍</span>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#fff', marginBottom: 4 }}>ติดต่อที่หน้าร้าน</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>{contact.address}</div>
+              </div>
+            </div>
+          )}
+
+          {!contact.facebook_url && !contact.line_url && !contact.line_qr_url && !contact.address && (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>ยังไม่มีข้อมูลติดต่อ</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Contact Admin Modal (สำหรับ Admin จัดการ) ── */
+function ContactAdminModal({ contact, setContact, notify, onClose }: {
+  contact: { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null
+  setContact: React.Dispatch<React.SetStateAction<{ id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null>>
+  notify: (m: string, t?: 'ok' | 'err') => void
+  onClose: () => void
+}) {
+  const [fbUrl, setFbUrl] = useState(contact?.facebook_url || '')
+  const [fbLabel, setFbLabel] = useState(contact?.facebook_label || 'Facebook Page')
+  const [lineUrl, setLineUrl] = useState(contact?.line_url || '')
+  const [lineLabel, setLineLabel] = useState(contact?.line_label || 'Line Official')
+  const [lineQrUrl, setLineQrUrl] = useState(contact?.line_qr_url || '')
+  const [address, setAddress] = useState(contact?.address || '')
+  const [saving, setSaving] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const qrInputRef = useRef<HTMLInputElement>(null)
+
+  const handleQrFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const base64 = (e.target?.result as string).split(',')[1]
+      const url = await uploadBase64Image(base64, 'contact')
+      if (url) { setLineQrUrl(url); notify('อัปโหลด QR Code แล้ว') }
+      else notify('อัปโหลดไม่สำเร็จ', 'err')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const payload = { facebook_url: fbUrl, facebook_label: fbLabel, line_url: lineUrl, line_label: lineLabel, line_qr_url: lineQrUrl, address, updated_at: new Date().toISOString() }
+    if (contact?.id) {
+      const { data } = await supabase.from('contact_settings').update(payload).eq('id', contact.id).select().single()
+      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
+      else notify('บันทึกไม่สำเร็จ', 'err')
+    } else {
+      const { data } = await supabase.from('contact_settings').insert([payload]).select().single()
+      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
+      else notify('บันทึกไม่สำเร็จ', 'err')
+    }
+    setSaving(false)
+    onClose()
+  }
+
+  const inp: React.CSSProperties = { background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)', color: '#f5f5f5', padding: '8px 12px', borderRadius: 6, fontSize: 13, width: '100%', fontFamily: 'inherit', outline: 'none' }
+  const lbl: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' as const, marginBottom: 5, display: 'block' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      onClick={onClose}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, color: '#fff' }}>⚙ จัดการช่องทางการติดต่อ</div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16 }}>×</button>
+        </div>
+
+        <div style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+          {/* Facebook */}
+          <div style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>Facebook</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div><span style={lbl}>ชื่อที่แสดง</span><input style={inp} value={fbLabel} onChange={e => setFbLabel(e.target.value)} placeholder="เช่น EVO Sport Facebook" /></div>
+              <div><span style={lbl}>ลิงค์ Facebook</span><input style={inp} value={fbUrl} onChange={e => setFbUrl(e.target.value)} placeholder="https://facebook.com/..." /></div>
+            </div>
+          </div>
+
+          {/* Line */}
+          <div style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#06c755"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+              <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>Line Official</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div><span style={lbl}>ชื่อที่แสดง</span><input style={inp} value={lineLabel} onChange={e => setLineLabel(e.target.value)} placeholder="เช่น @evosport" /></div>
+              <div><span style={lbl}>ลิงค์ Line</span><input style={inp} value={lineUrl} onChange={e => setLineUrl(e.target.value)} placeholder="https://line.me/R/ti/p/..." /></div>
+              <div>
+                <span style={lbl}>QR Code (อัปโหลดรูป)</span>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  {lineQrUrl && <img src={lineQrUrl} alt="QR" style={{ width: 64, height: 64, borderRadius: 6, objectFit: 'contain', background: '#fff', padding: 4, flexShrink: 0 }} />}
+                  <div
+                    style={{ flex: 1, border: `2px dashed ${dragOver ? '#c00' : 'rgba(255,255,255,0.15)'}`, borderRadius: 8, padding: '12px', textAlign: 'center', cursor: 'pointer', transition: 'all .18s', background: dragOver ? 'rgba(200,0,0,0.07)' : 'transparent' }}
+                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files[0]) handleQrFile(e.dataTransfer.files[0]) }}
+                    onClick={() => qrInputRef.current?.click()}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>📷</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>ลาก-วาง หรือคลิกเลือกรูป QR Code</div>
+                    <input ref={qrInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleQrFile(e.target.files[0]) }} />
+                  </div>
+                </div>
+                {lineQrUrl && <button onClick={() => setLineQrUrl('')} style={{ marginTop: 6, background: 'none', border: '1px solid rgba(200,0,0,0.4)', color: '#ff6060', fontSize: 11, padding: '3px 10px', borderRadius: 4, cursor: 'pointer' }}>ลบ QR Code</button>}
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 18 }}>📍</span>
+              <span style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>ที่อยู่หน้าร้าน</span>
+            </div>
+            <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }} value={address} onChange={e => setAddress(e.target.value)} placeholder="ที่อยู่ร้าน เบอร์โทร เวลาทำการ..." />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '14px 24px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
+          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#f5f5f5', padding: '9px 20px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>ยกเลิก</button>
+          <button onClick={handleSave} disabled={saving} style={{ background: '#c00', border: 'none', color: '#fff', padding: '9px 24px', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700, opacity: saving ? .6 : 1 }}>
+            {saving ? 'กำลังบันทึก...' : '💾 บันทึก'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
