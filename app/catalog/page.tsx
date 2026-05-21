@@ -55,13 +55,14 @@ export default function CatalogPage() {
   
 useEffect(() => {
   if (typeof window === 'undefined') return
+  const saved = sessionStorage.getItem('adminUser')
+  if (saved) { setAdminUser(saved); return }
   const params = new URLSearchParams(window.location.search)
   const adminParam = decodeURIComponent(params.get('admin') || '')
   const navParam = params.get('nav')
-  console.log('catalog - adminParam:', adminParam)
-  console.log('catalog - adminUser after set:', adminParam)
   if (adminParam) {
     setAdminUser(adminParam)
+    sessionStorage.setItem('adminUser', adminParam)
   }
   if (navParam) setActiveNav(navParam)
 }, [])
