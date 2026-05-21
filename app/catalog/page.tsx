@@ -55,13 +55,12 @@ export default function CatalogPage() {
   
 useEffect(() => {
   if (typeof window === 'undefined') return
-  const params = new URLSearchParams(window.location.search)
   const adminParam = decodeURIComponent(params.get('admin') || '')
-  const navParam = params.get('nav')
-  if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
-    setAdminUser(adminParam)
-  }
-  if (navParam) setActiveNav(navParam)
+const navParam = params.get('nav')
+if (adminParam) {
+  setAdminUser(adminParam)
+}
+if (navParam) setActiveNav(navParam)
 }, [])
   
   // Load all data from Supabase
