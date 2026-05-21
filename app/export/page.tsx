@@ -271,7 +271,6 @@ export default function ExportPage() {
     link.click()
     setExporting(false); setProgress('')
   }, [shirts, selected, title, subtitle, brandText, accentColor, bgColor, layoutMode, sizeId, logoSrc, showNumbers, showPrice, showName, currentSize, loadImg, getCols, tab])
-
   // Login gate
   if (!adminUser) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Noto Sans Thai','Sarabun',sans-serif" }}>
