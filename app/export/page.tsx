@@ -45,13 +45,15 @@ export default function ExportPage() {
 
   // Auto-login from URL param passed by catalog page
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const adminParam = params.get('admin')
-    if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
-      setAdminUser(adminParam)
-    }
-  }, [])
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  const adminParam = params.get('admin')
+  console.log('adminParam from URL:', adminParam)
+  console.log('adminUser state:', adminUser)
+  if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
+    setAdminUser(adminParam)
+  }
+}, [])
 
   const [tab, setTab] = useState('collar')
   const [shirts, setShirts] = useState<Shirt[]>([])
