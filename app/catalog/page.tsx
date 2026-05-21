@@ -23,8 +23,6 @@ const NAV_ITEMS = [
 
 type Toast = { msg: string; type: 'ok' | 'err' }
 type ContactSettings = { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string }
-type Toast = { msg: string; type: 'ok' | 'err' }
-type ContactSettings = { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string }
 type View = 'front' | 'admin' | 'contact' // เพิ่มบรรทัดนี้
 
 export default function CatalogPage() {
