@@ -52,7 +52,16 @@ export default function CatalogPage() {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 2800)
   }, [])
-
+  
+useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const adminParam = params.get('admin')
+    if (adminParam && ADMIN_ACCOUNTS[adminParam] !== undefined) {
+      setAdminUser(adminParam)
+    }
+  }, [])
+  
   // Load all data from Supabase
   useEffect(() => {
     ;(async () => {
