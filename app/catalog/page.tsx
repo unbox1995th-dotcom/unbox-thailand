@@ -53,13 +53,22 @@ export default function CatalogPage() {
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const params = new URLSearchParams(window.location.search)
-    const adminParam = decodeURIComponent(params.get('admin') || '')
-    const navParam = params.get('nav')
-    if (adminParam) setAdminUser(adminParam)
-    if (navParam) setActiveNav(navParam)
-  }, [])
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  const adminParam = decodeURIComponent(params.get('admin') || '')
+  const navParam = params.get('nav')
+
+  if (adminParam) {
+    setAdminUser(adminParam)
+    sessionStorage.setItem('adminUser', adminParam) // บันทึกไว้ใน sessionStorage
+  } else {
+    // ถ้าไม่มี URL param ให้ดึงจาก sessionStorage แทน
+    const saved = sessionStorage.getItem('adminUser')
+    if (saved) setAdminUser(saved)
+  }
+
+  if (navParam) setActiveNav(navParam)
+}, [])
 
   useEffect(() => {
     ;(async () => {
