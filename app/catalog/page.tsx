@@ -1,6 +1,5 @@
 'use client'
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
@@ -901,7 +900,7 @@ function fileToBase64Logo(file: File): Promise<string> {
 
 /* ── Contact Modal (Frontend) ── */
 function ContactModal({ contact, onClose }: {
-  contact: { facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null
+  contact: { facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string; phone1?: string; phone2?: string; line_add?: string } | null
   onClose: () => void
 }) {
   const formatUrl = (url: string) => url && !url.startsWith('http') ? `https://${url}` : url
@@ -1016,7 +1015,7 @@ function ContactModal({ contact, onClose }: {
 
 /* ── Contact Admin Modal (Backend) ── */
 function ContactAdminModal({ contact, setContact, notify, onClose }: {
-  contact: { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null
+  contact: { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string; phone1?: string; phone2?: string; line_add?: string } | null
   setContact: React.Dispatch<React.SetStateAction<any>>
   notify: (m: string, t?: 'ok' | 'err') => void
   onClose: () => void
