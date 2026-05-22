@@ -1,6 +1,5 @@
 'use client'
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
@@ -46,7 +45,7 @@ export default function CatalogPage() {
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [showContact, setShowContact] = useState(false)
   const [showContactAdmin, setShowContactAdmin] = useState(false)
-  const [contact, setContact] = useState<{id:string;facebook_url:string;facebook_label:string;line_url:string;line_label:string;line_qr_url:string;address:string} | null>(null)
+  const [contact, setContact] = useState<{id:string;facebook_url:string;facebook_label:string;line_url:string;line_label:string;line_qr_url:string;address:string;phone1:string;phone2:string;line_add:string} | null>(null)
   const [showWelcome, setShowWelcome] = useState(true)
   const [toast, setToast] = useState<Toast | null>(null)
 
@@ -973,7 +972,39 @@ function ContactModal({ contact, onClose }: {
             </div>
           )}
 
-          {!contact?.facebook_url && !contact?.line_url && !contact?.address && (
+          {/* Phone */}
+          {(contact?.phone1 || contact?.phone2) && (
+            <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: '#fff', marginBottom: 2 }}>📱 เบอร์โทรศัพท์</div>
+              {contact?.phone1 && (
+                <a href={`tel:${contact.phone1}`} style={{ fontSize: 13, color: '#6fdf6f', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>โทร.</span> {contact.phone1}
+                </a>
+              )}
+              {contact?.phone2 && (
+                <a href={`tel:${contact.phone2}`} style={{ fontSize: 13, color: '#6fdf6f', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>โทร.</span> {contact.phone2}
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Line Add */}
+          {contact?.line_add && (
+            <a href={contact.line_add.startsWith('http') ? contact.line_add : `https://${contact.line_add}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', border: '1px solid rgba(6,199,85,0.3)', transition: 'opacity .18s' }}
+              onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Line Add</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>คลิกเพื่อเพิ่มเพื่อน Line</div>
+              </div>
+              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.4)', fontSize: 18 }}>→</div>
+            </a>
+          )}
+
+          {!contact?.facebook_url && !contact?.line_url && !contact?.address && !contact?.phone1 && !contact?.phone2 && (
             <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ยังไม่มีข้อมูลติดต่อ</div>
           )}
         </div>
@@ -995,6 +1026,9 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
   const [lineLabel, setLineLabel] = useState(contact?.line_label || 'Line Official')
   const [lineQrUrl, setLineQrUrl] = useState(contact?.line_qr_url || '')
   const [address, setAddress] = useState(contact?.address || '')
+  const [phone1, setPhone1] = useState(contact?.phone1 || '')
+  const [phone2, setPhone2] = useState(contact?.phone2 || '')
+  const [lineAdd, setLineAdd] = useState(contact?.line_add || '')
   const [saving, setSaving] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const qrInputRef = useRef<HTMLInputElement>(null)
@@ -1013,7 +1047,8 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
     const payload = {
       facebook_url: formatUrl(fbUrl), facebook_label: fbLabel,
       line_url: formatUrl(lineUrl), line_label: lineLabel,
-      line_qr_url: lineQrUrl, address, updated_at: new Date().toISOString()
+      line_qr_url: lineQrUrl, address,
+      phone1, phone2, line_add: lineAdd, updated_at: new Date().toISOString()
     }
     if (contact?.id) {
       const { data } = await supabase.from('contact_settings').update(payload).eq('id', contact.id).select().single()
@@ -1088,6 +1123,29 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
             {lineQrUrl && (
               <button className="btn-ghost" style={{ marginTop: 8, fontSize: 11 }} onClick={() => setLineQrUrl('')}>ลบ QR Code</button>
             )}
+          </div>
+
+          {/* Phone */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>📱</span>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>เบอร์โทรศัพท์</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>(ไม่บังคับ)</span>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div><span style={lbl}>เบอร์โทร 1</span><input style={inp} value={phone1} onChange={e => setPhone1(e.target.value)} placeholder="0xx-xxx-xxxx" /></div>
+              <div><span style={lbl}>เบอร์โทร 2</span><input style={inp} value={phone2} onChange={e => setPhone2(e.target.value)} placeholder="0xx-xxx-xxxx" /></div>
+            </div>
+          </div>
+
+          {/* Line Add */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>Line Add</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>(ไม่บังคับ)</span>
+            </div>
+            <div><span style={lbl}>ลิงก์ Line Add</span><input style={inp} value={lineAdd} onChange={e => setLineAdd(e.target.value)} placeholder="https://line.me/ti/p/xxxxxxx" /></div>
           </div>
 
           {/* Address */}
