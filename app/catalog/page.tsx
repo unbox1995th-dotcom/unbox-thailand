@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
