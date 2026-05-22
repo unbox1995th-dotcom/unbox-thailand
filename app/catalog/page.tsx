@@ -44,6 +44,9 @@ export default function CatalogPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showCustMgr, setShowCustMgr] = useState(false)
+  const [showContact, setShowContact] = useState(false)
+  const [showContactAdmin, setShowContactAdmin] = useState(false)
+  const [contact, setContact] = useState<{id:string;facebook_url:string;facebook_label:string;line_url:string;line_label:string;line_qr_url:string;address:string} | null>(null)
   const [showWelcome, setShowWelcome] = useState(true)
   const [toast, setToast] = useState<Toast | null>(null)
 
@@ -80,6 +83,7 @@ export default function CatalogPage() {
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
+          supabase.from('contact_settings').select('*').limit(1).single(),
           supabase.from('shop_settings').select('*').eq('id', 'main').single(),
         ])
       if (b) setBanners(b)
@@ -244,6 +248,7 @@ export default function CatalogPage() {
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
                 <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
+                <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`}
                   style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 10px', borderRadius: 5, fontSize: 11, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#c00'; (e.currentTarget as HTMLAnchorElement).style.color = '#c00' }}
@@ -281,6 +286,7 @@ export default function CatalogPage() {
                     onDragOver={() => handleDragOver(s.id)}
                     onDragEnd={handleDragEnd}
                     onEdit={() => setEditShirt(s)}
+                    onContact={() => setShowContact(true)}
                     onDelete={async () => {
                       if (s.image_url) await deleteImage(s.image_url)
                       await supabase.from('shirts').delete().eq('id', s.id)
@@ -335,6 +341,12 @@ export default function CatalogPage() {
       {showSettings && (
         <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes}
           onClose={() => setShowSettings(false)} notify={notify} />
+      )}
+      {showContact && (
+        <ContactModal contact={contact} onClose={() => setShowContact(false)} />
+      )}
+      {showContactAdmin && (
+        <ContactAdminModal contact={contact} setContact={setContact} notify={notify} onClose={() => setShowContactAdmin(false)} />
       )}
     </div>
   )
@@ -427,11 +439,11 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 }
 
 /* ── Shirt Card ── */
-function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe }: {
+function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact }: {
   shirt: Shirt, isAdmin: boolean,
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
-  onEdit: () => void, onDelete: () => void, onDupe: () => void
+  onEdit: () => void, onDelete: () => void, onDupe: () => void, onContact?: () => void
 }) {
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMoved = useRef(false)
@@ -485,6 +497,15 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
         {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
         <div style={{ fontWeight: 700, fontSize: 'clamp(13px, 2vw, 16px)', color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
+        {!isAdmin && onContact && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onContact() }}
+            style={{ width: '100%', marginTop: 10, background: 'linear-gradient(135deg,#c00,#900)', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity .18s' }}
+            onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+            onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+            📞 สนใจสั่งซื้อ
+          </button>
+        )}
         {isAdmin && (
           <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
             <button className="btn-outline sm" style={{ flex: 1, fontSize: 11, padding: '4px 6px' }} onClick={onEdit}>✏ แก้</button>
@@ -875,5 +896,223 @@ function WelcomePopup({ shopSettings, isAdmin, onAdmin, onBrowse, onLogoUpdate }
 }
 
 function fileToBase64Logo(file: File): Promise<string> {
+  return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
+}
+
+/* ── Contact Modal (Frontend) ── */
+function ContactModal({ contact, onClose }: {
+  contact: { facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null
+  onClose: () => void
+}) {
+  const formatUrl = (url: string) => url && !url.startsWith('http') ? `https://${url}` : url
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 'clamp(20px,4vw,32px)', width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '20px 24px', borderRadius: 10, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+              📞 ช่องทางการติดต่อ
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Facebook */}
+          {contact?.facebook_url && (
+            <a href={formatUrl(contact.facebook_url)} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1877f2', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
+              onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{contact.facebook_label || 'Facebook Page'}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
+              </div>
+              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</div>
+            </a>
+          )}
+
+          {/* Line */}
+          {contact?.line_url && (
+            <a href={formatUrl(contact.line_url)} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#06c755', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
+              onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{contact.line_label || 'Line Official'}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+              </div>
+              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</div>
+            </a>
+          )}
+
+          {/* QR Code */}
+          {contact?.line_qr_url && (
+            <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <img src={contact.line_qr_url} alt="QR Code" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>สแกน QR Code</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>สแกนเพื่อเพิ่มเพื่อนใน Line</div>
+              </div>
+            </div>
+          )}
+
+          {/* Address */}
+          {contact?.address && (
+            <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ fontSize: 24, flexShrink: 0 }}>📍</div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#fff', marginBottom: 3 }}>ติดต่อที่หน้าร้าน</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{contact.address}</div>
+              </div>
+            </div>
+          )}
+
+          {!contact?.facebook_url && !contact?.line_url && !contact?.address && (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ยังไม่มีข้อมูลติดต่อ</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Contact Admin Modal (Backend) ── */
+function ContactAdminModal({ contact, setContact, notify, onClose }: {
+  contact: { id: string; facebook_url: string; facebook_label: string; line_url: string; line_label: string; line_qr_url: string; address: string } | null
+  setContact: React.Dispatch<React.SetStateAction<any>>
+  notify: (m: string, t?: 'ok' | 'err') => void
+  onClose: () => void
+}) {
+  const [fbUrl, setFbUrl] = useState(contact?.facebook_url || '')
+  const [fbLabel, setFbLabel] = useState(contact?.facebook_label || 'Facebook Page')
+  const [lineUrl, setLineUrl] = useState(contact?.line_url || '')
+  const [lineLabel, setLineLabel] = useState(contact?.line_label || 'Line Official')
+  const [lineQrUrl, setLineQrUrl] = useState(contact?.line_qr_url || '')
+  const [address, setAddress] = useState(contact?.address || '')
+  const [saving, setSaving] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const qrInputRef = useRef<HTMLInputElement>(null)
+
+  const formatUrl = (url: string) => url && !url.startsWith('http') ? `https://${url}` : url
+
+  const handleQrFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const url = await uploadBase64Image(await fileToBase64CF(file), 'contact')
+    if (url) { setLineQrUrl(url); notify('อัปโหลด QR Code แล้ว') }
+    else notify('อัปโหลดไม่สำเร็จ', 'err')
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const payload = {
+      facebook_url: formatUrl(fbUrl), facebook_label: fbLabel,
+      line_url: formatUrl(lineUrl), line_label: lineLabel,
+      line_qr_url: lineQrUrl, address, updated_at: new Date().toISOString()
+    }
+    if (contact?.id) {
+      const { data } = await supabase.from('contact_settings').update(payload).eq('id', contact.id).select().single()
+      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
+      else notify('บันทึกไม่สำเร็จ', 'err')
+    } else {
+      const { data } = await supabase.from('contact_settings').insert([payload]).select().single()
+      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
+      else notify('บันทึกไม่สำเร็จ', 'err')
+    }
+    setSaving(false)
+    onClose()
+  }
+
+  const inp: React.CSSProperties = { background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)', color: '#f5f5f5', padding: '8px 12px', borderRadius: 5, fontFamily: 'inherit', fontSize: 13, width: '100%' }
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: 1, textTransform: 'uppercase' as const, marginBottom: 5, display: 'block' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 'clamp(20px,4vw,28px)', width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>⚙ จัดการช่องทางการติดต่อ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Facebook */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>Facebook</span>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div><span style={lbl}>ชื่อที่แสดง</span><input style={inp} value={fbLabel} onChange={e => setFbLabel(e.target.value)} placeholder="Facebook Page" /></div>
+              <div><span style={lbl}>ลิงก์ Facebook / m.me/...</span><input style={inp} value={fbUrl} onChange={e => setFbUrl(e.target.value)} placeholder="https://m.me/xxxxxxx" /></div>
+            </div>
+          </div>
+
+          {/* Line */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>Line Official</span>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div><span style={lbl}>ชื่อที่แสดง</span><input style={inp} value={lineLabel} onChange={e => setLineLabel(e.target.value)} placeholder="Line Official" /></div>
+              <div><span style={lbl}>ลิงก์ Line / lin.ee/...</span><input style={inp} value={lineUrl} onChange={e => setLineUrl(e.target.value)} placeholder="https://lin.ee/xxxxxxx" /></div>
+            </div>
+          </div>
+
+          {/* QR Code */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <span style={{ ...lbl, marginBottom: 10 }}>QR Code (ภาพ)</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {lineQrUrl && (
+                <img src={lineQrUrl} alt="QR" style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+              )}
+              <div
+                style={{ flex: 1, border: `2px dashed ${dragOver ? '#c00' : 'rgba(200,0,0,0.35)'}`, borderRadius: 8, padding: '14px 12px', textAlign: 'center', cursor: 'pointer', background: dragOver ? 'rgba(200,0,0,0.08)' : 'transparent', transition: 'all .18s' }}
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files[0]) handleQrFile(e.dataTransfer.files[0]) }}
+                onClick={() => qrInputRef.current?.click()}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>📷</div>
+                <div style={{ fontSize: 11, color: '#c00', fontWeight: 600 }}>ลาก-วาง หรือคลิกเลือกรูป QR</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>JPG · PNG · WEBP</div>
+              </div>
+              <input ref={qrInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleQrFile(e.target.files[0]); e.target.value = '' }} />
+            </div>
+            {lineQrUrl && (
+              <button className="btn-ghost" style={{ marginTop: 8, fontSize: 11 }} onClick={() => setLineQrUrl('')}>ลบ QR Code</button>
+            )}
+          </div>
+
+          {/* Address */}
+          <div style={{ background: '#1a1a1a', borderRadius: 10, padding: '14px 16px' }}>
+            <span style={lbl}>📍 ที่อยู่หน้าร้าน</span>
+            <textarea
+              style={{ ...inp, minHeight: 70, resize: 'vertical' as const }}
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+          <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={handleSave}>
+            {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+          </button>
+          <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function fileToBase64CF(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
