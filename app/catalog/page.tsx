@@ -1049,15 +1049,9 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
       line_qr_url: lineQrUrl, address,
       phone1, phone2, line_add: lineAdd, updated_at: new Date().toISOString()
     }
-    if (contact?.id) {
-      const { data } = await supabase.from('contact_settings').update(payload).eq('id', contact.id).select().single()
-      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
-      else notify('บันทึกไม่สำเร็จ', 'err')
-    } else {
-      const { data } = await supabase.from('contact_settings').insert([payload]).select().single()
-      if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
-      else notify('บันทึกไม่สำเร็จ', 'err')
-    }
+    const { data, error } = await supabase.from('contact_settings').upsert({ ...payload, id: 'main' }).eq('id', 'main').select().single()
+    if (data) { setContact(data); notify('บันทึกข้อมูลติดต่อแล้ว') }
+    else { console.error(error); notify('บันทึกไม่สำเร็จ', 'err') }
     setSaving(false)
     onClose()
   }
