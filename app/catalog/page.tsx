@@ -22,6 +22,7 @@ const NAV_ITEMS = [
 ]
 
 type Toast = { msg: string; type: 'ok' | 'err' }
+type ShopSettings = { id: string; shop_name: string; logo_url: string | null }
 type View = 'front' | 'admin-login' | 'cust-login' | 'register'
 
 export default function CatalogPage() {
@@ -36,11 +37,13 @@ export default function CatalogPage() {
   const [collars, setCollars] = useState<Collar[]>([])
   const [prodTypes, setProdTypes] = useState<ProductType[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [shopSettings, setShopSettings] = useState<ShopSettings | null>(null)
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showCustMgr, setShowCustMgr] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(true)
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -69,19 +72,21 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ss }] =
         await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
           supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
+          supabase.from('shop_settings').select('*').eq('id', 'main').single(),
         ])
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
+      if (ss) setShopSettings(ss)
       setReady(true)
     })()
   }, [])
@@ -149,6 +154,17 @@ export default function CatalogPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+
+      {/* Welcome Popup */}
+      {showWelcome && (
+        <WelcomePopup
+          shopSettings={shopSettings}
+          isAdmin={!!adminUser}
+          onAdmin={() => { setShowWelcome(false); setView('admin-login') }}
+          onBrowse={() => setShowWelcome(false)}
+          onLogoUpdate={(updated) => setShopSettings(updated)}
+        />
+      )}
 
       {/* Toast */}
       {toast && (
@@ -770,5 +786,93 @@ function ErrMsg({ msg }: { msg: string }) {
 }
 
 function fileToBase64(file: File): Promise<string> {
+  return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
+}
+
+/* ── Welcome Popup ── */
+function WelcomePopup({ shopSettings, isAdmin, onAdmin, onBrowse, onLogoUpdate }: {
+  shopSettings: { id: string; shop_name: string; logo_url: string | null } | null
+  isAdmin: boolean
+  onAdmin: () => void
+  onBrowse: () => void
+  onLogoUpdate: (s: { id: string; shop_name: string; logo_url: string | null }) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    setUploading(true)
+    const url = await uploadBase64Image(await fileToBase64Logo(file), 'logos')
+    if (url) {
+      const { data } = await supabase.from('shop_settings')
+        .upsert({ id: 'main', shop_name: shopSettings?.shop_name || 'อีโวสปอร์ต', logo_url: url, updated_at: new Date().toISOString() })
+        .select().single()
+      if (data) onLogoUpdate(data)
+    }
+    setUploading(false)
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 'clamp(28px, 5vw, 44px) clamp(20px, 5vw, 40px)', width: '100%', maxWidth: 400, textAlign: 'center' }}>
+
+        {/* Logo */}
+        <div style={{ position: 'relative', display: 'inline-block', marginBottom: 18 }}>
+          {shopSettings?.logo_url ? (
+            <img src={shopSettings.logo_url} alt="logo"
+              style={{ width: 90, height: 90, borderRadius: 16, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
+          ) : (
+            <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 30, color: '#fff', margin: '0 auto' }}>S</div>
+          )}
+          {/* Admin: ปุ่มเปลี่ยนโลโก้ */}
+          {isAdmin && (
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              style={{ position: 'absolute', bottom: -8, right: -8, background: '#c00', border: 'none', borderRadius: '50%', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12, color: '#fff' }}
+              title="เปลี่ยนโลโก้">
+              {uploading ? '⏳' : '📷'}
+            </button>
+          )}
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={(e) => { if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]); e.target.value = '' }} />
+        </div>
+
+        {/* ชื่อร้าน */}
+        <div style={{ fontWeight: 800, fontSize: 'clamp(16px, 4vw, 20px)', color: '#fff', marginBottom: 4 }}>
+          {shopSettings?.shop_name || 'ยินดีต้อนรับ'}
+        </div>
+        <div style={{ fontSize: 'clamp(11px, 2.5vw, 13px)', color: 'rgba(255,255,255,0.4)', marginBottom: 28 }}>
+          รวมแบบเสื้อและสินค้าทั้งหมด
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <button onClick={onBrowse}
+            style={{ background: 'linear-gradient(135deg,#c00,#900)', color: '#fff', border: 'none', borderRadius: 8, padding: '14px 20px', fontSize: 'clamp(13px, 2.5vw, 15px)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'opacity .18s' }}
+            onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+            onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+            👕 เข้าชมแบบเสื้อ
+          </button>
+          <button onClick={onAdmin}
+            style={{ background: 'transparent', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '12px 20px', fontSize: 'clamp(12px, 2.5vw, 13px)', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .18s' }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = '#c00'; e.currentTarget.style.color = '#ff8080' }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}>
+            🔐 เข้าสู่ระบบ Admin
+          </button>
+        </div>
+
+        {isAdmin && (
+          <div style={{ marginTop: 16, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+            กดไอคอน 📷 เพื่อเปลี่ยนโลโก้ร้าน
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function fileToBase64Logo(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
