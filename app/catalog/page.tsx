@@ -992,17 +992,15 @@ function ContactModal({ contact, onClose }: {
 
           {/* Line Add */}
           {contact?.line_add?.trim() && (
-            <a href={contact.line_add.startsWith('http') ? contact.line_add : `https://${contact.line_add}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', border: '1px solid rgba(6,199,85,0.3)', transition: 'opacity .18s' }}
-              onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Line Add</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>คลิกเพื่อเพิ่มเพื่อน Line</div>
+            <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 11.475C19.952 7.054 15.52 3.454 10.064 3.454c-5.457 0-9.888 3.6-9.888 8.021 0 3.966 3.517 7.29 8.269 7.919.322.069.76.212.871.487.1.25.065.641.032.893l-.14.842c-.043.25-.197.976.855.532 1.052-.444 5.676-3.342 7.745-5.723 1.428-1.566 2.144-3.155 2.144-4.95z"/></svg>
+                Line Add
               </div>
-              <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.4)', fontSize: 18 }}>→</div>
-            </a>
+              <div style={{ fontSize: 13, color: '#6fdf6f', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>ID</span> {contact.line_add}
+              </div>
+            </div>
           )}
 
           {!contact?.facebook_url?.trim() && !contact?.line_url?.trim() && !contact?.address?.trim() && !contact?.phone1?.trim() && !contact?.phone2?.trim() && (
