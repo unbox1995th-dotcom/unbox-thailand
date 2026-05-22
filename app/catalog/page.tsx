@@ -922,7 +922,7 @@ function ContactModal({ contact, onClose }: {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Facebook */}
-          {contact?.facebook_url && (
+          {contact?.facebook_url?.trim() && (
             <a href={formatUrl(contact.facebook_url)} target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1877f2', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
               onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
@@ -937,7 +937,7 @@ function ContactModal({ contact, onClose }: {
           )}
 
           {/* Line */}
-          {contact?.line_url && (
+          {contact?.line_url?.trim() && (
             <a href={formatUrl(contact.line_url)} target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#06c755', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', transition: 'opacity .18s' }}
               onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
@@ -952,7 +952,7 @@ function ContactModal({ contact, onClose }: {
           )}
 
           {/* QR Code */}
-          {contact?.line_qr_url && (
+          {contact?.line_qr_url?.trim() && (
             <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
               <img src={contact.line_qr_url} alt="QR Code" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
               <div>
@@ -963,7 +963,7 @@ function ContactModal({ contact, onClose }: {
           )}
 
           {/* Address */}
-          {contact?.address && (
+          {contact?.address?.trim() && (
             <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ fontSize: 24, flexShrink: 0 }}>📍</div>
               <div>
@@ -974,15 +974,15 @@ function ContactModal({ contact, onClose }: {
           )}
 
           {/* Phone */}
-          {(contact?.phone1 || contact?.phone2) && (
+          {(contact?.phone1?.trim() || contact?.phone2?.trim()) && (
             <div style={{ background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontWeight: 600, fontSize: 13, color: '#fff', marginBottom: 2 }}>📱 เบอร์โทรศัพท์</div>
-              {contact?.phone1 && (
+              {contact?.phone1?.trim() && (
                 <a href={`tel:${contact.phone1}`} style={{ fontSize: 13, color: '#6fdf6f', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>โทร.</span> {contact.phone1}
                 </a>
               )}
-              {contact?.phone2 && (
+              {contact?.phone2?.trim() && (
                 <a href={`tel:${contact.phone2}`} style={{ fontSize: 13, color: '#6fdf6f', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>โทร.</span> {contact.phone2}
                 </a>
@@ -991,7 +991,7 @@ function ContactModal({ contact, onClose }: {
           )}
 
           {/* Line Add */}
-          {contact?.line_add && (
+          {contact?.line_add?.trim() && (
             <a href={contact.line_add.startsWith('http') ? contact.line_add : `https://${contact.line_add}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1a1a1a', borderRadius: 12, padding: '14px 18px', textDecoration: 'none', border: '1px solid rgba(6,199,85,0.3)', transition: 'opacity .18s' }}
               onMouseOver={e => (e.currentTarget.style.opacity = '0.85')}
@@ -1005,7 +1005,7 @@ function ContactModal({ contact, onClose }: {
             </a>
           )}
 
-          {!contact?.facebook_url && !contact?.line_url && !contact?.address && !contact?.phone1 && !contact?.phone2 && (
+          {!contact?.facebook_url?.trim() && !contact?.line_url?.trim() && !contact?.address?.trim() && !contact?.phone1?.trim() && !contact?.phone2?.trim() && (
             <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ยังไม่มีข้อมูลติดต่อ</div>
           )}
         </div>
