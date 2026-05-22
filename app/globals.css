@@ -111,42 +111,6 @@ body {
 
 input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: pointer; }
 
-/* Header layout */
-.header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 64px;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-.header-logo { display: flex; align-items: center; gap: 12px; }
-.header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.header-title { font-weight: 700; font-size: 15px; }
-.header-subtitle { display: flex; align-items: center; gap: 6px; }
-
-/* Toast responsive */
-.toast-box {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  padding: 11px 18px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: calc(100vw - 40px);
-}
-
 @keyframes loading {
   0% { width: 0% }
   100% { width: 100% }
@@ -162,67 +126,21 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
 /* Tablet Small (≤768px) */
 @media (max-width: 768px) {
   .grid-shirts { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-
-  .header-title { font-size: 13px; }
-
-  .modal-box {
-    padding: 20px 16px;
-    max-height: 92vh;
-    border-radius: 10px;
-  }
-
-  .nav-item {
-    padding: 10px 13px;
-    font-size: 12px;
-  }
-
-  .toast-box {
-    top: 12px;
-    right: 12px;
-    left: 12px;
-    font-size: 12px;
-  }
+  .modal-box { padding: 20px 16px; max-height: 92vh; border-radius: 10px; }
+  .nav-item { padding: 10px 13px; font-size: 12px; }
 }
 
 /* Mobile (≤640px) */
 @media (max-width: 640px) {
   .grid-shirts { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-
-  .header-inner {
-    padding: 8px 12px;
-    min-height: auto;
-    gap: 8px;
-  }
-
-  .header-title { font-size: 12px; }
-
-  .btn-red.sm, .btn-outline.sm {
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-
-  .modal-box {
-    padding: 16px 14px;
-    max-height: 95vh;
-    border-radius: 8px;
-  }
-
-  .nav-item {
-    padding: 9px 11px;
-    font-size: 11px;
-  }
-
+  .modal-box { padding: 16px 14px; max-height: 95vh; border-radius: 8px; }
+  .nav-item { padding: 9px 11px; font-size: 11px; }
+  .btn-red.sm, .btn-outline.sm { padding: 5px 10px; font-size: 11px; }
   .drag-zone { padding: 20px 16px; }
 }
 
 /* Mobile XS (≤380px) */
 @media (max-width: 380px) {
   .grid-shirts { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-
-  .header-title { font-size: 11px; }
-
-  .btn-red.sm, .btn-outline.sm {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
+  .btn-red.sm, .btn-outline.sm { padding: 4px 8px; font-size: 11px; }
 }
