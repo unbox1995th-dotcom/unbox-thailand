@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
@@ -43,7 +43,6 @@ export default function CatalogPage() {
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
 
-  // Drag-and-drop state
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const saveSortTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -53,7 +52,15 @@ export default function CatalogPage() {
     setTimeout(() => setToast(null), 2800)
   }, [])
 
-  // Load all data from Supabase
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const adminParam = decodeURIComponent(params.get('admin') || '')
+    const navParam = params.get('nav')
+    if (adminParam) setAdminUser(adminParam)
+    if (navParam) setActiveNav(navParam)
+  }, [])
+
   useEffect(() => {
     ;(async () => {
       const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
@@ -84,12 +91,9 @@ export default function CatalogPage() {
     return true
   })
 
-  // Drag handlers — only active on "new" tab for admin
   const canDrag = !!adminUser && activeNav === 'new'
 
-  const handleDragStart = (id: string) => {
-    setDragId(id)
-  }
+  const handleDragStart = (id: string) => setDragId(id)
 
   const handleDragOver = (id: string) => {
     if (!dragId || dragId === id) return
@@ -108,7 +112,6 @@ export default function CatalogPage() {
   const handleDragEnd = async () => {
     setDragId(null)
     setDragOverId(null)
-    // Debounce save to Supabase
     if (saveSortTimer.current) clearTimeout(saveSortTimer.current)
     saveSortTimer.current = setTimeout(async () => {
       const updates = shirts.map((s, i) => ({ id: s.id, sort_order: i }))
@@ -118,7 +121,6 @@ export default function CatalogPage() {
       notify('บันทึกลำดับแล้ว')
     }, 800)
   }
-
 
   if (!ready) return <LoadingScreen />
   if (view === 'admin-login') return (
@@ -141,21 +143,26 @@ export default function CatalogPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#c00'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="toast-box" style={{
+          background: toast.type === 'ok' ? '#0c2210' : '#220c0c',
+          border: `1px solid ${toast.type === 'ok' ? '#266626' : '#c00'}`,
+          color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080',
+        }}>
           {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
         </div>
       )}
 
       {/* Header */}
       <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#fff' }}>S</div>
+        <div className="header-inner">
+          <div className="header-logo">
+            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, color: '#fff', flexShrink: 0 }}>S</div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>รวมแบบเสื้อและสินค้าทั้งหมด</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="header-title">รวมแบบเสื้อและสินค้าทั้งหมด</div>
+              <div className="header-subtitle">
                 <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: 2 }}>SHIRT CATALOG</span>
                 <span style={{ fontSize: 9, color: '#3d9a3d', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3d9a3d', display: 'inline-block' }} />
@@ -164,17 +171,17 @@ export default function CatalogPage() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="header-actions">
             {adminUser ? (
               <>
                 <span style={{ background: 'linear-gradient(90deg,#c00,#800)', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#fff' }}>ADMIN</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{adminUser}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{adminUser}</span>
                 <button className="btn-outline sm" onClick={() => setShowCustMgr(!showCustMgr)}>{showCustMgr ? '← กลับ' : `สมาชิก (${customers.length})`}</button>
                 <button className="btn-outline sm" onClick={() => { setAdminUser(null); setShowCustMgr(false); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : custUser ? (
               <>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>👤 {custUser.name}</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>👤 {custUser.name}</span>
                 <button className="btn-outline sm" onClick={() => { setCustUser(null); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : (
@@ -200,8 +207,8 @@ export default function CatalogPage() {
       {!showCustMgr && (
         <>
           {/* Nav */}
-          <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto' }}>
-            <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', padding: '0 16px' }}>
+          <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', padding: '0 12px', minWidth: 'max-content' }}>
               {NAV_ITEMS.map((n) => (
                 <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => setActiveNav(n.id)}>
                   {n.label}
@@ -213,32 +220,33 @@ export default function CatalogPage() {
 
           {/* Admin Toolbar */}
           {adminUser && (
-            <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
-              <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
+            <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '8px 12px' }}>
+              <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode</span>
                 <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
-                <a href="/export" style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
-                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
-                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
-                  📥 Export ภาพ
+                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`}
+                  style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 10px', borderRadius: 5, fontSize: 11, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all .18s' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#c00'; (e.currentTarget as HTMLAnchorElement).style.color = '#c00' }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color = '#f5f5f5' }}>
+                  📥 Export
                 </a>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginLeft: 'auto' }}>
-                  ทั้งหมด {shirts.length} | แสดง {filtered.length} รายการ
+                  {shirts.length} | {filtered.length} รายการ
                 </span>
               </div>
             </div>
           )}
 
           {/* Grid */}
-          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(16px, 3vw, 28px) clamp(12px, 3vw, 20px)' }}>
             {canDrag && (
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 14 }}>☰</span> กดค้างที่การ์ดแล้วลากเพื่อเรียงลำดับ — บันทึกอัตโนมัติ
               </div>
             )}
             {filtered.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '70px 20px' }}>
+              <div style={{ textAlign: 'center', padding: 'clamp(40px, 8vw, 70px) 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
                 <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>ยังไม่มีสินค้าในหมวดนี้</div>
                 {adminUser && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}
@@ -294,8 +302,11 @@ export default function CatalogPage() {
           onSave={async (data, imgFile) => {
             let image_url = editShirt.image_url
             if (imgFile) {
-              if (editShirt.image_url) await deleteImage(editShirt.image_url)
-              image_url = await uploadBase64Image(imgFile)
+              const newUrl = await uploadBase64Image(imgFile)
+              if (newUrl) {
+                if (editShirt.image_url) await deleteImage(editShirt.image_url)
+                image_url = newUrl
+              }
             }
             const { data: updated } = await supabase.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
             if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
@@ -350,22 +361,24 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 
   return (
     <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: 20 }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(12px, 2vw, 20px)' }}>
         {banners.length > 0 ? (
-          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 260 }}>
+          <div style={{ position: 'relative', borderRadius: 'clamp(8px, 1.5vw, 12px)', overflow: 'hidden', height: 'clamp(140px, 22vw, 300px)' }}>
             <img src={banners[idx].image_url} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.45),transparent)' }} />
             {banners.length > 1 && (
               <>
-                <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>‹</button>
-                <button onClick={() => setCur((c) => (c + 1) % banners.length)} style={{ position: 'absolute', right: isAdmin ? 130 : 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>›</button>
-                <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#c00' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
+                <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)}
+                  style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14 }}>‹</button>
+                <button onClick={() => setCur((c) => (c + 1) % banners.length)}
+                  style={{ position: 'absolute', right: isAdmin ? 110 : 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14 }}>›</button>
+                <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
+                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 20 : 6, height: 6, borderRadius: 4, background: i === idx ? '#c00' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
                 </div>
               </>
             )}
             {isAdmin && (
-              <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+              <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
                 <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เพิ่ม</button>
                 <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={async () => {
                   const b = banners[idx]
@@ -378,17 +391,17 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             )}
           </div>
         ) : isAdmin ? (
-          <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ height: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             onDragOver={(e) => { e.preventDefault(); setOv(true) }}
             onDragLeave={() => setOv(false)}
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
-            <div style={{ fontSize: 32 }}>🖼</div>
-            <div style={{ color: '#c00', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
+            <div style={{ fontSize: 28 }}>🖼</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP</div>
           </div>
         ) : (
-          <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>ยังไม่มี Banner</div>
+          <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>ยังไม่มี Banner</div>
         )}
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }} />
       </div>
@@ -450,16 +463,16 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>โปร</span>}
         </div>
       </div>
-      <div style={{ padding: '13px 14px 12px' }}>
-        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
+      <div style={{ padding: 'clamp(10px, 2vw, 13px) clamp(10px, 2vw, 14px)' }}>
+        <div style={{ fontWeight: 600, fontSize: 'clamp(12px, 1.8vw, 14px)', marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
         {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
         {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
-        <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
+        <div style={{ fontWeight: 700, fontSize: 'clamp(13px, 2vw, 16px)', color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
         {isAdmin && (
-          <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onDupe}>⧉ คัดลอก</button>
-            <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕</button>
+          <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
+            <button className="btn-outline sm" style={{ flex: 1, fontSize: 11, padding: '4px 6px' }} onClick={onEdit}>✏ แก้</button>
+            <button className="btn-outline sm" style={{ flex: 1, fontSize: 11, padding: '4px 6px' }} onClick={onDupe}>⧉ ก๊อป</button>
+            <button className="btn-ghost" style={{ flex: 1, fontSize: 11, padding: '4px 6px' }} onClick={onDelete}>✕</button>
           </div>
         )}
       </div>
@@ -492,12 +505,12 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขแบบเสื้อ' : '+ เพิ่มแบบเสื้อใหม่'}</div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{initial ? '✏ แก้ไขแบบเสื้อ' : '+ เพิ่มแบบเสื้อใหม่'}</div>
           <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
-        <div className="section-label">รูปภาพ (อัปโหลดสู่ Supabase Storage)</div>
+        <div className="section-label">รูปภาพ</div>
         {imgPreview ? (
-          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', height: 170, marginBottom: 16 }}>
+          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', height: 150, marginBottom: 16 }}>
             <img src={imgPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <button className="btn-red sm" style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => { setImgPreview(null); setNewImgData('__remove__') }}>เปลี่ยนรูป</button>
           </div>
@@ -507,14 +520,14 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
             onDragLeave={() => setOv(false)}
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
-            <div style={{ fontSize: 28 }}>📷</div>
-            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
+            <div style={{ fontSize: 26 }}>📷</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>แตะหรือลาก-วางรูปภาพ</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP</div>
           </div>
         )}
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
         <div className="divider" />
-        <div style={{ display: 'grid', gap: 13 }}>
+        <div style={{ display: 'grid', gap: 12 }}>
           <div><div className="section-label">ชื่อทีม / ชื่องาน</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อแบบเสื้อ / ชื่อทีม" /></div>
           <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
             <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
@@ -548,7 +561,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
             <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
           </label>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
             {saving ? '⏳ กำลังอัปโหลด...' : '💾 บันทึก'}
           </button>
@@ -570,12 +583,12 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 580 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>⚙ จัดการประเภทสินค้า</div>
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
           {([['collar', `ประเภทคอ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
-            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
+            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 14px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
           ))}
         </div>
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
@@ -642,23 +655,23 @@ function CustomerMgr({ customers, setCustomers, notify }: {
   const [q, setQ] = useState('')
   const list = customers.filter((c) => `${c.name}${c.email}${c.facebook}`.toLowerCase().includes(q.toLowerCase()))
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: 'clamp(16px, 3vw, 28px) clamp(12px, 3vw, 20px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 18 }}>ข้อมูลสมาชิก</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>Supabase Database · {customers.length} คน</div>
         </div>
-        <input className="input-d" style={{ width: 260 }} placeholder="ค้นหาชื่อ / อีเมล / Facebook..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input-d" style={{ width: 'min(260px, 100%)' }} placeholder="ค้นหาชื่อ / อีเมล / Facebook..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {list.length === 0
         ? <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ไม่พบสมาชิก</div>
         : <div style={{ display: 'grid', gap: 10 }}>
           {list.map((c) => (
-            <div key={c.id} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#c00,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
-              <div style={{ flex: 1, minWidth: 180 }}>
+            <div key={c.id} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#c00,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
+              <div style={{ flex: 1, minWidth: 160 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {c.email && <span>📧 {c.email}</span>}
                   {c.phone && <span>📞 {c.phone}</span>}
                   {c.facebook && <span>📘 {c.facebook}</span>}
@@ -738,12 +751,12 @@ function Register({ customers, onSave, onBack }: {
 
 function AuthShell({ title, badge, sub, children }: { title: string, badge?: string, sub?: string, children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '36px 32px', width: '100%', maxWidth: 400 }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 'clamp(24px, 5vw, 36px) clamp(16px, 5vw, 32px)', width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
+          <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 22, color: '#fff', margin: '0 auto 14px' }}>S</div>
           {badge && <div style={{ display: 'inline-block', background: '#c00', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#fff', marginBottom: 10 }}>{badge}</div>}
-          <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{title}</div>
+          <div style={{ fontWeight: 700, fontSize: 17, color: '#fff' }}>{title}</div>
           {sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>{sub}</div>}
         </div>
         {children}
@@ -756,7 +769,6 @@ function ErrMsg({ msg }: { msg: string }) {
   return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5, border: '1px solid rgba(200,0,0,0.25)' }}>{msg}</div>
 }
 
-// Utility
 function fileToBase64(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
