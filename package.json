@@ -7,11 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:build": "npx @cloudflare/next-on-pages@1",
     "preview": "npx wrangler pages dev .vercel/output/static"
   },
   "dependencies": {
-    "next": "14.2.29",
+    "next": "15.1.0",
     "react": "^18",
     "react-dom": "^18",
     "@supabase/supabase-js": "^2.45.0"
