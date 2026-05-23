@@ -76,7 +76,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ss }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ct }, { data: ss }] =
         await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
           supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
@@ -91,6 +91,7 @@ export default function CatalogPage() {
       if (c) setCollars(c)
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
+      if (ct) setContact(ct)
       if (ss) setShopSettings(ss)
       setReady(true)
     })()
