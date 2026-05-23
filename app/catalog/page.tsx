@@ -83,7 +83,7 @@ export default function CatalogPage() {
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
-          supabase.from('contact_settings').select('*').limit(1).single(),
+          supabase.from('contact_settings').select('*').eq('id', 'main').single(),
           supabase.from('shop_settings').select('*').eq('id', 'main').single(),
         ])
       if (b) setBanners(b)
