@@ -46,7 +46,6 @@ export default function CatalogPage() {
   const [showCalculator, setShowCalculator] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
 
-  // Drag-and-drop state
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const saveSortTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -65,7 +64,6 @@ export default function CatalogPage() {
     if (navParam) setActiveNav(navParam)
   }, [])
 
-  // Load all data from Supabase
   useEffect(() => {
     ;(async () => {
       const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
@@ -148,7 +146,6 @@ export default function CatalogPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
-      {/* Toast */}
       {toast && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#c00'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
@@ -171,7 +168,7 @@ export default function CatalogPage() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {adminUser ? (
               <>
                 <span style={{ background: 'linear-gradient(90deg,#c00,#800)', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#fff' }}>ADMIN</span>
@@ -186,8 +183,6 @@ export default function CatalogPage() {
               </>
             ) : (
               <>
-                <button className="btn-outline sm" onClick={() => setShowCalculator(true)}>🧮 คำนวณราคา</button>
-                <button className="btn-red sm" onClick={() => setShowContact(true)}>📞 ติดต่อสั่งซื้อ</button>
                 <button className="btn-outline sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
                 <button className="btn-red sm" onClick={() => setView('admin-login')}>Admin</button>
               </>
@@ -196,19 +191,16 @@ export default function CatalogPage() {
         </div>
       </div>
 
-      {/* Banner */}
       {!showCustMgr && (
         <BannerSection banners={banners} setBanners={setBanners} isAdmin={!!adminUser} notify={notify} />
       )}
 
-      {/* Customer Manager */}
       {showCustMgr && adminUser && (
         <CustomerMgr customers={customers} setCustomers={setCustomers} notify={notify} />
       )}
 
       {!showCustMgr && (
         <>
-          {/* Nav */}
           <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto' }}>
             <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', padding: '0 16px' }}>
               {NAV_ITEMS.map((n) => (
@@ -220,7 +212,6 @@ export default function CatalogPage() {
             </div>
           </div>
 
-          {/* Admin Toolbar */}
           {adminUser && (
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -239,7 +230,6 @@ export default function CatalogPage() {
             </div>
           )}
 
-          {/* Grid */}
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
             {canDrag && (
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -274,6 +264,8 @@ export default function CatalogPage() {
                       const { data } = await supabase.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
                       if (data) { setShirts((prev) => [data, ...prev]); notify('คัดลอกสำเร็จ') }
                     }}
+                    onContact={() => setShowContact(true)}
+                    onCalculate={() => setShowCalculator(true)}
                   />
                 ))}
               </div>
@@ -318,12 +310,8 @@ export default function CatalogPage() {
         <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
-      {showContact && (
-        <ContactModal onClose={() => setShowContact(false)} />
-      )}
-      {showCalculator && (
-        <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />
-      )}
+      {showContact && <ContactModal onClose={() => setShowContact(false)} />}
+      {showCalculator && <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />}
     </div>
   )
 }
@@ -415,11 +403,12 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 }
 
 /* ── Shirt Card ── */
-function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe }: {
+function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact, onCalculate }: {
   shirt: Shirt, isAdmin: boolean,
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
-  onEdit: () => void, onDelete: () => void, onDupe: () => void
+  onEdit: () => void, onDelete: () => void, onDupe: () => void,
+  onContact?: () => void, onCalculate?: () => void
 }) {
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMoved = useRef(false)
@@ -436,6 +425,8 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
     if (touchTimer.current) clearTimeout(touchTimer.current)
     if (isDragging) onDragEnd?.()
   }
+
+  const showActionBtns = !isAdmin && (shirt.category === 'new' || shirt.category === 'collar')
 
   return (
     <div
@@ -473,6 +464,12 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
         {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
         <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
+        {showActionBtns && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onContact}>📞 ติดต่อสั่งซื้อ</button>
+            <button className="btn-red sm" style={{ flex: 1 }} onClick={onCalculate}>🧮 คำนวณราคา</button>
+          </div>
+        )}
         {isAdmin && (
           <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
             <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
@@ -774,7 +771,6 @@ function ErrMsg({ msg }: { msg: string }) {
   return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5, border: '1px solid rgba(200,0,0,0.25)' }}>{msg}</div>
 }
 
-// Utility
 function fileToBase64(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
@@ -840,12 +836,8 @@ function ContactModal({ onClose }: { onClose: () => void }) {
             {(contact.phone1 || contact.phone2) && (
               <div style={{ padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>📱 โทรศัพท์</div>
-                {contact.phone1 && (
-                  <a href={`tel:${contact.phone1}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none', marginBottom: 4 }}>{contact.phone1}</a>
-                )}
-                {contact.phone2 && (
-                  <a href={`tel:${contact.phone2}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none' }}>{contact.phone2}</a>
-                )}
+                {contact.phone1 && <a href={`tel:${contact.phone1}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none', marginBottom: 4 }}>{contact.phone1}</a>}
+                {contact.phone2 && <a href={`tel:${contact.phone2}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none' }}>{contact.phone2}</a>}
               </div>
             )}
           </div>
@@ -888,16 +880,12 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
         <div className="section-label">เลือกแบบเสื้อ</div>
         <select className="select-d" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={{ marginBottom: 14 }}>
           <option value="">— เลือกแบบเสื้อ —</option>
-          {shirts.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} (เนื้อผ้า ฿{Number(s.price).toLocaleString()})</option>
-          ))}
+          {shirts.map((s) => <option key={s.id} value={s.id}>{s.name} (เนื้อผ้า ฿{Number(s.price).toLocaleString()})</option>)}
         </select>
         <div className="section-label">จำนวนชิ้น</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
           <button className="btn-outline sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-          <input className="input-d" type="number" min={1} value={qty}
-            onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-            style={{ width: 80, textAlign: 'center' }} />
+          <input className="input-d" type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} style={{ width: 80, textAlign: 'center' }} />
           <button className="btn-outline sm" onClick={() => setQty((q) => q + 1)}>+</button>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ตัดเย็บ {sewingUnit} บาท/ตัว</span>
         </div>
@@ -911,16 +899,13 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
               <div className="section-label">จำนวนจุดสกรีน</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[1, 2, 3, 4].map((n) => (
-                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'}
-                    onClick={() => setPrintPos(n)}>{n} จุด</button>
+                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'} onClick={() => setPrintPos(n)}>{n} จุด</button>
                 ))}
               </div>
             </div>
             <div>
               <div className="section-label">ราคาสกรีน/จุด/ตัว (บาท)</div>
-              <input className="input-d" type="number" value={printPrice}
-                onChange={(e) => setPrintPrice(Math.max(0, Number(e.target.value)))}
-                style={{ width: 100 }} />
+              <input className="input-d" type="number" value={printPrice} onChange={(e) => setPrintPrice(Math.max(0, Number(e.target.value)))} style={{ width: 100 }} />
             </div>
           </div>
         )}
