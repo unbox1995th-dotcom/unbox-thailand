@@ -346,9 +346,8 @@ export default function CatalogPage() {
       )}
       {showContact && (
         <ContactModal onClose={() => setShowContact(false)} />
-      )}
-      {showContactAdmin && (
-        <ContactAdminModal contact={contact} setContact={setContact} notify={notify} onClose={() => setShowContactAdmin(false)} />
+      {showCalculator && (
+        <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />
       )}
     </div>
   )
@@ -1168,4 +1167,174 @@ function ContactAdminModal({ contact, setContact, notify, onClose }: {
 
 function fileToBase64CF(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
+}
+/* ── Contact Modal ── */
+function ContactModal({ onClose }: { onClose: () => void }) {
+  const [contact, setContact] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.from('contact_settings').select('*').eq('id', 'main').single()
+      .then(({ data }) => { if (data) setContact(data); setLoading(false) })
+  }, [])
+
+  return (
+    <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 380 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>📞 ติดต่อสั่งซื้อ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+        </div>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
+        ) : !contact ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {contact.facebook_url && (
+              <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(59,89,152,0.15)', border: '1px solid rgba(59,89,152,0.3)', textDecoration: 'none' }}>
+                <span style={{ fontSize: 24 }}>💬</span>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#7b9fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook'}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>กดเพื่อแชท</div>
+                </div>
+              </a>
+            )}
+            {contact.line_url && (
+              <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,195,0,0.08)', border: '1px solid rgba(0,195,0,0.25)', textDecoration: 'none' }}>
+                <span style={{ fontSize: 24 }}>💚</span>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#5ddf5d', fontSize: 14 }}>{contact.line_label || 'Line'}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>กดเพื่อแชท</div>
+                </div>
+              </a>
+            )}
+            {contact.line_add && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: 24 }}>🆔</span>
+                <div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Line ID</div>
+                  <div style={{ fontWeight: 600, color: '#5ddf5d', fontSize: 14 }}>{contact.line_add}</div>
+                </div>
+              </div>
+            )}
+            {contact.line_qr_url && (
+              <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>สแกน QR เพิ่มเพื่อน Line</div>
+                <img src={contact.line_qr_url} alt="Line QR" style={{ width: 140, height: 140, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
+              </div>
+            )}
+            {(contact.phone1 || contact.phone2) && (
+              <div style={{ padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>📱 โทรศัพท์</div>
+                {contact.phone1 && (
+                  <a href={`tel:${contact.phone1}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none', marginBottom: 4 }}>{contact.phone1}</a>
+                )}
+                {contact.phone2 && (
+                  <a href={`tel:${contact.phone2}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none' }}>{contact.phone2}</a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Price Calculator ── */
+const SEWING_TIERS = [
+  { min: 1,   max: 11,  price: 250 },
+  { min: 12,  max: 24,  price: 220 },
+  { min: 25,  max: 49,  price: 200 },
+  { min: 50,  max: 99,  price: 185 },
+  { min: 100, max: 999, price: 170 },
+]
+
+function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => void }) {
+  const [selectedId, setSelectedId] = useState('')
+  const [qty, setQty] = useState(12)
+  const [hasPrint, setHasPrint] = useState(false)
+  const [printPos, setPrintPos] = useState(1)
+  const [printPrice, setPrintPrice] = useState(30)
+
+  const shirt = shirts.find((s) => s.id === selectedId)
+  const sewingUnit = SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
+  const fabricPrice = shirt ? Number(shirt.price) : 0
+  const printTotal = hasPrint ? printPos * printPrice : 0
+  const unitTotal = fabricPrice + sewingUnit + printTotal
+  const grandTotal = unitTotal * qty
+
+  return (
+    <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>🧮 คำนวณราคาเบื้องต้น</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+        </div>
+        <div className="section-label">เลือกแบบเสื้อ</div>
+        <select className="select-d" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={{ marginBottom: 14 }}>
+          <option value="">— เลือกแบบเสื้อ —</option>
+          {shirts.map((s) => (
+            <option key={s.id} value={s.id}>{s.name} (เนื้อผ้า ฿{Number(s.price).toLocaleString()})</option>
+          ))}
+        </select>
+        <div className="section-label">จำนวนชิ้น</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <button className="btn-outline sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+          <input className="input-d" type="number" min={1} value={qty}
+            onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+            style={{ width: 80, textAlign: 'center' }} />
+          <button className="btn-outline sm" onClick={() => setQty((q) => q + 1)}>+</button>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ตัดเย็บ {sewingUnit} บาท/ตัว</span>
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 10 }}>
+          <input type="checkbox" checked={hasPrint} onChange={(e) => setHasPrint(e.target.checked)} />
+          <span style={{ fontSize: 13 }}>มีสกรีน/ปักโลโก้</span>
+        </label>
+        {hasPrint && (
+          <div style={{ paddingLeft: 24, display: 'grid', gap: 10, marginBottom: 10 }}>
+            <div>
+              <div className="section-label">จำนวนจุดสกรีน</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[1, 2, 3, 4].map((n) => (
+                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'}
+                    onClick={() => setPrintPos(n)}>{n} จุด</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="section-label">ราคาสกรีน/จุด/ตัว (บาท)</div>
+              <input className="input-d" type="number" value={printPrice}
+                onChange={(e) => setPrintPrice(Math.max(0, Number(e.target.value)))}
+                style={{ width: 100 }} />
+            </div>
+          </div>
+        )}
+        <div className="divider" />
+        <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
+          <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>📋 สรุปราคาเบื้องต้น</div>
+          {[
+            ['เนื้อผ้า', `${fabricPrice.toLocaleString()} บาท/ตัว`],
+            [`ตัดเย็บ (${qty} ตัว)`, `${sewingUnit.toLocaleString()} บาท/ตัว`],
+            ...(hasPrint ? [[`สกรีน ${printPos} จุด`, `${printTotal.toLocaleString()} บาท/ตัว`]] : []),
+          ].map(([label, val]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
+              <span>{val}</span>
+            </div>
+          ))}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+            <span>รวม/ตัว</span><span>{unitTotal.toLocaleString()} บาท</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 18, color: '#ff4444' }}>
+            <span>รวมทั้งหมด (×{qty})</span><span>{grandTotal.toLocaleString()} บาท</span>
+          </div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
+        </div>
+      </div>
+    </div>
+  )
 }
