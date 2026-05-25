@@ -345,7 +345,7 @@ export default function CatalogPage() {
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && (
-        <ContactModal contact={contact} onClose={() => setShowContact(false)} />
+        <ContactModal onClose={() => setShowContact(false)} />
       )}
       {showContactAdmin && (
         <ContactAdminModal contact={contact} setContact={setContact} notify={notify} onClose={() => setShowContactAdmin(false)} />
