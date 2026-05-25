@@ -35,6 +35,8 @@ export default function CatalogPage() {
 
   const [banners, setBanners] = useState<Banner[]>([])
   const [shirts, setShirts] = useState<Shirt[]>([])
+  const [showContact, setShowContact] = useState(false)       // ← เพิ่ม
+  const [showCalculator, setShowCalculator] = useState(false) // ← เพิ่ม
   const [collars, setCollars] = useState<Collar[]>([])
   const [prodTypes, setProdTypes] = useState<ProductType[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -44,9 +46,6 @@ export default function CatalogPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showCustMgr, setShowCustMgr] = useState(false)
-  const [showContact, setShowContact] = useState(false)
-  const [showContactAdmin, setShowContactAdmin] = useState(false)
-  const [contact, setContact] = useState<{id:string;facebook_url:string;facebook_label:string;line_url:string;line_label:string;line_qr_url:string;address:string;phone1:string;phone2:string;line_add:string} | null>(null)
   const [showWelcome, setShowWelcome] = useState(true)
   const [toast, setToast] = useState<Toast | null>(null)
 
