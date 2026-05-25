@@ -211,6 +211,8 @@ export default function CatalogPage() {
               <>
                 <button className="btn-outline sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
                 <button className="btn-red sm" onClick={() => setView('admin-login')}>Admin</button>
+                <button className="btn-outline sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
+                <button className="btn-red sm" onClick={() => setView('admin-login')}>Admin</button>
               </>
             )}
           </div>
