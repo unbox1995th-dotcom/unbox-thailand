@@ -284,7 +284,7 @@ export default function ExportPage() {
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-          <span onClick={() => { window.location.href = '/catalog'; }} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
+          <span onClick={() => { window.location.href = `/catalog?admin=${encodeURIComponent(adminUser || '')}` style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
         </div>
       </div>
     </div>
@@ -331,7 +331,7 @@ export default function ExportPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{adminUser}</span>
-            <button className="btn-o" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => { setAdminUser(null); sessionStorage.removeItem('adminUser'); }}>ออก</button>
+            <button className="btn-o" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => { window.location.href = `/catalog?admin=${encodeURIComponent(adminUser || '')}`; }}>ออก</button>
           </div>
         </div>
       </div>
