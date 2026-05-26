@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, uploadBase64Image, deleteImage } from '@/lib/supabase'
+import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
@@ -254,7 +254,7 @@ export default function CatalogPage() {
                     onDragEnd={handleDragEnd}
                     onEdit={() => setEditShirt(s)}
                     onDelete={async () => {
-                      if (s.image_url) await deleteImage(s.image_url)
+                      await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
                       await supabase.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
                       notify('ลบสินค้าแล้ว', 'err')
@@ -297,7 +297,7 @@ export default function CatalogPage() {
             if (imgFile) {
               const newUrl = await uploadBase64Image(imgFile)
               if (newUrl) {
-                if (editShirt.image_url) await deleteImage(editShirt.image_url)
+                // ไม่ลบรูปเก่า — เก็บไว้ใน Storage ตลอด
                 image_url = newUrl
               }
             }
@@ -375,7 +375,6 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
                 <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เพิ่ม</button>
                 <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={async () => {
                   const b = banners[idx]
-                  await deleteImage(b.image_url)
                   await supabase.from('banners').delete().eq('id', b.id)
                   setBanners((prev) => prev.filter((_, i) => i !== idx))
                   setCur(0); notify('ลบ Banner แล้ว', 'err')
