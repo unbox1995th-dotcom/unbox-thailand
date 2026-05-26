@@ -1056,8 +1056,8 @@ function ContactAdminModal({ notify, onClose }: {
   }
 
   const inp: React.CSSProperties = {
-    background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)',
-    color: '#f5f5f5', padding: '8px 10px', borderRadius: 6,
+    background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+    color: '#fff', padding: '8px 10px', borderRadius: 6,
     fontFamily: 'inherit', fontSize: 13, width: '100%',
   }
 
@@ -1076,8 +1076,11 @@ function ContactAdminModal({ notify, onClose }: {
           <div style={{ display: 'grid', gap: 14 }}>
 
             {/* Facebook */}
-            <div style={{ background: '#161616', border: '1px solid rgba(59,89,152,0.3)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#7b9fff', marginBottom: 10 }}>💬 Facebook</div>
+            <div style={{ background: '#1877f2', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M13.5 11H11.8V17H9.8V11H8.5V9.2H9.8V8.2C9.8 6.7 10.6 5.8 12.2 5.8H13.5V7.6H12.6C12.1 7.6 11.8 7.8 11.8 8.3V9.2H13.5L13.5 11Z" fill="#1877f2"/></svg>
+                Facebook
+              </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
                   <div className="section-label">ชื่อที่แสดง</div>
@@ -1091,8 +1094,11 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Line */}
-            <div style={{ background: '#161616', border: '1px solid rgba(0,195,0,0.25)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#5ddf5d', marginBottom: 10 }}>💚 Line</div>
+            <div style={{ background: '#06c755', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M17 10.4C17 7.4 14 5 11 5S5 7.4 5 10.4c0 2.7 2.4 5 5.6 5.4.2 0 .5.1.6.3.1.2 0 .4 0 .1l-.1.6c0 .2-.1.7.6.4.7-.3 3.9-2.3 5.3-3.9A5 5 0 0017 10.4z" fill="#06c755"/><path d="M9.5 11.8H8V9H9v2h.5v.8zm1 0V9h1v2.8h-1zm3 0h-.6L11.8 10v1.8h-1V9h.6l1.1 1.8V9h1v2.8zm2 0h-1.8V9h1.8v.7h-1v.4h1v.7h-1v.4h1v.6z" fill="white"/></svg>
+                Line
+              </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
                   <div className="section-label">ชื่อที่แสดง</div>
@@ -1124,8 +1130,11 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Phone */}
-            <div style={{ background: '#161616', border: '1px solid rgba(255,170,68,0.25)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#ffaa44', marginBottom: 10 }}>📱 เบอร์โทรศัพท์</div>
+            <div style={{ background: '#c00', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#c00"/></svg>
+                เบอร์โทรศัพท์
+              </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
                   <div className="section-label">เบอร์ที่ 1</div>
