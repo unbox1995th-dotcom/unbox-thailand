@@ -362,8 +362,8 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
     <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: 20 }}>
         {banners.length > 0 ? (
-          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', height: 260 }}>
-            <img src={banners[idx].image_url} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: '16/5', minHeight: 120, maxHeight: 400 }}>
+            <img src={banners[idx].image_url} alt="banner" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.45),transparent)' }} />
             {banners.length > 1 && (
               <>
@@ -387,7 +387,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             )}
           </div>
         ) : isAdmin ? (
-          <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ minHeight: 120, aspectRatio: '16/5', maxHeight: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             onDragOver={(e) => { e.preventDefault(); setOv(true) }}
             onDragLeave={() => setOv(false)}
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) }}
