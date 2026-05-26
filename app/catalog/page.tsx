@@ -1,13 +1,8 @@
 'use client'
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
 type Fabric = { id: string; name: string; fabric_type: string; price: number; image_url: string | null; description: string; sort_order: number; created_at: string; updated_at: string }
@@ -1533,4 +1528,3 @@ function FabricModal({ initial, onSave, onClose }: {
     </div>
   )
 }
-
