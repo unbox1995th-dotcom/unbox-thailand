@@ -48,3 +48,4 @@ Open [http://localhost:3000/catalog](http://localhost:3000/catalog)
 2. Import repo in Vercel
 3. Add environment variables in Vercel dashboard
 4. Deploy automatically on every push
+  
