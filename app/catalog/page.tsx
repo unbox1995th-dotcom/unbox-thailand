@@ -466,8 +466,8 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
         {showActionBtns && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onContact}>📞 ติดต่อสั่งซื้อ</button>
-            <button className="btn-red sm" style={{ flex: 1 }} onClick={onCalculate}>🧮 คำนวณราคา</button>
+            <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>📞 สนใจสั่งซื้อ</button>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onCalculate}>🧮 คำนวณราคา</button>
           </div>
         )}
         {isAdmin && (
@@ -808,11 +808,16 @@ function ContactModal({ onClose }: { onClose: () => void }) {
             <>
               {/* Facebook */}
               {contact.facebook_url && (
-                <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#1877f2', textDecoration: 'none', transition: 'opacity .15s' }}
+                <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#1877f2', textDecoration: 'none', transition: 'opacity .15s' }}
                   onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
                   onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>f</div>
+                    {/* Facebook Logo SVG */}
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="18" cy="18" r="18" fill="white"/>
+                      <path d="M22.5 18H19.5V27H16.5V18H14.25V15.25H16.5V13.5C16.5 11.57 17.57 10 19.75 10H22.5V12.75H20.75C20.06 12.75 19.5 13.06 19.5 13.75V15.25H22.5L22.5 18Z" fill="#1877f2"/>
+                    </svg>
                     <div>
                       <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook Page'}</div>
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
@@ -822,20 +827,38 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                 </a>
               )}
 
-              {/* Line */}
+              {/* Line + QR */}
               {contact.line_url && (
-                <a href={contact.line_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#06c755', textDecoration: 'none', transition: 'opacity .15s' }}
-                  onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
-                  onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>L</div>
-                    <div>
-                      <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.line_label || 'Line Official'}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+                <div style={{ borderRadius: 10, background: '#06c755', overflow: 'hidden' }}>
+                  <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', textDecoration: 'none', transition: 'opacity .15s' }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+                    onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {/* Line Logo SVG */}
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="18" cy="18" r="18" fill="white"/>
+                        <path d="M28 17.16C28 12.12 22.63 8 16 8S4 12.12 4 17.16c0 4.51 4 8.3 9.4 9.02.37.08.87.24.99.55.11.28.07.72.04.1l-.16 1c-.05.28-.23 1.1 1 .6 1.2-.5 6.5-3.83 8.87-6.55A8.15 8.15 0 0028 17.16z" fill="#06c755"/>
+                        <path d="M14.5 19.5h-2v-4.5h1v3.5h1v1zm1.5 0v-4.5h1v4.5h-1zm4.5 0h-1l-2-3v3h-1v-4.5h1l2 3v-3h1v4.5zm3.5 0h-3v-4.5h3v1h-2v.88h2v1h-2v.62h2v1z" fill="white"/>
+                      </svg>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.line_label || 'Line Official'}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+                      </div>
                     </div>
-                  </div>
-                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
-                </a>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
+                  </a>
+                  {/* QR ใต้ปุ่ม Line */}
+                  {contact.line_qr_url && (
+                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <img src={contact.line_qr_url} alt="Line QR" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>สแกน QR เพิ่มเพื่อน Line</div>
+                        {contact.line_add && <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>ID: {contact.line_add}</div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Phone */}
@@ -874,15 +897,6 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>ติดต่อที่หน้าร้าน</div>
                     <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.6 }}>{contact.address}</div>
                   </div>
-                </div>
-              )}
-
-              {/* Line QR */}
-              {contact.line_qr_url && (
-                <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>สแกน QR เพิ่มเพื่อน Line</div>
-                  <img src={contact.line_qr_url} alt="Line QR" style={{ width: 120, height: 120, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
-                  {contact.line_add && <div style={{ fontSize: 12, color: '#5ddf5d', marginTop: 8 }}>ID: {contact.line_add}</div>}
                 </div>
               )}
             </>
