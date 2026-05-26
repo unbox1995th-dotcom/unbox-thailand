@@ -14,20 +14,13 @@ const ADMIN_ACCOUNTS: Record<string, string> = {
 }
 
 const TABS = [
-  { id: 'new',       label: 'แบบเสื้อใหม่',     badge: 'New',  isPromo: false },
-  { id: 'collar',    label: 'คอเสื้อทั้งหมด',   badge: '',     isPromo: false },
-  { id: 'promotion', label: 'โปรโมชั่น',          badge: '',     isPromo: true  },
-  { id: 'other',     label: 'แบบเสื้ออื่นๆ',    badge: '',     isPromo: false },
-  { id: 'fabric',    label: 'เนื้อผ้า',           badge: '',     isPromo: false },
-  { id: 'photo',     label: 'ภาพถ่ายงานจริง',   badge: '',     isPromo: false },
-  { id: 'all',       label: 'สินค้าทั้งหมด',     badge: '',     isPromo: false },
-]
-
-const LAYOUTS = [
-  { id: 'auto', label: 'Auto' },
-  { id: '2col', label: '2 คอลัมน์' },
-  { id: '3col', label: '3 คอลัมน์' },
-  { id: '4col', label: '4 คอลัมน์' },
+  { id: 'new',       label: 'แบบเสื้อใหม่',   badge: 'New', isPromo: false },
+  { id: 'collar',    label: 'คอเสื้อทั้งหมด', badge: '',    isPromo: false },
+  { id: 'promotion', label: 'โปรโมชั่น',        badge: '',    isPromo: true  },
+  { id: 'other',     label: 'แบบเสื้ออื่นๆ',  badge: '',    isPromo: false },
+  { id: 'fabric',    label: 'เนื้อผ้า',         badge: '',    isPromo: false },
+  { id: 'photo',     label: 'ภาพถ่ายงานจริง', badge: '',    isPromo: false },
+  { id: 'all',       label: 'สินค้าทั้งหมด',   badge: '',    isPromo: false },
 ]
 
 const SIZES = [
@@ -37,6 +30,11 @@ const SIZES = [
   { id: '4:5',  label: '4:5 Portrait', w: 1080, h: 1350, icon: '📷' },
 ]
 
+function goBack(adminUser: string | null) {
+  const admin = adminUser || ''
+  window.location.href = `/catalog?admin=${encodeURIComponent(admin)}&nav=new`
+}
+
 export default function ExportPage() {
   const [adminUser, setAdminUser] = useState<string | null>(null)
   const [loginId, setLoginId] = useState('')
@@ -45,11 +43,9 @@ export default function ExportPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const saved = sessionStorage.getItem('adminUser')
-    if (saved) { setAdminUser(saved); return }
     const params = new URLSearchParams(window.location.search)
     const adminParam = decodeURIComponent(params.get('admin') || '')
-    if (adminParam) { setAdminUser(adminParam); sessionStorage.setItem('adminUser', adminParam) }
+    if (adminParam) setAdminUser(adminParam)
   }, [])
 
   const [tab, setTab] = useState('collar')
@@ -222,20 +218,20 @@ export default function ExportPage() {
       }
 
       if (showName || showPrice) {
-        const ly = y + imgH
+        const labelY = y + imgH
         ctx.fillStyle = '#111111'
-        rrBottom(ctx, x, ly, cardW, labelH, 14); ctx.fill()
+        rrBottom(ctx, x, labelY, cardW, labelH, 14); ctx.fill()
         ctx.textAlign = 'center'
         if (showPrice && shirt.price) {
           ctx.fillStyle = '#ffffff'
           ctx.font = `700 ${Math.round(labelH * 0.38)}px 'Noto Sans Thai', sans-serif`
-          ctx.fillText(`${Number(shirt.price).toLocaleString()} .-`, x + cardW / 2, ly + labelH * 0.52)
+          ctx.fillText(`${Number(shirt.price).toLocaleString()} .-`, x + cardW / 2, labelY + labelH * 0.52)
         }
         if (showName && shirt.name) {
           ctx.fillStyle = 'rgba(255,255,255,0.5)'
           ctx.font = `400 ${Math.round(labelH * 0.24)}px 'Noto Sans Thai', sans-serif`
           const nm = shirt.name.length > 16 ? shirt.name.slice(0, 15) + '…' : shirt.name
-          ctx.fillText(nm, x + cardW / 2, ly + labelH * 0.88)
+          ctx.fillText(nm, x + cardW / 2, labelY + labelH * 0.88)
         }
       }
     })
@@ -264,7 +260,7 @@ export default function ExportPage() {
     setExporting(false); setProgress('')
   }, [shirts, selected, title, subtitle, brandText, accentColor, bgColor, layoutMode, sizeId, logoSrc, showNumbers, showPrice, showName, currentSize, loadImg, getCols, tab])
 
-  // Login gate
+  // ── Login gate ──
   if (!adminUser) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Noto Sans Thai','Sarabun',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap'); *{box-sizing:border-box;margin:0;padding:0} .inp{background:#1a1a1a;border:1px solid rgba(255,255,255,0.13);color:#f5f5f5;padding:10px 12px;border-radius:5px;font-family:inherit;font-size:14px;width:100%;display:block;margin-bottom:12px} .inp:focus{outline:none;border-color:#c00}`}</style>
@@ -277,14 +273,14 @@ export default function ExportPage() {
         </div>
         <input className="inp" placeholder="Name ID เช่น ceo edit00" value={loginId} onChange={e => setLoginId(e.target.value)} />
         <input className="inp" type="password" placeholder="Password" value={loginPw} onChange={e => setLoginPw(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
+          onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr('') } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
         {loginErr && <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5 }}>{loginErr}</div>}
         <button style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '11px', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 14 }}
-          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr(''); sessionStorage.setItem('adminUser', loginId) } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}>
+          onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr('') } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}>
           เข้าสู่ระบบ
         </button>
         <div style={{ marginTop: 14, textAlign: 'center' }}>
-          <span onClick={() => { window.location.href = `/catalog?admin=${encodeURIComponent(adminUser || '')}` style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
+          <span onClick={() => goBack(null)} style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', cursor: 'pointer' }}>← กลับหน้าหลัก</span>
         </div>
       </div>
     </div>
@@ -323,7 +319,8 @@ export default function ExportPage() {
       <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 20px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span onClick={() => { window.location.href = `/catalog?admin=${encodeURIComponent(adminUser || '')}`; }} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>← กลับ</span>
+            {/* ✅ ปุ่มกลับ — ส่ง admin param กลับไปด้วย ไม่ logout */}
+            <span onClick={() => goBack(adminUser)} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>← กลับ</span>
             <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
             <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff' }}>S</div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Export Tool</div>
@@ -331,7 +328,8 @@ export default function ExportPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{adminUser}</span>
-            <button className="btn-o" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => { window.location.href = `/catalog?admin=${encodeURIComponent(adminUser || '')}`; }}>ออก</button>
+            {/* ✅ ปุ่มออก — กลับ catalog พร้อม session ไม่ logout */}
+            <button className="btn-o" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => goBack(adminUser)}>ออก</button>
           </div>
         </div>
       </div>
@@ -378,85 +376,111 @@ export default function ExportPage() {
                         : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(255,255,255,0.1)' }}>👕</div>
                       }
                     </div>
-                    <div style={{ padding: '9px 10px' }}>
-                      <div style={{ fontWeight: 600, fontSize: 11, color: '#fff', marginBottom: 2, lineHeight: 1.3 }}>{s.name || 'ไม่มีชื่อ'}</div>
-                      {s.collar_type && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginBottom: 2 }}>คอ: {s.collar_type}</div>}
-                      <div style={{ fontWeight: 700, fontSize: 12, color: '#ff4444' }}>{s.price ? `${Number(s.price).toLocaleString()} THB.-` : '—'}</div>
-                    </div>
+                    {(s.name || s.price) && (
+                      <div style={{ padding: '8px 10px' }}>
+                        {s.name && <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>}
+                        {s.price && <div style={{ fontSize: 11, color: '#ff4444', fontWeight: 700 }}>{Number(s.price).toLocaleString()} THB</div>}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* RIGHT — settings */}
-          <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 10, padding: '18px 16px', position: 'sticky', top: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: 10 }}>⚙ ตั้งค่าภาพ</div>
+          {/* RIGHT — controls */}
+          <div style={{ display: 'grid', gap: 14 }}>
 
-            <div>
+            {/* Export Button */}
+            <button className="btn-r" style={{ width: '100%', padding: '13px', fontSize: 14 }}
+              disabled={selected.size === 0 || exporting} onClick={doExport}>
+              {exporting ? progress || 'กำลัง Export...' : `📥 Export ${selected.size > 0 ? selected.size : ''} รูป`}
+            </button>
+
+            {/* Size */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14 }}>
               <div className="sl">ขนาดภาพ</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {SIZES.map(s => <button key={s.id} className={`pill${sizeId === s.id ? ' on' : ''}`} onClick={() => setSizeId(s.id)}>{s.icon} {s.label}</button>)}
+                {SIZES.map(s => (
+                  <button key={s.id} className={`pill${sizeId === s.id ? ' on' : ''}`} onClick={() => setSizeId(s.id)}>
+                    {s.icon} {s.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div>
-              <div className="sl">Layout คอลัมน์</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5 }}>
-                {LAYOUTS.map(l => <button key={l.id} className={`pill${layoutMode === l.id ? ' on' : ''}`} style={{ padding: '4px 4px', fontSize: 10 }} onClick={() => setLayoutMode(l.id)}>{l.label}</button>)}
+            {/* Layout */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14 }}>
+              <div className="sl">Layout</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[{ id: 'auto', label: 'Auto' }, { id: '2col', label: '2 คอล' }, { id: '3col', label: '3 คอล' }, { id: '4col', label: '4 คอล' }].map(l => (
+                  <button key={l.id} className={`pill${layoutMode === l.id ? ' on' : ''}`} onClick={() => setLayoutMode(l.id)}>{l.label}</button>
+                ))}
               </div>
             </div>
 
-            <div><div className="sl">ชื่อหัว</div><input className="inp" value={title} onChange={e => setTitle(e.target.value)} /></div>
-            <div><div className="sl">ซับไตเติล</div><input className="inp" value={subtitle} onChange={e => setSubtitle(e.target.value)} /></div>
-            <div><div className="sl">ข้อความท้าย</div><input className="inp" value={brandText} onChange={e => setBrandText(e.target.value)} /></div>
+            {/* Text */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14, display: 'grid', gap: 10 }}>
+              <div className="sl">ข้อความ</div>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>หัวเรื่อง</div>
+                <input className="inp" value={title} onChange={e => setTitle(e.target.value)} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>คำบรรยาย</div>
+                <input className="inp" value={subtitle} onChange={e => setSubtitle(e.target.value)} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Footer</div>
+                <input className="inp" value={brandText} onChange={e => setBrandText(e.target.value)} />
+              </div>
+            </div>
 
-            <div>
-              <div className="sl">Logo / Watermark</div>
+            {/* Colors */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14 }}>
+              <div className="sl">สีธีม</div>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Accent</div>
+                  <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ width: 40, height: 30, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Background</div>
+                  <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} style={{ width: 40, height: 30, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Logo */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14 }}>
+              <div className="sl">โลโก้</div>
+              <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (!f) return
+                  const r = new FileReader()
+                  r.onload = ev => setLogoSrc(ev.target?.result as string)
+                  r.readAsDataURL(f)
+                }} />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {logoSrc && <img src={logoSrc} alt="logo" style={{ width: 34, height: 34, borderRadius: 4, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />}
-                <label style={{ flex: 1, background: '#1a1a1a', border: '1px dashed rgba(200,0,0,0.4)', borderRadius: 5, padding: '7px 10px', cursor: 'pointer', fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center', display: 'block' }}>
-                  {logoSrc ? 'เปลี่ยน Logo' : '+ อัปโหลด Logo'}
-                  <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setLogoSrc(ev.target?.result as string); r.readAsDataURL(f) }} />
+                <button className="btn-o" style={{ flex: 1, fontSize: 11 }} onClick={() => logoInputRef.current?.click()}>
+                  {logoSrc ? '✓ เปลี่ยนโลโก้' : '+ เพิ่มโลโก้'}
+                </button>
+                {logoSrc && <button className="btn-o" style={{ fontSize: 11 }} onClick={() => setLogoSrc(null)}>ลบ</button>}
+              </div>
+              {logoSrc && <img src={logoSrc} style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', marginTop: 10, border: '1px solid rgba(255,255,255,0.1)' }} />}
+            </div>
+
+            {/* Show/Hide */}
+            <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14, display: 'grid', gap: 10 }}>
+              <div className="sl">แสดงข้อมูล</div>
+              {[['showNumbers', 'เลขลำดับ', showNumbers, setShowNumbers], ['showPrice', 'ราคา', showPrice, setShowPrice], ['showName', 'ชื่อสินค้า', showName, setShowName]].map(([, label, val, setter]: any) => (
+                <label key={label as string} className="tog">
+                  <input type="checkbox" checked={val as boolean} onChange={e => setter(e.target.checked)} />
+                  {label as string}
                 </label>
-                {logoSrc && <button className="btn-o" style={{ padding: '5px 8px', fontSize: 10 }} onClick={() => setLogoSrc(null)}>ลบ</button>}
-              </div>
+              ))}
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <div className="sl">สีหลัก</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ width: 32, height: 32, borderRadius: 4, border: 'none', cursor: 'pointer' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{accentColor}</span>
-                </div>
-              </div>
-              <div>
-                <div className="sl">พื้นหลัง</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} style={{ width: 32, height: 32, borderRadius: 4, border: 'none', cursor: 'pointer' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{bgColor}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ background: '#1a1a1a', borderRadius: 7, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div className="sl" style={{ marginBottom: 0 }}>แสดงในภาพ</div>
-              <label className="tog"><input type="checkbox" checked={showNumbers} onChange={e => setShowNumbers(e.target.checked)} /> เลขลำดับ</label>
-              <label className="tog"><input type="checkbox" checked={showPrice} onChange={e => setShowPrice(e.target.checked)} /> ราคา</label>
-              <label className="tog"><input type="checkbox" checked={showName} onChange={e => setShowName(e.target.checked)} /> ชื่อสินค้า</label>
-            </div>
-
-            <div style={{ background: 'rgba(200,0,0,0.07)', border: '1px solid rgba(200,0,0,0.2)', borderRadius: 7, padding: '10px 12px', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>ขนาด</span><span style={{ color: '#fff' }}>{currentSize.w} × {currentSize.h} px</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span>อัตราส่วน</span><span style={{ color: '#fff' }}>{sizeId}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>เลือก</span><span style={{ color: '#c00', fontWeight: 700 }}>{selected.size} รายการ</span></div>
-            </div>
-
-            <button className="btn-r" style={{ width: '100%', padding: '13px', fontSize: 14 }} disabled={selected.size === 0 || exporting} onClick={doExport}>
-              {exporting ? `⏳ ${progress}` : `📥 Export JPEG (${selected.size})`}
-            </button>
-            {selected.size === 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center' }}>ติ๊กเลือกการ์ดก่อน</div>}
           </div>
         </div>
       </div>
@@ -467,16 +491,27 @@ export default function ExportPage() {
 }
 
 function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y)
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r)
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r)
-  ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath()
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
 }
 
 function rrBottom(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y)
-  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y); ctx.closePath()
+  ctx.beginPath()
+  ctx.moveTo(x, y)
+  ctx.lineTo(x + w, y)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  ctx.lineTo(x + r, y + h)
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+  ctx.lineTo(x, y)
+  ctx.closePath()
 }
