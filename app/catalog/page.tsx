@@ -1015,8 +1015,8 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20, overflow: 'hidden' }}><div style={{ overflowY: 'auto', maxHeight: '80vh' }}>
-        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-20px -20px 20px' }}>
+      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-24px -24px 20px', borderRadius: '10px 10px 0 0' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🧮 คำนวณราคาเบื้องต้น</div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>ประมาณการค่าใช้จ่ายเบื้องต้น</div>
@@ -1076,7 +1076,7 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
           </div>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
         </div>
-      </div></div>
+      </div>
     </div>
   )
 }
