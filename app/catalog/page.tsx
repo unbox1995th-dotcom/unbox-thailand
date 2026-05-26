@@ -6,6 +6,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
+type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
+
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
   'ceo edit03': '00003333', 'ceo edit04': '00004444', 'ceo edit05': '00005555',
@@ -46,6 +48,9 @@ export default function CatalogPage() {
   const [showContact, setShowContact] = useState(false)
   const [showCalculator, setShowCalculator] = useState(false)
   const [showContactAdmin, setShowContactAdmin] = useState(false)
+  const [showShopAdmin, setShowShopAdmin] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: 'main', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -76,11 +81,13 @@ export default function CatalogPage() {
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
         ])
+      const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
+      if (ss) setShopSettings(ss)
       setReady(true)
     })()
   }, [])
@@ -221,6 +228,7 @@ export default function CatalogPage() {
                 <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
+                <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
@@ -316,6 +324,8 @@ export default function CatalogPage() {
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       {showCalculator && <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />}
       {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
+      {showShopAdmin && <ShopAdminModal shopSettings={shopSettings} setShopSettings={setShopSettings} notify={notify} onClose={() => setShowShopAdmin(false)} />}
+      {showWelcome && <WelcomeModal shopSettings={shopSettings} onBrowse={() => setShowWelcome(false)} onAdmin={() => { setShowWelcome(false); setView('admin-login') }} />}
     </div>
   )
 }
@@ -362,7 +372,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
     <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: 20 }}>
         {banners.length > 0 ? (
-          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: '16/5', minHeight: 120, maxHeight: 400 }}>
+          <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', paddingTop: 'clamp(120px, 28vw, 380px)', height: 0 }}>
             <img src={banners[idx].image_url} alt="banner" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.45),transparent)' }} />
             {banners.length > 1 && (
@@ -935,10 +945,13 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>🧮 คำนวณราคาเบื้องต้น</div>
-          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20, overflow: 'hidden' }}><div style={{ overflowY: 'auto', maxHeight: '80vh' }}>
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-20px -20px 20px' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🧮 คำนวณราคาเบื้องต้น</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>ประมาณการค่าใช้จ่ายเบื้องต้น</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
         <div className="section-label">เลือกแบบเสื้อ</div>
         <select className="select-d" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={{ marginBottom: 14 }}>
@@ -993,7 +1006,7 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
           </div>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
         </div>
-      </div>
+      </div></div>
     </div>
   )
 }
@@ -1164,6 +1177,146 @@ function ContactAdminModal({ notify, onClose }: {
             </button>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Welcome Modal ── */
+function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
+  shopSettings: { shop_name: string; shop_subtitle: string; logo_url: string | null }
+  onBrowse: () => void
+  onAdmin: () => void
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '36px 28px', width: '100%', maxWidth: 380, textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+        {/* Logo */}
+        <div style={{ marginBottom: 20 }}>
+          {shopSettings.logo_url ? (
+            <img src={shopSettings.logo_url} alt="logo"
+              style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(200,0,0,0.5)', margin: '0 auto' }} />
+          ) : (
+            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
+          )}
+        </div>
+        {/* Name */}
+        <div style={{ fontWeight: 800, fontSize: 22, color: '#fff', marginBottom: 8 }}>
+          {shopSettings.shop_name || 'อีโวสปอร์ต'}
+        </div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 28 }}>
+          {shopSettings.shop_subtitle || 'รวมแบบเสื้อและสินค้าทั้งหมด'}
+        </div>
+        {/* Buttons */}
+        <button onClick={onBrowse}
+          style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          👕 เข้าชมแบบเสื้อ
+        </button>
+        <button onClick={onAdmin}
+          style={{ width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.15)', padding: '13px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          🔐 เข้าสู่ระบบ Admin
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ── Shop Admin Modal ── */
+function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
+  shopSettings: { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
+  setShopSettings: React.Dispatch<React.SetStateAction<any>>
+  notify: (m: string, t?: 'ok' | 'err') => void
+  onClose: () => void
+}) {
+  const [name, setName] = useState(shopSettings.shop_name || '')
+  const [subtitle, setSubtitle] = useState(shopSettings.shop_subtitle || '')
+  const [logoUrl, setLogoUrl] = useState(shopSettings.logo_url || '')
+  const [saving, setSaving] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const url = await uploadBase64Image(await fileToBase64(file), 'logos')
+    if (url) { setLogoUrl(url); notify('อัปโหลดโลโก้สำเร็จ') }
+    else notify('อัปโหลดไม่สำเร็จ', 'err')
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const { error } = await supabase.from('shop_settings').upsert({
+      id: 'main', shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
+    })
+    if (error) { notify('บันทึกไม่สำเร็จ: ' + error.message, 'err') }
+    else {
+      setShopSettings((p: any) => ({ ...p, shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null }))
+      notify('บันทึกหน้าต้อนรับแล้ว ✓')
+      onClose()
+    }
+    setSaving(false)
+  }
+
+  const inp: React.CSSProperties = {
+    background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)',
+    color: '#f5f5f5', padding: '8px 10px', borderRadius: 6,
+    fontFamily: 'inherit', fontSize: 13, width: '100%',
+  }
+
+  return (
+    <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 420 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>🏪 แก้ไขหน้าต้อนรับ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+        </div>
+
+        <div style={{ display: 'grid', gap: 16 }}>
+          {/* Logo */}
+          <div style={{ textAlign: 'center' }}>
+            <div className="section-label" style={{ textAlign: 'left', marginBottom: 8 }}>โลโก้ร้าน</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(200,0,0,0.4)', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
+              )}
+              <div style={{ flex: 1 }}>
+                <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL โลโก้ หรืออัปโหลด..." />
+                <button className="btn-outline sm" onClick={() => logoInputRef.current?.click()}>📷 อัปโหลดโลโก้</button>
+              </div>
+            </div>
+            <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+              onChange={e => { if (e.target.files?.[0]) handleLogoUpload(e.target.files[0]); e.target.value = '' }} />
+          </div>
+
+          {/* Shop Name */}
+          <div>
+            <div className="section-label">ชื่อร้าน</div>
+            <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อร้าน" />
+          </div>
+
+          {/* Subtitle */}
+          <div>
+            <div className="section-label">คำอธิบายใต้ชื่อร้าน</div>
+            <input style={inp} value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="รวมแบบเสื้อและสินค้าทั้งหมด" />
+          </div>
+
+          {/* Preview */}
+          <div style={{ background: '#0d0d0d', borderRadius: 10, padding: 16, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 12, letterSpacing: 1 }}>PREVIEW</div>
+            {logoUrl ? (
+              <img src={logoUrl} alt="preview" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px', display: 'block' }} />
+            ) : (
+              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
+            )}
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'ชื่อร้าน'}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'คำอธิบาย'}</div>
+          </div>
+
+          <button className="btn-red" style={{ width: '100%', padding: '12px' }} disabled={saving} onClick={handleSave}>
+            {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกหน้าต้อนรับ'}
+          </button>
+        </div>
       </div>
     </div>
   )
