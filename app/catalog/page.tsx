@@ -787,61 +787,107 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth: 380 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>📞 ติดต่อสั่งซื้อ</div>
-          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
-        </div>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
-        ) : !contact ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {contact.facebook_url && (
-              <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(59,89,152,0.15)', border: '1px solid rgba(59,89,152,0.3)', textDecoration: 'none' }}>
-                <span style={{ fontSize: 24 }}>💬</span>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#7b9fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook'}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>กดเพื่อแชท</div>
-                </div>
-              </a>
-            )}
-            {contact.line_url && (
-              <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,195,0,0.08)', border: '1px solid rgba(0,195,0,0.25)', textDecoration: 'none' }}>
-                <span style={{ fontSize: 24 }}>💚</span>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#5ddf5d', fontSize: 14 }}>{contact.line_label || 'Line'}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>กดเพื่อแชท</div>
-                </div>
-              </a>
-            )}
-            {contact.line_add && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <span style={{ fontSize: 24 }}>🆔</span>
-                <div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Line ID</div>
-                  <div style={{ fontWeight: 600, color: '#5ddf5d', fontSize: 14 }}>{contact.line_add}</div>
-                </div>
-              </div>
-            )}
-            {contact.line_qr_url && (
-              <div style={{ textAlign: 'center', padding: '12px 0' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>สแกน QR เพิ่มเพื่อน Line</div>
-                <img src={contact.line_qr_url} alt="Line QR" style={{ width: 140, height: 140, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
-              </div>
-            )}
-            {(contact.phone1 || contact.phone2) && (
-              <div style={{ padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>📱 โทรศัพท์</div>
-                {contact.phone1 && <a href={`tel:${contact.phone1}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none', marginBottom: 4 }}>{contact.phone1}</a>}
-                {contact.phone2 && <a href={`tel:${contact.phone2}`} style={{ display: 'block', fontWeight: 600, color: '#ffaa44', fontSize: 15, textDecoration: 'none' }}>{contact.phone2}</a>}
-              </div>
-            )}
+      <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+              📞 ช่องทางการติดต่อ
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
           </div>
-        )}
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
+          ) : !contact ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
+          ) : (
+            <>
+              {/* Facebook */}
+              {contact.facebook_url && (
+                <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#1877f2', textDecoration: 'none', transition: 'opacity .15s' }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+                  onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>f</div>
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook Page'}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
+                    </div>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
+                </a>
+              )}
+
+              {/* Line */}
+              {contact.line_url && (
+                <a href={contact.line_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#06c755', textDecoration: 'none', transition: 'opacity .15s' }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+                  onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>L</div>
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.line_label || 'Line Official'}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+                    </div>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
+                </a>
+              )}
+
+              {/* Phone */}
+              {(contact.phone1 || contact.phone2) && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {contact.phone1 && (
+                    <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
+                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                      <span style={{ fontSize: 20 }}>📱</span>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone1}</div>
+                      </div>
+                    </a>
+                  )}
+                  {contact.phone2 && (
+                    <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
+                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                      <span style={{ fontSize: 20 }}>📱</span>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone2}</div>
+                      </div>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Address */}
+              {contact.address && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ fontSize: 20, marginTop: 2 }}>📍</span>
+                  <div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>ติดต่อที่หน้าร้าน</div>
+                    <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.6 }}>{contact.address}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Line QR */}
+              {contact.line_qr_url && (
+                <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>สแกน QR เพิ่มเพื่อน Line</div>
+                  <img src={contact.line_qr_url} alt="Line QR" style={{ width: 120, height: 120, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
+                  {contact.line_add && <div style={{ fontSize: 12, color: '#5ddf5d', marginTop: 8 }}>ID: {contact.line_add}</div>}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
