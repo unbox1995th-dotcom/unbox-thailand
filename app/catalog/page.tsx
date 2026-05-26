@@ -7,6 +7,7 @@ import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/sup
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
+type Fabric = { id: string; name: string; fabric_type: string; price: number; image_url: string | null; description: string; sort_order: number; created_at: string; updated_at: string }
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
@@ -36,6 +37,9 @@ export default function CatalogPage() {
   const [activeNav, setActiveNav] = useState('new')
 
   const [banners, setBanners] = useState<Banner[]>([])
+  const [fabrics, setFabrics] = useState<Fabric[]>([])
+  const [showFabricAdd, setShowFabricAdd] = useState(false)
+  const [editFabric, setEditFabric] = useState<Fabric | null>(null)
   const [shirts, setShirts] = useState<Shirt[]>([])
   const [collars, setCollars] = useState<Collar[]>([])
   const [prodTypes, setProdTypes] = useState<ProductType[]>([])
@@ -82,6 +86,8 @@ export default function CatalogPage() {
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
         ])
       const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
+      const { data: fab } = await supabase.from('fabrics').select('*').order('sort_order').order('created_at', { ascending: false })
+      if (fab) setFabrics(fab)
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
@@ -225,10 +231,11 @@ export default function CatalogPage() {
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
-                <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
+                {activeNav !== 'fabric' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>}
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
+                {activeNav === 'fabric' && <button className="btn-red sm" onClick={() => setShowFabricAdd(true)}>🧵 เพิ่มเนื้อผ้า</button>}
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
@@ -247,11 +254,33 @@ export default function CatalogPage() {
                 <span style={{ fontSize: 14 }}>☰</span> กดค้างที่การ์ดแล้วลากเพื่อเรียงลำดับ — บันทึกอัตโนมัติ
               </div>
             )}
-            {filtered.length === 0 ? (
+            {activeNav === 'fabric' && adminUser && fabrics.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '70px 20px' }}>
+                <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>🧵</div>
+                <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: 18 }}>ยังไม่มีเนื้อผ้าในระบบ</div>
+                <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowFabricAdd(true)}>🧵 เพิ่มเนื้อผ้าแรก</button>
+              </div>
+            )}
+            {activeNav === 'fabric' && fabrics.length > 0 && (
+              <div className="grid-shirts">
+                {fabrics.map((fab) => (
+                  <FabricCard key={fab.id} fabric={fab} isAdmin={!!adminUser}
+                    onEdit={() => setEditFabric(fab)}
+                    onDelete={async () => {
+                      await logDeletion({ table_name: 'fabrics', record_id: fab.id, record_name: fab.name, image_url: fab.image_url, deleted_by: adminUser || 'admin' })
+                      await supabase.from('fabrics').delete().eq('id', fab.id)
+                      setFabrics((prev) => prev.filter((x) => x.id !== fab.id))
+                      notify('ลบเนื้อผ้าแล้ว', 'err')
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            {activeNav !== 'fabric' && (filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
                 <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>ยังไม่มีสินค้าในหมวดนี้</div>
-                {adminUser && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}
+                {adminUser && activeNav !== 'fabric' && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}
               </div>
             ) : (
               <div className="grid-shirts">
@@ -280,7 +309,7 @@ export default function CatalogPage() {
                   />
                 ))}
               </div>
-            )}
+            ) : null)}
           </div>
         </>
       )}
@@ -324,6 +353,29 @@ export default function CatalogPage() {
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       {showCalculator && <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />}
       {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
+      {showFabricAdd && (
+        <FabricModal
+          onSave={async (data, imgFile) => {
+            let image_url = null
+            if (imgFile) image_url = await uploadBase64Image(imgFile, 'fabrics')
+            const { data: newFab } = await supabase.from('fabrics').insert([{ ...data, image_url, sort_order: fabrics.length }]).select().single()
+            if (newFab) { setFabrics((prev) => [newFab, ...prev]); setShowFabricAdd(false); notify('เพิ่มเนื้อผ้าแล้ว') }
+          }}
+          onClose={() => setShowFabricAdd(false)}
+        />
+      )}
+      {editFabric && (
+        <FabricModal
+          initial={editFabric}
+          onSave={async (data, imgFile) => {
+            let image_url = editFabric.image_url
+            if (imgFile) { const u = await uploadBase64Image(imgFile, 'fabrics'); if (u) image_url = u }
+            const { data: updated } = await supabase.from('fabrics').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editFabric.id).select().single()
+            if (updated) { setFabrics((prev) => prev.map((x) => x.id === editFabric.id ? updated : x)); setEditFabric(null); notify('บันทึกแล้ว') }
+          }}
+          onClose={() => setEditFabric(null)}
+        />
+      )}
       {showShopAdmin && <ShopAdminModal shopSettings={shopSettings} setShopSettings={setShopSettings} notify={notify} onClose={() => setShowShopAdmin(false)} />}
       {showWelcome && <WelcomeModal shopSettings={shopSettings} onBrowse={() => setShowWelcome(false)} onAdmin={() => { setShowWelcome(false); setView('admin-login') }} />}
     </div>
@@ -564,7 +616,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
           <div><div className="section-label">ราคา (THB)</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
             </div>
           </div>
           {category !== 'fabric' ? (
@@ -580,7 +632,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
           ) : (
             <div><div className="section-label">ประเภทเนื้อผ้า</div>
               <select className="select-d" value={f.product_type || 'ไมโครโพลีเอสเตอร์'} onChange={(e) => set('product_type', e.target.value)}>
-                <option value="ไมโครโพลีเอสเตอร์">ไมโครโพลีเอสเตอร์ (Default)</option>
+                <option value="ไมโครโพลีเอสเตอร์">ไมโครโพลีเอสเตอร์</option>
                 <option value="แจ็คการ์ด">แจ็คการ์ด</option>
                 <option value="ทอพิเศษ">ทอพิเศษ</option>
                 <option value="อื่นๆ">อื่นๆ</option>
@@ -1334,6 +1386,145 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
           <button className="btn-red" style={{ width: '100%', padding: '12px' }} disabled={saving} onClick={handleSave}>
             {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกหน้าต้อนรับ'}
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Fabric Card ── */
+function FabricCard({ fabric, isAdmin, onEdit, onDelete }: {
+  fabric: Fabric, isAdmin: boolean,
+  onEdit: () => void, onDelete: () => void
+}) {
+  return (
+    <div className="card-shirt" style={{ position: 'relative' }}>
+      <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
+        {fabric.image_url
+          ? <img src={fabric.image_url} alt={fabric.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44 }}>🧵</div>
+        }
+        <div style={{ position: 'absolute', top: 8, left: 8 }}>
+          <span style={{ background: '#555', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{(fabric.fabric_type || '').replace(' (Default)', '').replace('Default', '')}</span>
+        </div>
+      </div>
+      <div style={{ padding: '13px 14px 12px' }}>
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{fabric.name || 'ไม่มีชื่อ'}</div>
+        {fabric.description && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8, lineHeight: 1.5 }}>{fabric.description}</div>}
+        <div style={{ fontWeight: 700, fontSize: 15, color: Number(fabric.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.3)' }}>{Number(fabric.price) > 0 ? `+${Number(fabric.price).toLocaleString()} บาท/ตัว` : 'ไม่บวกเพิ่ม'}</div>
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
+            <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕ ลบ</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Fabric Modal ── */
+function FabricModal({ initial, onSave, onClose }: {
+  initial?: Fabric,
+  onSave: (data: Partial<Fabric>, img: string | null) => Promise<void>,
+  onClose: () => void
+}) {
+  const [f, setF] = useState({
+    name: initial?.name || '',
+    fabric_type: initial?.fabric_type || 'ไมโครโพลีเอสเตอร์',
+    price: initial?.price || 0,
+    description: initial?.description || '',
+    category: 'fabric',
+  })
+  const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
+  const [newImgData, setNewImgData] = useState<string | null>(null)
+  const [ov, setOv] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const ref = useRef<HTMLInputElement>(null)
+  const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }))
+
+  const loadImg = (file: File) => {
+    const r = new FileReader()
+    r.onload = (e) => { const d = e.target?.result as string; setImgPreview(d); setNewImgData(d) }
+    r.readAsDataURL(file)
+  }
+
+  return (
+    <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขเนื้อผ้า' : '+ เพิ่มเนื้อผ้าใหม่'}</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+        </div>
+
+        {/* Image Upload */}
+        <div className="section-label">รูปภาพเนื้อผ้า (อัปโหลดสู่ Supabase Storage)</div>
+        {imgPreview ? (
+          <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', height: 170, marginBottom: 16 }}>
+            <img src={imgPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <button className="btn-red sm" style={{ position: 'absolute', top: 8, right: 8 }}
+              onClick={() => { setImgPreview(null); setNewImgData('__remove__') }}>เปลี่ยนรูป</button>
+          </div>
+        ) : (
+          <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+            onDragOver={(e) => { e.preventDefault(); setOv(true) }}
+            onDragLeave={() => setOv(false)}
+            onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]) }}
+            onClick={() => ref.current?.click()}>
+            <div style={{ fontSize: 28 }}>🧵</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
+          </div>
+        )}
+        <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }}
+          onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
+
+        <div className="divider" />
+
+        <div style={{ display: 'grid', gap: 13 }}>
+          {/* Name */}
+          <div>
+            <div className="section-label">ชื่อเนื้อผ้า</div>
+            <input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="เช่น ไมโครโพลีฯ เกรด A" />
+          </div>
+
+          {/* Fabric Type */}
+          <div>
+            <div className="section-label">ประเภทเนื้อผ้า</div>
+            <select className="select-d" value={f.fabric_type} onChange={(e) => set('fabric_type', e.target.value)}>
+              <option value="ไมโครโพลีเอสเตอร์">ไมโครโพลีเอสเตอร์</option>
+              <option value="แจ็คการ์ด">แจ็คการ์ด</option>
+              <option value="ทอพิเศษ">ทอพิเศษ</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+
+          {/* Price */}
+          <div>
+            <div className="section-label">+บวกเพิ่ม ตัวละ</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input className="input-d" type="number" value={f.price}
+                onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <div className="section-label">คุณสมบัติเนื้อผ้า</div>
+            <textarea className="input-d" value={f.description}
+              onChange={(e) => set('description', e.target.value)}
+              placeholder="เช่น น้ำหนักผ้า 150 แกรม ระบายอากาศได้ดี ไม่หดตัว..."
+              style={{ minHeight: 90, resize: 'vertical' as const }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+          <button className="btn-red" style={{ flex: 1 }} disabled={saving}
+            onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
+            {saving ? '⏳ กำลังอัปโหลด...' : '💾 บันทึก'}
+          </button>
+          <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>ยกเลิก</button>
         </div>
       </div>
     </div>
