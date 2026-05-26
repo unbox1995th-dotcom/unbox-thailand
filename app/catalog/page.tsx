@@ -502,7 +502,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || '', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || (category === 'fabric' ? 'ไมโครโพลีเอสเตอร์' : ''), price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
@@ -520,7 +520,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขแบบเสื้อ' : '+ เพิ่มแบบเสื้อใหม่'}</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? (category === 'fabric' ? '✏ แก้ไขเนื้อผ้า' : '✏ แก้ไขแบบเสื้อ') : (category === 'fabric' ? '+ เพิ่มเนื้อผ้าใหม่' : '+ เพิ่มแบบเสื้อใหม่')}</div>
           <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
         <div className="section-label">รูปภาพ (อัปโหลดสู่ Supabase Storage)</div>
@@ -543,38 +543,56 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
         <div className="divider" />
         <div style={{ display: 'grid', gap: 13 }}>
-          <div><div className="section-label">ชื่อทีม / ชื่องาน</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อแบบเสื้อ / ชื่อทีม" /></div>
-          <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
-            <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
-              <option value="">— เลือกประเภทคอ —</option>
-              {collars.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-          <div><div className="section-label">ประเภทสินค้า</div>
-            <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-              <option value="">— เลือกประเภทสินค้า —</option>
-              {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
-            </select>
-          </div>
+          <div><div className="section-label">{category === 'fabric' ? 'ชื่อเนื้อผ้า' : 'ชื่อทีม / ชื่องาน'}</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder={category === 'fabric' ? 'ชื่อเนื้อผ้า' : 'ชื่อแบบเสื้อ / ชื่อทีม'} /></div>
+          {category !== 'fabric' && (
+            <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
+              <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
+                <option value="">— เลือกประเภทคอ —</option>
+                {collars.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {category !== 'fabric' && (
+            <div><div className="section-label">ประเภทสินค้า</div>
+              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
+                <option value="">— เลือกประเภทสินค้า —</option>
+                {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+          )}
           <div><div className="section-label">ราคา (THB)</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
             </div>
           </div>
-          <div><div className="section-label">หมวดหมู่</div>
-            <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="new">แบบเสื้อใหม่ (New)</option>
-              <option value="collar">คอเสื้อทั้งหมด</option>
-              <option value="other">แบบเสื้ออื่นๆ</option>
-              <option value="fabric">เนื้อผ้า</option>
-              <option value="photo">ภาพถ่ายงานจริง</option>
-            </select>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
-            <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
-          </label>
+          {category !== 'fabric' ? (
+            <div><div className="section-label">หมวดหมู่</div>
+              <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
+                <option value="new">แบบเสื้อใหม่ (New)</option>
+                <option value="collar">คอเสื้อทั้งหมด</option>
+                <option value="other">แบบเสื้ออื่นๆ</option>
+                <option value="fabric">เนื้อผ้า</option>
+                <option value="photo">ภาพถ่ายงานจริง</option>
+              </select>
+            </div>
+          ) : (
+            <div><div className="section-label">ประเภทเนื้อผ้า</div>
+              <select className="select-d" value={f.product_type || 'ไมโครโพลีเอสเตอร์'} onChange={(e) => set('product_type', e.target.value)}>
+                <option value="ไมโครโพลีเอสเตอร์">ไมโครโพลีเอสเตอร์ (Default)</option>
+                <option value="แจ็คการ์ด">แจ็คการ์ด</option>
+                <option value="ทอพิเศษ">ทอพิเศษ</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+              </select>
+            </div>
+          )}
+          {category !== 'fabric' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
+              <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
+            </label>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
