@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
@@ -44,6 +45,7 @@ export default function CatalogPage() {
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [showContact, setShowContact] = useState(false)
   const [showCalculator, setShowCalculator] = useState(false)
+  const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -218,6 +220,7 @@ export default function CatalogPage() {
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
                 <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
+                <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
@@ -312,6 +315,7 @@ export default function CatalogPage() {
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       {showCalculator && <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />}
+      {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
     </div>
   )
 }
@@ -989,6 +993,168 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
           </div>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Contact Admin Modal ── */
+function ContactAdminModal({ notify, onClose }: {
+  notify: (m: string, t?: 'ok' | 'err') => void
+  onClose: () => void
+}) {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [f, setF] = useState({
+    facebook_url: '',
+    facebook_label: '',
+    line_url: '',
+    line_label: '',
+    line_add: '',
+    line_qr_url: '',
+    phone1: '',
+    phone2: '',
+    address: '',
+  })
+  const qrInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    supabase.from('contact_settings').select('*').eq('id', 'main').single()
+      .then(({ data }) => {
+        if (data) setF({
+          facebook_url: data.facebook_url || '',
+          facebook_label: data.facebook_label || '',
+          line_url: data.line_url || '',
+          line_label: data.line_label || '',
+          line_add: data.line_add || '',
+          line_qr_url: data.line_qr_url || '',
+          phone1: data.phone1 || '',
+          phone2: data.phone2 || '',
+          address: data.address || '',
+        })
+        setLoading(false)
+      })
+  }, [])
+
+  const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }))
+
+  const handleQrUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const url = await uploadBase64Image(await fileToBase64(file), 'contact')
+    if (url) { set('line_qr_url', url); notify('อัปโหลด QR สำเร็จ') }
+    else notify('อัปโหลดไม่สำเร็จ', 'err')
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const { error } = await supabase
+      .from('contact_settings')
+      .upsert({ id: 'main', ...f, updated_at: new Date().toISOString() })
+    if (error) notify('บันทึกไม่สำเร็จ: ' + error.message, 'err')
+    else { notify('บันทึกข้อมูลติดต่อแล้ว ✓'); onClose() }
+    setSaving(false)
+  }
+
+  const inp: React.CSSProperties = {
+    background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)',
+    color: '#f5f5f5', padding: '8px 10px', borderRadius: 6,
+    fontFamily: 'inherit', fontSize: 13, width: '100%',
+  }
+
+  return (
+    <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>📞 จัดการช่องทางติดต่อ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
+        ) : (
+          <div style={{ display: 'grid', gap: 14 }}>
+
+            {/* Facebook */}
+            <div style={{ background: '#161616', border: '1px solid rgba(59,89,152,0.3)', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#7b9fff', marginBottom: 10 }}>💬 Facebook</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div>
+                  <div className="section-label">ชื่อที่แสดง</div>
+                  <input style={inp} value={f.facebook_label} onChange={e => set('facebook_label', e.target.value)} placeholder="เช่น Facebook Page" />
+                </div>
+                <div>
+                  <div className="section-label">Facebook URL (m.me/...)</div>
+                  <input style={inp} value={f.facebook_url} onChange={e => set('facebook_url', e.target.value)} placeholder="https://m.me/..." />
+                </div>
+              </div>
+            </div>
+
+            {/* Line */}
+            <div style={{ background: '#161616', border: '1px solid rgba(0,195,0,0.25)', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#5ddf5d', marginBottom: 10 }}>💚 Line</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div>
+                  <div className="section-label">ชื่อที่แสดง</div>
+                  <input style={inp} value={f.line_label} onChange={e => set('line_label', e.target.value)} placeholder="เช่น Line Official" />
+                </div>
+                <div>
+                  <div className="section-label">Line URL (lin.ee/...)</div>
+                  <input style={inp} value={f.line_url} onChange={e => set('line_url', e.target.value)} placeholder="https://lin.ee/..." />
+                </div>
+                <div>
+                  <div className="section-label">Line ID</div>
+                  <input style={inp} value={f.line_add} onChange={e => set('line_add', e.target.value)} placeholder="@xxxxxxxx" />
+                </div>
+                <div>
+                  <div className="section-label">Line QR Code</div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {f.line_qr_url && (
+                      <img src={f.line_qr_url} alt="QR" style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <input style={{ ...inp, marginBottom: 6 }} value={f.line_qr_url} onChange={e => set('line_qr_url', e.target.value)} placeholder="URL รูป QR หรืออัปโหลด..." />
+                      <button className="btn-outline sm" onClick={() => qrInputRef.current?.click()}>📷 อัปโหลด QR</button>
+                    </div>
+                  </div>
+                  <input ref={qrInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                    onChange={e => { if (e.target.files?.[0]) handleQrUpload(e.target.files[0]); e.target.value = '' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div style={{ background: '#161616', border: '1px solid rgba(255,170,68,0.25)', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#ffaa44', marginBottom: 10 }}>📱 เบอร์โทรศัพท์</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div>
+                  <div className="section-label">เบอร์ที่ 1</div>
+                  <input style={inp} value={f.phone1} onChange={e => set('phone1', e.target.value)} placeholder="0xx-xxx-xxxx" />
+                </div>
+                <div>
+                  <div className="section-label">เบอร์ที่ 2</div>
+                  <input style={inp} value={f.phone2} onChange={e => set('phone2', e.target.value)} placeholder="0xx-xxx-xxxx" />
+                </div>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>📍 ที่อยู่หน้าร้าน</div>
+              <textarea
+                style={{ ...inp, minHeight: 70, resize: 'vertical' as const }}
+                value={f.address}
+                onChange={e => set('address', e.target.value)}
+                placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
+              />
+            </div>
+
+            {/* Save Button */}
+            <button className="btn-red" style={{ width: '100%', padding: '12px' }} disabled={saving} onClick={handleSave}>
+              {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกข้อมูลติดต่อ'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
