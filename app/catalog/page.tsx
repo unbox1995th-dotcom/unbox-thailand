@@ -489,7 +489,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
     if (isDragging) onDragEnd?.()
   }
 
-  const showActionBtns = !isAdmin && (shirt.category === 'new' || shirt.category === 'collar')
+  const showActionBtns = !isAdmin && (shirt.category === 'new' || shirt.category === 'collar' || shirt.category === 'other' || shirt.category === 'photo')
 
   return (
     <div
@@ -989,23 +989,23 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Price Calculator ── */
-const SEWING_TIERS = [
-  { min: 1,   max: 11,  price: 250 },
-  { min: 12,  max: 24,  price: 220 },
-  { min: 25,  max: 49,  price: 200 },
-  { min: 50,  max: 99,  price: 185 },
-  { min: 100, max: 999, price: 170 },
-]
-
 function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => void }) {
   const [selectedId, setSelectedId] = useState('')
   const [qty, setQty] = useState(12)
   const [hasPrint, setHasPrint] = useState(false)
   const [printPos, setPrintPos] = useState(1)
   const [printPrice, setPrintPrice] = useState(30)
+  const [tiers, setTiers] = useState<{ min_qty: number; max_qty: number | null; price_per_piece: number }[]>([])
+
+  useEffect(() => {
+    supabase.from('pricing_rules').select('min_qty,max_qty,price_per_piece').order('sort_order')
+      .then(({ data }) => { if (data && data.length > 0) setTiers(data) })
+  }, [])
 
   const shirt = shirts.find((s) => s.id === selectedId)
-  const sewingUnit = SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
+  const sewingUnit = tiers.length > 0
+    ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece)
+    : [{ min: 1, max: 11, price: 250 }, { min: 12, max: 24, price: 220 }, { min: 25, max: 49, price: 200 }, { min: 50, max: 99, price: 185 }, { min: 100, max: 999, price: 170 }].find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
   const fabricPrice = shirt ? Number(shirt.price) : 0
   const printTotal = hasPrint ? printPos * printPrice : 0
   const unitTotal = fabricPrice + sewingUnit + printTotal
