@@ -439,7 +439,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
     if (isDragging) onDragEnd?.()
   }
 
-  const showActionBtns = !isAdmin && (shirt.category === 'new' || shirt.category === 'collar')
+  const showActionBtns = !isAdmin && (shirt.category === 'new' || shirt.category === 'collar' || shirt.category === 'other' || shirt.category === 'photo')
 
   return (
     <div
