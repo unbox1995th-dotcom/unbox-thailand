@@ -7,6 +7,7 @@ import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/sup
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
+type FabricType = { id: string; name: string; sort_order: number }
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
@@ -39,6 +40,7 @@ export default function CatalogPage() {
   const [shirts, setShirts] = useState<Shirt[]>([])
   const [collars, setCollars] = useState<Collar[]>([])
   const [prodTypes, setProdTypes] = useState<ProductType[]>([])
+  const [fabricTypes, setFabricTypes] = useState<FabricType[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
@@ -73,13 +75,14 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }] =
         await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
           supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
           supabase.from('collars').select('*').order('sort_order'),
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
+          supabase.from('fabric_types').select('*').order('sort_order'),
         ])
       const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
@@ -87,6 +90,7 @@ export default function CatalogPage() {
       if (c) setCollars(c)
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
+      if (ft) setFabricTypes(ft as FabricType[])
       if (ss) setShopSettings(ss)
       setReady(true)
     })()
@@ -315,7 +319,7 @@ export default function CatalogPage() {
 
       {/* Modals */}
       {showAdd && (
-        <ShirtModal collars={collars} prodTypes={prodTypes}
+        <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
           category={activeNav === 'all' ? 'new' : activeNav}
           onSave={async (data, imgFile) => {
             let image_url = null
@@ -326,7 +330,7 @@ export default function CatalogPage() {
           onClose={() => setShowAdd(false)} />
       )}
       {editShirt && (
-        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes}
+        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
           onSave={async (data, imgFile) => {
             let image_url = editShirt.image_url
             if (imgFile) {
@@ -342,7 +346,7 @@ export default function CatalogPage() {
           onClose={() => setEditShirt(null)} />
       )}
       {showSettings && (
-        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes}
+        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
@@ -556,8 +560,8 @@ function PhotoCard({ shirt, isAdmin, onEdit, onDelete }: {
 }
 
 /* ── Shirt Modal ── */
-function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: {
-  initial?: Shirt, collars: Collar[], prodTypes: ProductType[],
+function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave, onClose }: {
+  initial?: Shirt, collars: Collar[], prodTypes: ProductType[], fabricTypes: FabricType[],
   category?: string,
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
@@ -616,15 +620,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
             </div>
             <div><div className="section-label">ประเภทเนื้อผ้า</div>
               <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-                <option value="ไมโครโพลีเอสเตอร์ (Micro Polyester)">ไมโครโพลีเอสเตอร์ (Micro Polyester)</option>
-                <option value="แจ็คการ์ด (Jacquard)">แจ็คการ์ด (Jacquard)</option>
-                <option value="แฟชั่น (Fashion)">แฟชั่น (Fashion)</option>
-                <option value="อื่นๆ">อื่นๆ</option>
-                {prodTypes.filter((t) => {
-                  const fixed = ['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ']
-                  const hidden = ['เสื้อแขนสั้น','เสื้อแขนกุด','เสื้อแขนยาว','เสื้อแขนยาว ปลายจั๊ม','กางเกง','ปลอกแขน','ธงแลกเปลี่ยน','ธงเชียร์','ผ้าพันคอ']
-                  return !fixed.includes(t.name) && !hidden.includes(t.name)
-                }).map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+                {fabricTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
               </select>
             </div>
             <div><div className="section-label">คุณสมบัติเนื้อผ้า</div>
@@ -705,12 +701,13 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
 }
 
 /* ── Settings Modal ── */
-function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, notify }: {
+function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, onClose, notify }: {
   collars: Collar[], setCollars: React.Dispatch<React.SetStateAction<Collar[]>>,
   prodTypes: ProductType[], setProdTypes: React.Dispatch<React.SetStateAction<ProductType[]>>,
+  fabricTypes: FabricType[], setFabricTypes: React.Dispatch<React.SetStateAction<FabricType[]>>,
   onClose: () => void, notify: (m: string, t?: 'ok' | 'err') => void
 }) {
-  const [tab, setTab] = useState<'collar' | 'prod'>('collar')
+  const [tab, setTab] = useState<'collar' | 'prod' | 'fabric'>('collar')
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 580 }}>
@@ -719,12 +716,13 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, 
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-          {([['collar', `ประเภทคอเสื้อ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
-            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
+          {([['collar', `ประเภทคอเสื้อ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`], ['fabric', `ประเภทเนื้อผ้า (${fabricTypes.length})`]] as const).map(([id, lbl]) => (
+            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id as any)}>{lbl}</div>
           ))}
         </div>
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
         {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
+        {tab === 'fabric' && <SupabaseTypeList table="fabric_types" items={fabricTypes} setItems={setFabricTypes as any} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
       </div>
     </div>
   )
