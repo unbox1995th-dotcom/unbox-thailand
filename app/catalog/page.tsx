@@ -715,16 +715,16 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 580 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทเนื้อผ้า</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-          {([['collar', `ประเภทคอ (${collars.length})`], ['prod', `ประเภทเนื้อผ้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
+          {([['collar', `ประเภทคอเสื้อ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
             <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
           ))}
         </div>
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
-        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
+        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
       </div>
     </div>
   )
