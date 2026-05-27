@@ -16,13 +16,13 @@ const ADMIN_ACCOUNTS: Record<string, string> = {
 }
 
 const NAV_ITEMS = [
-  { id: 'new', label: 'เนเธเธเน€เธชเธทเนเธญเนเธซเธกเน', badge: 'New' },
-  { id: 'collar', label: 'เธเธญเน€เธชเธทเนเธญเธ—เธฑเนเธเธซเธกเธ”' },
-  { id: 'promotion', label: 'เนเธเธฃเนเธกเธเธฑเนเธ' },
-  { id: 'other', label: 'เนเธเธเน€เธชเธทเนเธญเธญเธทเนเธเน' },
-  { id: 'fabric', label: 'เน€เธเธทเนเธญเธเนเธฒ' },
-  { id: 'photo', label: 'เธ เธฒเธเธ–เนเธฒเธขเธเธฒเธเธเธฃเธดเธ' },
-  { id: 'all', label: 'เธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”' },
+  { id: 'new', label: 'แบบเสื้อใหม่', badge: 'New' },
+  { id: 'collar', label: 'คอเสื้อทั้งหมด' },
+  { id: 'promotion', label: 'โปรโมชั่น' },
+  { id: 'other', label: 'แบบเสื้ออื่นๆ' },
+  { id: 'fabric', label: 'เนื้อผ้า' },
+  { id: 'photo', label: 'ภาพถ่ายงานจริง' },
+  { id: 'all', label: 'สินค้าทั้งหมด' },
 ]
 
 type Toast = { msg: string; type: 'ok' | 'err' }
@@ -50,7 +50,7 @@ export default function CatalogPage() {
   const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [showShopAdmin, setShowShopAdmin] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
-  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: 'main', shop_name: 'เธญเธตเนเธงเธชเธเธญเธฃเนเธ•', shop_subtitle: 'เธฃเธงเธกเนเธเธเน€เธชเธทเนเธญเนเธฅเธฐเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”', logo_url: null })
+  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: 'main', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -130,26 +130,26 @@ export default function CatalogPage() {
       for (const u of updates) {
         await supabase.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
       }
-      notify('เธเธฑเธเธ—เธถเธเธฅเธณเธ”เธฑเธเนเธฅเนเธง')
+      notify('บันทึกลำดับแล้ว')
     }, 800)
   }
 
   if (!ready) return <LoadingScreen />
   if (view === 'admin-login') return (
-    <AdminLogin onLogin={(u) => { setAdminUser(u); setView('front'); notify(`เธขเธดเธเธ”เธตเธ•เนเธญเธเธฃเธฑเธ Admin: ${u}`) }}
+    <AdminLogin onLogin={(u) => { setAdminUser(u); setView('front'); notify(`ยินดีต้อนรับ Admin: ${u}`) }}
       onBack={() => setView('front')} />
   )
   if (view === 'cust-login') return (
-    <CustLogin customers={customers} onLogin={(u) => { setCustUser(u); setView('front'); notify(`เธขเธดเธเธ”เธตเธ•เนเธญเธเธฃเธฑเธ ${u.name}`) }}
+    <CustLogin customers={customers} onLogin={(u) => { setCustUser(u); setView('front'); notify(`ยินดีต้อนรับ ${u.name}`) }}
       onBack={() => setView('front')} onReg={() => setView('register')} />
   )
   if (view === 'register') return (
     <Register onSave={async (data) => {
       const { data: newCust, error } = await supabase.from('customers').insert([data]).select().single()
-      if (error) { notify('เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธเนเธกเนเธชเธณเน€เธฃเนเธ: ' + error.message, 'err'); return }
+      if (error) { notify('สมัครสมาชิกไม่สำเร็จ: ' + error.message, 'err'); return }
       setCustomers((prev) => [newCust, ...prev])
       setView('cust-login')
-      notify('เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธเธชเธณเน€เธฃเนเธ')
+      notify('สมัครสมาชิกสำเร็จ')
     }} onBack={() => setView('cust-login')} customers={customers} />
   )
 
@@ -157,7 +157,7 @@ export default function CatalogPage() {
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
       {toast && (
         <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#c00'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {toast.type === 'ok' ? 'โ“' : 'โ•'} {toast.msg}
+          {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function CatalogPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#fff' }}>S</div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>เธฃเธงเธกเนเธเธเน€เธชเธทเนเธญเนเธฅเธฐเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>รวมแบบเสื้อและสินค้าทั้งหมด</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: 2 }}>SHIRT CATALOG</span>
                 <span style={{ fontSize: 9, color: '#3d9a3d', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -182,17 +182,17 @@ export default function CatalogPage() {
               <>
                 <span style={{ background: 'linear-gradient(90deg,#c00,#800)', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#fff' }}>ADMIN</span>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{adminUser}</span>
-                <button className="btn-outline sm" onClick={() => setShowCustMgr(!showCustMgr)}>{showCustMgr ? 'โ เธเธฅเธฑเธ' : `เธชเธกเธฒเธเธดเธ (${customers.length})`}</button>
-                <button className="btn-outline sm" onClick={() => { setAdminUser(null); setShowCustMgr(false); notify('เธญเธญเธเธเธฒเธเธฃเธฐเธเธเนเธฅเนเธง', 'err') }}>เธญเธญเธ</button>
+                <button className="btn-outline sm" onClick={() => setShowCustMgr(!showCustMgr)}>{showCustMgr ? '← กลับ' : `สมาชิก (${customers.length})`}</button>
+                <button className="btn-outline sm" onClick={() => { setAdminUser(null); setShowCustMgr(false); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : custUser ? (
               <>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>๐‘ค {custUser.name}</span>
-                <button className="btn-outline sm" onClick={() => { setCustUser(null); notify('เธญเธญเธเธเธฒเธเธฃเธฐเธเธเนเธฅเนเธง', 'err') }}>เธญเธญเธ</button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>👤 {custUser.name}</span>
+                <button className="btn-outline sm" onClick={() => { setCustUser(null); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : (
               <>
-                <button className="btn-outline sm" onClick={() => setView('cust-login')}>เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ</button>
+                <button className="btn-outline sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
                 <button className="btn-red sm" onClick={() => setView('admin-login')}>Admin</button>
               </>
             )}
@@ -224,18 +224,18 @@ export default function CatalogPage() {
           {adminUser && (
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>โ Admin Mode โ€” เธเธฑเธเธ—เธถเธเธชเธนเน Supabase เธญเธฑเธ•เนเธเธกเธฑเธ•เธด</span>
-                <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เน€เธเธดเนเธกเนเธเธเน€เธชเธทเนเธญ</button>
-                <button className="btn-outline sm" onClick={() => setShowSettings(true)}>เธเธฑเธ”เธเธฒเธฃเธเธฃเธฐเน€เธ เธ—</button>
-                <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>๐“ เธเนเธญเธเธ—เธฒเธเธ•เธดเธ”เธ•เนเธญ</button>
-                <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>๐ช เธซเธเนเธฒเธ•เนเธญเธเธฃเธฑเธ</button>
+                <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
+                <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
+                <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
+                <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
+                <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
                   onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
-                  ๐“ฅ Export เธ เธฒเธ
+                  📥 Export ภาพ
                 </a>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginLeft: 'auto' }}>
-                  เธ—เธฑเนเธเธซเธกเธ” {shirts.length} | เนเธชเธ”เธ {filtered.length} เธฃเธฒเธขเธเธฒเธฃ
+                  ทั้งหมด {shirts.length} | แสดง {filtered.length} รายการ
                 </span>
               </div>
             </div>
@@ -244,14 +244,14 @@ export default function CatalogPage() {
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
             {canDrag && (
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 14 }}>โฐ</span> เธเธ”เธเนเธฒเธเธ—เธตเนเธเธฒเธฃเนเธ”เนเธฅเนเธงเธฅเธฒเธเน€เธเธทเนเธญเน€เธฃเธตเธขเธเธฅเธณเธ”เธฑเธ โ€” เธเธฑเธเธ—เธถเธเธญเธฑเธ•เนเธเธกเธฑเธ•เธด
+                <span style={{ fontSize: 14 }}>☰</span> กดค้างที่การ์ดแล้วลากเพื่อเรียงลำดับ — บันทึกอัตโนมัติ
               </div>
             )}
             {filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
-                <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>๐‘•</div>
-                <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>เธขเธฑเธเนเธกเนเธกเธตเธชเธดเธเธเนเธฒเนเธเธซเธกเธงเธ”เธเธตเน</div>
-                {adminUser && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เน€เธเธดเนเธกเนเธเธเน€เธชเธทเนเธญเนเธฃเธ</button>}
+                <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
+                <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>ยังไม่มีสินค้าในหมวดนี้</div>
+                {adminUser && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}
               </div>
             ) : (
               <div className="grid-shirts">
@@ -268,12 +268,12 @@ export default function CatalogPage() {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
                       await supabase.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
-                      notify('เธฅเธเธชเธดเธเธเนเธฒเนเธฅเนเธง', 'err')
+                      notify('ลบสินค้าแล้ว', 'err')
                     }}
                     onDupe={async () => {
                       const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = s
-                      const { data } = await supabase.from('shirts').insert([{ ...rest, name: s.name + ' (เธชเธณเน€เธเธฒ)' }]).select().single()
-                      if (data) { setShirts((prev) => [data, ...prev]); notify('เธเธฑเธ”เธฅเธญเธเธชเธณเน€เธฃเนเธ') }
+                      const { data } = await supabase.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
+                      if (data) { setShirts((prev) => [data, ...prev]); notify('คัดลอกสำเร็จ') }
                     }}
                     onContact={() => setShowContact(true)}
                     onCalculate={() => setShowCalculator(true)}
@@ -286,7 +286,7 @@ export default function CatalogPage() {
       )}
 
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '16px 24px', textAlign: 'center', fontSize: 10, color: 'rgba(255,255,255,0.13)' }}>
-        Shirt Catalog ยฉ 2025 โ€” Powered by Supabase + Vercel
+        Shirt Catalog © 2025 — Powered by Supabase + Vercel
       </div>
 
       {/* Modals */}
@@ -297,7 +297,7 @@ export default function CatalogPage() {
             let image_url = null
             if (imgFile) image_url = await uploadBase64Image(imgFile)
             const { data: newShirt } = await supabase.from('shirts').insert([{ ...data, image_url }]).select().single()
-            if (newShirt) { setShirts((prev) => [newShirt, ...prev]); setShowAdd(false); notify('เน€เธเธดเนเธกเนเธเธเน€เธชเธทเนเธญเนเธฅเนเธง โ€” เธเธฑเธเธ—เธถเธเธชเธนเน Supabase') }
+            if (newShirt) { setShirts((prev) => [newShirt, ...prev]); setShowAdd(false); notify('เพิ่มแบบเสื้อแล้ว — บันทึกสู่ Supabase') }
           }}
           onClose={() => setShowAdd(false)} />
       )}
@@ -308,12 +308,12 @@ export default function CatalogPage() {
             if (imgFile) {
               const newUrl = await uploadBase64Image(imgFile)
               if (newUrl) {
-                // เนเธกเนเธฅเธเธฃเธนเธเน€เธเนเธฒ โ€” เน€เธเนเธเนเธงเนเนเธ Storage เธ•เธฅเธญเธ”
+                // ไม่ลบรูปเก่า — เก็บไว้ใน Storage ตลอด
                 image_url = newUrl
               }
             }
             const { data: updated } = await supabase.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
-            if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('เธเธฑเธเธ—เธถเธเธเธฒเธฃเนเธเนเนเธเนเธฅเนเธง') }
+            if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
           }}
           onClose={() => setEditShirt(null)} />
       )}
@@ -330,12 +330,12 @@ export default function CatalogPage() {
   )
 }
 
-/* โ”€โ”€ Loading โ”€โ”€ */
+/* ── Loading ── */
 function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
       <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
-      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>เธเธณเธฅเธฑเธเนเธซเธฅเธ”เธเนเธญเธกเธนเธฅเธเธฒเธ Supabase...</div>
+      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>กำลังโหลดข้อมูลจาก Supabase...</div>
       <div style={{ width: 160, height: 3, background: '#1c1c1c', borderRadius: 2, overflow: 'hidden' }}>
         <div style={{ height: '100%', background: '#c00', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
       </div>
@@ -343,7 +343,7 @@ function LoadingScreen() {
   )
 }
 
-/* โ”€โ”€ Banner Section โ”€โ”€ */
+/* ── Banner Section ── */
 function BannerSection({ banners, setBanners, isAdmin, notify }: {
   banners: Banner[], setBanners: React.Dispatch<React.SetStateAction<Banner[]>>,
   isAdmin: boolean, notify: (m: string, t?: 'ok' | 'err') => void
@@ -361,9 +361,9 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return
     const url = await uploadBase64Image(await fileToBase64(file), 'banners')
-    if (!url) { notify('เธญเธฑเธเนเธซเธฅเธ”เธฃเธนเธเนเธกเนเธชเธณเน€เธฃเนเธ', 'err'); return }
+    if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); return }
     const { data } = await supabase.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
-    if (data) { setBanners((prev) => [...prev, data]); notify('เน€เธเธดเนเธก Banner เนเธฅเนเธง') }
+    if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
   }
 
   const idx = banners.length > 0 ? cur % banners.length : 0
@@ -377,8 +377,8 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.45),transparent)' }} />
             {banners.length > 1 && (
               <>
-                <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>โ€น</button>
-                <button onClick={() => setCur((c) => (c + 1) % banners.length)} style={{ position: 'absolute', right: isAdmin ? 130 : 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>โ€บ</button>
+                <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>‹</button>
+                <button onClick={() => setCur((c) => (c + 1) % banners.length)} style={{ position: 'absolute', right: isAdmin ? 130 : 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>›</button>
                 <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
                   {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#c00' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
                 </div>
@@ -386,13 +386,13 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             )}
             {isAdmin && (
               <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
-                <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เน€เธเธดเนเธก</button>
+                <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เพิ่ม</button>
                 <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={async () => {
                   const b = banners[idx]
                   await supabase.from('banners').delete().eq('id', b.id)
                   setBanners((prev) => prev.filter((_, i) => i !== idx))
-                  setCur(0); notify('เธฅเธ Banner เนเธฅเนเธง', 'err')
-                }}>เธฅเธ</button>
+                  setCur(0); notify('ลบ Banner แล้ว', 'err')
+                }}>ลบ</button>
               </div>
             )}
           </div>
@@ -402,12 +402,12 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             onDragLeave={() => setOv(false)}
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
-            <div style={{ fontSize: 32 }}>๐–ผ</div>
-            <div style={{ color: '#c00', fontWeight: 700, fontSize: 14 }}>เธฅเธฒเธ-เธงเธฒเธเธฃเธนเธ Banner เธซเธฃเธทเธญเธเธฅเธดเธเน€เธฅเธทเธญเธเนเธเธฅเน</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG ยท PNG ยท WEBP โ€” เธญเธฑเธเนเธซเธฅเธ”เธชเธนเน Supabase Storage</div>
+            <div style={{ fontSize: 32 }}>🖼</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         ) : (
-          <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>เธขเธฑเธเนเธกเนเธกเธต Banner</div>
+          <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>ยังไม่มี Banner</div>
         )}
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }} />
       </div>
@@ -415,7 +415,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
   )
 }
 
-/* โ”€โ”€ Shirt Card โ”€โ”€ */
+/* ── Shirt Card ── */
 function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact, onCalculate }: {
   shirt: Shirt, isAdmin: boolean,
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
@@ -460,34 +460,34 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
       }}
     >
       {canDrag && (
-        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>โ ฟ</div>
+        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>⠿</div>
       )}
       <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
         {shirt.image_url
           ? <img src={shirt.image_url} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44 }}>๐‘•</div>
+          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44 }}>👕</div>
         }
         <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {shirt.category === 'new' && <span style={{ background: '#c00', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
-          {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>เนเธเธฃ</span>}
+          {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>โปร</span>}
         </div>
       </div>
       <div style={{ padding: '13px 14px 12px' }}>
-        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'เนเธกเนเธกเธตเธเธทเนเธญ'}</div>
-        {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>เธเธญ: {shirt.collar_type}</div>}
-        {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>เธเธฃเธฐเน€เธ เธ—: {shirt.product_type}</div>}
-        <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : 'โ€”'}</div>
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
+        {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
+        {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
+        <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
         {showActionBtns && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-            <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>๐“ เธชเธเนเธเธชเธฑเนเธเธเธทเนเธญ</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onCalculate}>๐งฎ เธเธณเธเธงเธ“เธฃเธฒเธเธฒ</button>
+            <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>📞 สนใจสั่งซื้อ</button>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onCalculate}>🧮 คำนวณราคา</button>
           </div>
         )}
         {isAdmin && (
           <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>โ เนเธเนเนเธ</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onDupe}>โง เธเธฑเธ”เธฅเธญเธ</button>
-            <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>โ•</button>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onDupe}>⧉ คัดลอก</button>
+            <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕</button>
           </div>
         )}
       </div>
@@ -495,14 +495,14 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
   )
 }
 
-/* โ”€โ”€ Shirt Modal โ”€โ”€ */
+/* ── Shirt Modal ── */
 function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: {
   initial?: Shirt, collars: Collar[], prodTypes: ProductType[],
   category?: string,
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || (category === 'fabric' ? 'เนเธกเนเธเธฃเนเธเธฅเธตเน€เธญเธชเน€เธ•เธญเธฃเน' : ''), price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || '', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
@@ -520,14 +520,14 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? (category === 'fabric' ? 'โ เนเธเนเนเธเน€เธเธทเนเธญเธเนเธฒ' : 'โ เนเธเนเนเธเนเธเธเน€เธชเธทเนเธญ') : (category === 'fabric' ? '+ เน€เธเธดเนเธกเน€เธเธทเนเธญเธเนเธฒเนเธซเธกเน' : '+ เน€เธเธดเนเธกเนเธเธเน€เธชเธทเนเธญเนเธซเธกเน')}</div>
-          <button className="btn-outline sm" onClick={onClose}>โ• เธเธดเธ”</button>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขแบบเสื้อ' : '+ เพิ่มแบบเสื้อใหม่'}</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
-        <div className="section-label">เธฃเธนเธเธ เธฒเธ (เธญเธฑเธเนเธซเธฅเธ”เธชเธนเน Supabase Storage)</div>
+        <div className="section-label">รูปภาพ (อัปโหลดสู่ Supabase Storage)</div>
         {imgPreview ? (
           <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', height: 170, marginBottom: 16 }}>
             <img src={imgPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <button className="btn-red sm" style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => { setImgPreview(null); setNewImgData('__remove__') }}>เน€เธเธฅเธตเนเธขเธเธฃเธนเธ</button>
+            <button className="btn-red sm" style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => { setImgPreview(null); setNewImgData('__remove__') }}>เปลี่ยนรูป</button>
           </div>
         ) : (
           <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
@@ -535,77 +535,59 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
             onDragLeave={() => setOv(false)}
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
-            <div style={{ fontSize: 28 }}>๐“ท</div>
-            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>เธฅเธฒเธ-เธงเธฒเธเธฃเธนเธเธ เธฒเธ เธซเธฃเธทเธญเธเธฅเธดเธเน€เธฅเธทเธญเธ</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG ยท PNG ยท WEBP โ€” เธญเธฑเธเนเธซเธฅเธ”เธชเธนเน Supabase Storage</div>
+            <div style={{ fontSize: 28 }}>📷</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         )}
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
         <div className="divider" />
         <div style={{ display: 'grid', gap: 13 }}>
-          <div><div className="section-label">{category === 'fabric' ? 'เธเธทเนเธญเน€เธเธทเนเธญเธเนเธฒ' : 'เธเธทเนเธญเธ—เธตเธก / เธเธทเนเธญเธเธฒเธ'}</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder={category === 'fabric' ? 'เธเธทเนเธญเน€เธเธทเนเธญเธเนเธฒ' : 'เธเธทเนเธญเนเธเธเน€เธชเธทเนเธญ / เธเธทเนเธญเธ—เธตเธก'} /></div>
-          {category !== 'fabric' && (
-            <div><div className="section-label">เธเธญเน€เธชเธทเนเธญ / เธเธฒเธเน€เธเธ / เธชเธดเธเธเนเธฒ</div>
-              <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
-                <option value="">โ€” เน€เธฅเธทเธญเธเธเธฃเธฐเน€เธ เธ—เธเธญ โ€”</option>
-                {collars.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          {category !== 'fabric' && (
-            <div><div className="section-label">เธเธฃเธฐเน€เธ เธ—เธชเธดเธเธเนเธฒ</div>
-              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-                <option value="">โ€” เน€เธฅเธทเธญเธเธเธฃเธฐเน€เธ เธ—เธชเธดเธเธเนเธฒ โ€”</option>
-                {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-          )}
-          <div><div className="section-label">เธฃเธฒเธเธฒ (THB)</div>
+          <div><div className="section-label">ชื่อทีม / ชื่องาน</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อแบบเสื้อ / ชื่อทีม" /></div>
+          <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
+            <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
+              <option value="">— เลือกประเภทคอ —</option>
+              {collars.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+          <div><div className="section-label">ประเภทสินค้า</div>
+            <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
+              <option value="">— เลือกประเภทสินค้า —</option>
+              {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+            </select>
+          </div>
+          <div><div className="section-label">ราคา (THB)</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
             </div>
           </div>
-          {category !== 'fabric' ? (
-            <div><div className="section-label">เธซเธกเธงเธ”เธซเธกเธนเน</div>
-              <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
-                <option value="new">เนเธเธเน€เธชเธทเนเธญเนเธซเธกเน (New)</option>
-                <option value="collar">เธเธญเน€เธชเธทเนเธญเธ—เธฑเนเธเธซเธกเธ”</option>
-                <option value="other">เนเธเธเน€เธชเธทเนเธญเธญเธทเนเธเน</option>
-                <option value="fabric">เน€เธเธทเนเธญเธเนเธฒ</option>
-                <option value="photo">เธ เธฒเธเธ–เนเธฒเธขเธเธฒเธเธเธฃเธดเธ</option>
-              </select>
-            </div>
-          ) : (
-            <div><div className="section-label">เธเธฃเธฐเน€เธ เธ—เน€เธเธทเนเธญเธเนเธฒ</div>
-              <select className="select-d" value={f.product_type || 'เนเธกเนเธเธฃเนเธเธฅเธตเน€เธญเธชเน€เธ•เธญเธฃเน'} onChange={(e) => set('product_type', e.target.value)}>
-                <option value="เนเธกเนเธเธฃเนเธเธฅเธตเน€เธญเธชเน€เธ•เธญเธฃเน">เนเธกเนเธเธฃเนเธเธฅเธตเน€เธญเธชเน€เธ•เธญเธฃเน (Default)</option>
-                <option value="เนเธเนเธเธเธฒเธฃเนเธ”">เนเธเนเธเธเธฒเธฃเนเธ”</option>
-                <option value="เธ—เธญเธเธดเน€เธจเธฉ">เธ—เธญเธเธดเน€เธจเธฉ</option>
-                <option value="เธญเธทเนเธเน">เธญเธทเนเธเน</option>
-              </select>
-            </div>
-          )}
-          {category !== 'fabric' && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
-              <span style={{ fontSize: 13 }}>เนเธชเธ”เธเนเธเธซเธกเธงเธ”เนเธเธฃเนเธกเธเธฑเนเธ</span>
-            </label>
-          )}
+          <div><div className="section-label">หมวดหมู่</div>
+            <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
+              <option value="new">แบบเสื้อใหม่ (New)</option>
+              <option value="collar">คอเสื้อทั้งหมด</option>
+              <option value="other">แบบเสื้ออื่นๆ</option>
+              <option value="fabric">เนื้อผ้า</option>
+              <option value="photo">ภาพถ่ายงานจริง</option>
+            </select>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
+            <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
+          </label>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
-            {saving ? 'โณ เธเธณเธฅเธฑเธเธญเธฑเธเนเธซเธฅเธ”...' : '๐’พ เธเธฑเธเธ—เธถเธ'}
+            {saving ? '⏳ กำลังอัปโหลด...' : '💾 บันทึก'}
           </button>
-          <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>เธขเธเน€เธฅเธดเธ</button>
+          <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>ยกเลิก</button>
         </div>
       </div>
     </div>
   )
 }
 
-/* โ”€โ”€ Settings Modal โ”€โ”€ */
+/* ── Settings Modal ── */
 function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, notify }: {
   collars: Collar[], setCollars: React.Dispatch<React.SetStateAction<Collar[]>>,
   prodTypes: ProductType[], setProdTypes: React.Dispatch<React.SetStateAction<ProductType[]>>,
@@ -616,16 +598,16 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 580 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>โ เธเธฑเธ”เธเธฒเธฃเธเธฃเธฐเน€เธ เธ—เธชเธดเธเธเนเธฒ</div>
-          <button className="btn-outline sm" onClick={onClose}>โ•</button>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
+          <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-          {([['collar', `เธเธฃเธฐเน€เธ เธ—เธเธญ (${collars.length})`], ['prod', `เธเธฃเธฐเน€เธ เธ—เธชเธดเธเธเนเธฒ (${prodTypes.length})`]] as const).map(([id, lbl]) => (
+          {([['collar', `ประเภทคอ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
             <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
           ))}
         </div>
-        {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เน€เธเธดเนเธกเธเธฃเธฐเน€เธ เธ—เธเธญเน€เธชเธทเนเธญ..." notify={notify} />}
-        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เน€เธเธดเนเธกเธเธฃเธฐเน€เธ เธ—เธชเธดเธเธเนเธฒ..." notify={notify} />}
+        {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
+        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
       </div>
     </div>
   )
@@ -643,35 +625,35 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
   const add = async () => {
     if (!nv.trim()) return
     const { data } = await supabase.from(table).insert([{ name: nv.trim(), sort_order: items.length }]).select().single()
-    if (data) { setItems((prev: any[]) => [...prev, data]); setNv(''); notify('เน€เธเธดเนเธกเธชเธณเน€เธฃเนเธ') }
+    if (data) { setItems((prev: any[]) => [...prev, data]); setNv(''); notify('เพิ่มสำเร็จ') }
   }
   const save = async (i: number) => {
     const item = items[i]
     await supabase.from(table).update({ name: ev }).eq('id', item.id)
     setItems((prev: any[]) => prev.map((x, j) => j === i ? { ...x, name: ev } : x))
-    setEi(null); notify('เธเธฑเธเธ—เธถเธเนเธฅเนเธง')
+    setEi(null); notify('บันทึกแล้ว')
   }
   const del = async (i: number) => {
     await supabase.from(table).delete().eq('id', items[i].id)
-    setItems((prev: any[]) => prev.filter((_, j) => j !== i)); notify('เธฅเธเนเธฅเนเธง', 'err')
+    setItems((prev: any[]) => prev.filter((_, j) => j !== i)); notify('ลบแล้ว', 'err')
   }
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <input className="input-d" value={nv} onChange={(e) => setNv(e.target.value)} placeholder={ph} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <button className="btn-red sm" style={{ whiteSpace: 'nowrap' }} onClick={add}>+ เน€เธเธดเนเธก</button>
+        <button className="btn-red sm" style={{ whiteSpace: 'nowrap' }} onClick={add}>+ เพิ่ม</button>
       </div>
       <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {items.map((item, i) => (
           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '7px 12px', borderRadius: 5 }}>
             {ei === i
               ? <><input className="input-d" value={ev} onChange={(e) => setEv(e.target.value)} style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && save(i)} />
-                <button className="btn-red sm" onClick={() => save(i)}>เธเธฑเธเธ—เธถเธ</button>
-                <button className="btn-outline sm" onClick={() => setEi(null)}>เธขเธเน€เธฅเธดเธ</button></>
+                <button className="btn-red sm" onClick={() => save(i)}>บันทึก</button>
+                <button className="btn-outline sm" onClick={() => setEi(null)}>ยกเลิก</button></>
               : <><span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
-                <button className="btn-outline sm" onClick={() => { setEi(i); setEv(item.name) }}>เนเธเนเนเธ</button>
-                <button className="btn-ghost" onClick={() => del(i)}>เธฅเธ</button></>
+                <button className="btn-outline sm" onClick={() => { setEi(i); setEv(item.name) }}>แก้ไข</button>
+                <button className="btn-ghost" onClick={() => del(i)}>ลบ</button></>
             }
           </div>
         ))}
@@ -680,7 +662,7 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
   )
 }
 
-/* โ”€โ”€ Customer Manager โ”€โ”€ */
+/* ── Customer Manager ── */
 function CustomerMgr({ customers, setCustomers, notify }: {
   customers: Customer[], setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>,
   notify: (m: string, t?: 'ok' | 'err') => void
@@ -691,13 +673,13 @@ function CustomerMgr({ customers, setCustomers, notify }: {
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>เธเนเธญเธกเธนเธฅเธชเธกเธฒเธเธดเธ</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>Supabase Database ยท {customers.length} เธเธ</div>
+          <div style={{ fontWeight: 700, fontSize: 18 }}>ข้อมูลสมาชิก</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>Supabase Database · {customers.length} คน</div>
         </div>
-        <input className="input-d" style={{ width: 260 }} placeholder="เธเนเธเธซเธฒเธเธทเนเธญ / เธญเธตเน€เธกเธฅ / Facebook..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input-d" style={{ width: 260 }} placeholder="ค้นหาชื่อ / อีเมล / Facebook..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {list.length === 0
-        ? <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>เนเธกเนเธเธเธชเธกเธฒเธเธดเธ</div>
+        ? <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ไม่พบสมาชิก</div>
         : <div style={{ display: 'grid', gap: 10 }}>
           {list.map((c) => (
             <div key={c.id} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -705,17 +687,17 @@ function CustomerMgr({ customers, setCustomers, notify }: {
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  {c.email && <span>๐“ง {c.email}</span>}
-                  {c.phone && <span>๐“ {c.phone}</span>}
-                  {c.facebook && <span>๐“ {c.facebook}</span>}
-                  {c.joined_at && <span>๐• {new Date(c.joined_at).toLocaleDateString('th-TH')}</span>}
+                  {c.email && <span>📧 {c.email}</span>}
+                  {c.phone && <span>📞 {c.phone}</span>}
+                  {c.facebook && <span>📘 {c.facebook}</span>}
+                  {c.joined_at && <span>🕐 {new Date(c.joined_at).toLocaleDateString('th-TH')}</span>}
                 </div>
               </div>
               <button className="btn-ghost" onClick={async () => {
                 await supabase.from('customers').delete().eq('id', c.id)
                 setCustomers((prev) => prev.filter((x) => x.id !== c.id))
-                notify('เธฅเธเธชเธกเธฒเธเธดเธเนเธฅเนเธง', 'err')
-              }}>โ• เธฅเธ</button>
+                notify('ลบสมาชิกแล้ว', 'err')
+              }}>✕ ลบ</button>
             </div>
           ))}
         </div>
@@ -724,16 +706,16 @@ function CustomerMgr({ customers, setCustomers, notify }: {
   )
 }
 
-/* โ”€โ”€ Auth Pages โ”€โ”€ */
+/* ── Auth Pages ── */
 function AdminLogin({ onLogin, onBack }: { onLogin: (u: string) => void, onBack: () => void }) {
   const [id, setId] = useState(''); const [pw, setPw] = useState(''); const [err, setErr] = useState('')
   return (
-    <AuthShell title="เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ Admin" badge="ADMIN ONLY">
-      <input className="input-d" placeholder="Name ID เน€เธเนเธ ceo edit00" value={id} onChange={(e) => setId(e.target.value)} style={{ marginBottom: 10 }} />
-      <input className="input-d" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('เธเธทเนเธญเธเธนเนเนเธเนเธซเธฃเธทเธญเธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ'))} style={{ marginBottom: 14 }} />
+    <AuthShell title="เข้าสู่ระบบ Admin" badge="ADMIN ONLY">
+      <input className="input-d" placeholder="Name ID เช่น ceo edit00" value={id} onChange={(e) => setId(e.target.value)} style={{ marginBottom: 10 }} />
+      <input className="input-d" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'))} style={{ marginBottom: 14 }} />
       {err && <ErrMsg msg={err} />}
-      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={() => ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('เธเธทเนเธญเธเธนเนเนเธเนเธซเธฃเธทเธญเธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ')}>เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ Admin</button>
-      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>โ เธเธฅเธฑเธ</button>
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={() => ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')}>เข้าสู่ระบบ Admin</button>
+      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>← กลับ</button>
     </AuthShell>
   )
 }
@@ -742,15 +724,15 @@ function CustLogin({ customers, onLogin, onBack, onReg }: {
   customers: Customer[], onLogin: (u: Customer) => void, onBack: () => void, onReg: () => void
 }) {
   const [em, setEm] = useState(''); const [pw, setPw] = useState(''); const [err, setErr] = useState('')
-  const go = () => { const u = customers.find((c) => c.email === em && c.password === pw); if (u) onLogin(u); else setErr('เธญเธตเน€เธกเธฅเธซเธฃเธทเธญเธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ') }
+  const go = () => { const u = customers.find((c) => c.email === em && c.password === pw); if (u) onLogin(u); else setErr('อีเมลหรือรหัสผ่านไม่ถูกต้อง') }
   return (
-    <AuthShell title="เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธเธชเธกเธฒเธเธดเธ">
-      <input className="input-d" placeholder="เธญเธตเน€เธกเธฅ" value={em} onChange={(e) => setEm(e.target.value)} style={{ marginBottom: 10 }} />
-      <input className="input-d" type="password" placeholder="เธฃเธซเธฑเธชเธเนเธฒเธ" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} style={{ marginBottom: 14 }} />
+    <AuthShell title="เข้าสู่ระบบสมาชิก">
+      <input className="input-d" placeholder="อีเมล" value={em} onChange={(e) => setEm(e.target.value)} style={{ marginBottom: 10 }} />
+      <input className="input-d" type="password" placeholder="รหัสผ่าน" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} style={{ marginBottom: 14 }} />
       {err && <ErrMsg msg={err} />}
-      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={go}>เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ</button>
-      <button className="btn-outline" style={{ width: '100%', marginBottom: 8 }} onClick={onReg}>เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธเนเธซเธกเน</button>
-      <button className="btn-outline" style={{ width: '100%', opacity: .65, fontSize: 12 }} onClick={onBack}>เนเธกเนเธฅเนเธญเธเธญเธดเธ โ€” เน€เธเนเธฒเธเธกเนเธ”เนเน€เธฅเธข</button>
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={go}>เข้าสู่ระบบ</button>
+      <button className="btn-outline" style={{ width: '100%', marginBottom: 8 }} onClick={onReg}>สมัครสมาชิกใหม่</button>
+      <button className="btn-outline" style={{ width: '100%', opacity: .65, fontSize: 12 }} onClick={onBack}>ไม่ล็อคอิน — เข้าชมได้เลย</button>
     </AuthShell>
   )
 }
@@ -763,21 +745,21 @@ function Register({ customers, onSave, onBack }: {
   const [saving, setSaving] = useState(false)
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }))
   const go = async () => {
-    if (!f.name || !f.email || !f.password) return setErr('เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธเนเธญเธกเธนเธฅเธ—เธตเนเธเธณเน€เธเนเธ')
-    if (f.password !== f.confirm) return setErr('เธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ•เธฃเธเธเธฑเธ')
-    if (customers.find((c) => c.email === f.email)) return setErr('เธญเธตเน€เธกเธฅเธเธตเนเธ–เธนเธเนเธเนเธเธฒเธเนเธฅเนเธง')
+    if (!f.name || !f.email || !f.password) return setErr('กรุณากรอกข้อมูลที่จำเป็น')
+    if (f.password !== f.confirm) return setErr('รหัสผ่านไม่ตรงกัน')
+    if (customers.find((c) => c.email === f.email)) return setErr('อีเมลนี้ถูกใช้งานแล้ว')
     setSaving(true)
     await onSave({ name: f.name, email: f.email, phone: f.phone, facebook: f.facebook, password: f.password })
     setSaving(false)
   }
   return (
-    <AuthShell title="เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ" sub="เธเนเธญเธกเธนเธฅเธ–เธนเธเน€เธเนเธเนเธ Supabase เธญเธขเนเธฒเธเธเธฅเธญเธ”เธ เธฑเธข">
-      {([['name', 'เธเธทเนเธญ-เธเธฒเธกเธชเธเธธเธฅ *', 'text'], ['email', 'เธญเธตเน€เธกเธฅ *', 'email'], ['phone', 'เน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เน', 'tel'], ['facebook', 'Facebook (เนเธเธฐเธเธณ)', 'text'], ['password', 'เธฃเธซเธฑเธชเธเนเธฒเธ *', 'password'], ['confirm', 'เธขเธทเธเธขเธฑเธเธฃเธซเธฑเธชเธเนเธฒเธ *', 'password']] as const).map(([k, lb, tp]) => (
+    <AuthShell title="สมัครสมาชิก" sub="ข้อมูลถูกเก็บใน Supabase อย่างปลอดภัย">
+      {([['name', 'ชื่อ-นามสกุล *', 'text'], ['email', 'อีเมล *', 'email'], ['phone', 'เบอร์โทรศัพท์', 'tel'], ['facebook', 'Facebook (แนะนำ)', 'text'], ['password', 'รหัสผ่าน *', 'password'], ['confirm', 'ยืนยันรหัสผ่าน *', 'password']] as const).map(([k, lb, tp]) => (
         <input key={k} className="input-d" type={tp} placeholder={lb} value={(f as any)[k]} onChange={(e) => set(k, e.target.value)} style={{ marginBottom: 10 }} />
       ))}
       {err && <ErrMsg msg={err} />}
-      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} disabled={saving} onClick={go}>{saving ? 'เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...' : 'เธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ'}</button>
-      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>โ เธเธฅเธฑเธ</button>
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} disabled={saving} onClick={go}>{saving ? 'กำลังบันทึก...' : 'สมัครสมาชิก'}</button>
+      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>← กลับ</button>
     </AuthShell>
   )
 }
@@ -806,7 +788,7 @@ function fileToBase64(file: File): Promise<string> {
   return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
 }
 
-/* โ”€โ”€ Contact Modal โ”€โ”€ */
+/* ── Contact Modal ── */
 function ContactModal({ onClose }: { onClose: () => void }) {
   const [contact, setContact] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -823,18 +805,18 @@ function ContactModal({ onClose }: { onClose: () => void }) {
         <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-              ๐“ เธเนเธญเธเธ—เธฒเธเธเธฒเธฃเธ•เธดเธ”เธ•เนเธญ
+              📞 ช่องทางการติดต่อ
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>เธชเธเนเธเธชเธฑเนเธเธเธทเนเธญ เธ•เธดเธ”เธ•เนเธญเน€เธฃเธฒเนเธ”เนเน€เธฅเธข</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>โ•</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>เธเธณเธฅเธฑเธเนเธซเธฅเธ”...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
           ) : !contact ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธซเธฅเธ”เธเนเธญเธกเธนเธฅเนเธ”เน</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
           ) : (
             <>
               {/* Facebook */}
@@ -851,10 +833,10 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                     </svg>
                     <div>
                       <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook Page'}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>เธเธฅเธดเธเน€เธเธทเนเธญเนเธเธขเธฑเธ Facebook</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
                     </div>
                   </div>
-                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>โ’</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
                 </a>
               )}
 
@@ -874,17 +856,17 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                       </svg>
                       <div>
                         <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.line_label || 'Line Official'}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>เธเธฅเธดเธเน€เธเธทเนเธญเน€เธเธดเนเธกเน€เธเธทเนเธญเธเนเธ Line</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
                       </div>
                     </div>
-                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>โ’</span>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
                   </a>
-                  {/* QR เนเธ•เนเธเธธเนเธก Line */}
+                  {/* QR ใต้ปุ่ม Line */}
                   {contact.line_qr_url && (
                     <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
                       <img src={contact.line_qr_url} alt="Line QR" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>เธชเนเธเธ QR เน€เธเธดเนเธกเน€เธเธทเนเธญเธ Line</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>สแกน QR เพิ่มเพื่อน Line</div>
                         {contact.line_add && <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>ID: {contact.line_add}</div>}
                       </div>
                     </div>
@@ -899,9 +881,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                     <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
                       onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
-                      <span style={{ fontSize: 20 }}>๐“ฑ</span>
+                      <span style={{ fontSize: 20 }}>📱</span>
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>เนเธ—เธฃเธจเธฑเธเธ—เน</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
                         <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone1}</div>
                       </div>
                     </a>
@@ -910,9 +892,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                     <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
                       onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
-                      <span style={{ fontSize: 20 }}>๐“ฑ</span>
+                      <span style={{ fontSize: 20 }}>📱</span>
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>เนเธ—เธฃเธจเธฑเธเธ—เน</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
                         <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone2}</div>
                       </div>
                     </a>
@@ -923,9 +905,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
               {/* Address */}
               {contact.address && (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ fontSize: 20, marginTop: 2 }}>๐“</span>
+                  <span style={{ fontSize: 20, marginTop: 2 }}>📍</span>
                   <div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>เธ•เธดเธ”เธ•เนเธญเธ—เธตเนเธซเธเนเธฒเธฃเนเธฒเธ</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>ติดต่อที่หน้าร้าน</div>
                     <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.6 }}>{contact.address}</div>
                   </div>
                 </div>
@@ -938,7 +920,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-/* โ”€โ”€ Price Calculator โ”€โ”€ */
+/* ── Price Calculator ── */
 const SEWING_TIERS = [
   { min: 1,   max: 11,  price: 250 },
   { min: 12,  max: 24,  price: 220 },
@@ -953,14 +935,17 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
   const [hasPrint, setHasPrint] = useState(false)
   const [printPos, setPrintPos] = useState(1)
   const [printPrice, setPrintPrice] = useState(30)
-  const [tiers, setTiers] = useState<{min_qty:number;max_qty:number|null;price_per_piece:number}[]>([])
-useEffect(() => {
-  supabase.from('pricing_rules').select('min_qty,max_qty,price_per_piece').order('sort_order')
-    .then(({ data }) => { if (data && data.length > 0) setTiers(data) })
-}, [])
+  const [tiers, setTiers] = useState<{ min_qty: number; max_qty: number | null; price_per_piece: number }[]>([])
+
+  useEffect(() => {
+    supabase.from('pricing_rules').select('min_qty,max_qty,price_per_piece').order('sort_order')
+      .then(({ data }) => { if (data && data.length > 0) setTiers(data) })
+  }, [])
 
   const shirt = shirts.find((s) => s.id === selectedId)
-  const sewingUnit = tiers.length > 0 ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece) : SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
+  const sewingUnit = tiers.length > 0
+    ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece)
+    : (SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250)
   const fabricPrice = shirt ? Number(shirt.price) : 0
   const printTotal = hasPrint ? printPos * printPrice : 0
   const unitTotal = fabricPrice + sewingUnit + printTotal
@@ -971,50 +956,50 @@ useEffect(() => {
       <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20, overflow: 'hidden' }}><div style={{ overflowY: 'auto', maxHeight: '80vh' }}>
         <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-20px -20px 20px' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>๐งฎ เธเธณเธเธงเธ“เธฃเธฒเธเธฒเน€เธเธทเนเธญเธเธ•เนเธ</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>เธเธฃเธฐเธกเธฒเธ“เธเธฒเธฃเธเนเธฒเนเธเนเธเนเธฒเธขเน€เธเธทเนเธญเธเธ•เนเธ</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🧮 คำนวณราคาเบื้องต้น</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>ประมาณการค่าใช้จ่ายเบื้องต้น</div>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>โ•</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
-        <div className="section-label">เน€เธฅเธทเธญเธเนเธเธเน€เธชเธทเนเธญ</div>
+        <div className="section-label">เลือกแบบเสื้อ</div>
         <select className="select-d" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={{ marginBottom: 14 }}>
-          <option value="">โ€” เน€เธฅเธทเธญเธเนเธเธเน€เธชเธทเนเธญ โ€”</option>
-          {shirts.map((s) => <option key={s.id} value={s.id}>{s.name} (เน€เธเธทเนเธญเธเนเธฒ เธฟ{Number(s.price).toLocaleString()})</option>)}
+          <option value="">— เลือกแบบเสื้อ —</option>
+          {shirts.map((s) => <option key={s.id} value={s.id}>{s.name} (เนื้อผ้า ฿{Number(s.price).toLocaleString()})</option>)}
         </select>
-        <div className="section-label">เธเธณเธเธงเธเธเธดเนเธ</div>
+        <div className="section-label">จำนวนชิ้น</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <button className="btn-outline sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>โ’</button>
+          <button className="btn-outline sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
           <input className="input-d" type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} style={{ width: 80, textAlign: 'center' }} />
           <button className="btn-outline sm" onClick={() => setQty((q) => q + 1)}>+</button>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>เธ•เธฑเธ”เน€เธขเนเธ {sewingUnit} เธเธฒเธ—/เธ•เธฑเธง</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ตัดเย็บ {sewingUnit} บาท/ตัว</span>
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 10 }}>
           <input type="checkbox" checked={hasPrint} onChange={(e) => setHasPrint(e.target.checked)} />
-          <span style={{ fontSize: 13 }}>เธกเธตเธชเธเธฃเธตเธ/เธเธฑเธเนเธฅเนเธเน</span>
+          <span style={{ fontSize: 13 }}>มีสกรีน/ปักโลโก้</span>
         </label>
         {hasPrint && (
           <div style={{ paddingLeft: 24, display: 'grid', gap: 10, marginBottom: 10 }}>
             <div>
-              <div className="section-label">เธเธณเธเธงเธเธเธธเธ”เธชเธเธฃเธตเธ</div>
+              <div className="section-label">จำนวนจุดสกรีน</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[1, 2, 3, 4].map((n) => (
-                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'} onClick={() => setPrintPos(n)}>{n} เธเธธเธ”</button>
+                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'} onClick={() => setPrintPos(n)}>{n} จุด</button>
                 ))}
               </div>
             </div>
             <div>
-              <div className="section-label">เธฃเธฒเธเธฒเธชเธเธฃเธตเธ/เธเธธเธ”/เธ•เธฑเธง (เธเธฒเธ—)</div>
+              <div className="section-label">ราคาสกรีน/จุด/ตัว (บาท)</div>
               <input className="input-d" type="number" value={printPrice} onChange={(e) => setPrintPrice(Math.max(0, Number(e.target.value)))} style={{ width: 100 }} />
             </div>
           </div>
         )}
         <div className="divider" />
         <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
-          <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>๐“ เธชเธฃเธธเธเธฃเธฒเธเธฒเน€เธเธทเนเธญเธเธ•เนเธ</div>
+          <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>📋 สรุปราคาเบื้องต้น</div>
           {[
-            ['เน€เธเธทเนเธญเธเนเธฒ', `${fabricPrice.toLocaleString()} เธเธฒเธ—/เธ•เธฑเธง`],
-            [`เธ•เธฑเธ”เน€เธขเนเธ (${qty} เธ•เธฑเธง)`, `${sewingUnit.toLocaleString()} เธเธฒเธ—/เธ•เธฑเธง`],
-            ...(hasPrint ? [[`เธชเธเธฃเธตเธ ${printPos} เธเธธเธ”`, `${printTotal.toLocaleString()} เธเธฒเธ—/เธ•เธฑเธง`]] : []),
+            ['เนื้อผ้า', `${fabricPrice.toLocaleString()} บาท/ตัว`],
+            [`ตัดเย็บ (${qty} ตัว)`, `${sewingUnit.toLocaleString()} บาท/ตัว`],
+            ...(hasPrint ? [[`สกรีน ${printPos} จุด`, `${printTotal.toLocaleString()} บาท/ตัว`]] : []),
           ].map(([label, val]) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
               <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
@@ -1022,19 +1007,19 @@ useEffect(() => {
             </div>
           ))}
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-            <span>เธฃเธงเธก/เธ•เธฑเธง</span><span>{unitTotal.toLocaleString()} เธเธฒเธ—</span>
+            <span>รวม/ตัว</span><span>{unitTotal.toLocaleString()} บาท</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 18, color: '#ff4444' }}>
-            <span>เธฃเธงเธกเธ—เธฑเนเธเธซเธกเธ” (ร—{qty})</span><span>{grandTotal.toLocaleString()} เธเธฒเธ—</span>
+            <span>รวมทั้งหมด (×{qty})</span><span>{grandTotal.toLocaleString()} บาท</span>
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* เธฃเธฒเธเธฒเธเธฃเธฐเธกเธฒเธ“เธเธฒเธฃเน€เธเธทเนเธญเธเธ•เนเธ เธเธฃเธธเธ“เธฒเธ•เธดเธ”เธ•เนเธญเธฃเนเธฒเธเน€เธเธทเนเธญเธขเธทเธเธขเธฑเธเธฃเธฒเธเธฒเธเธฃเธดเธ</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
         </div>
       </div></div>
     </div>
   )
 }
 
-/* โ”€โ”€ Contact Admin Modal โ”€โ”€ */
+/* ── Contact Admin Modal ── */
 function ContactAdminModal({ notify, onClose }: {
   notify: (m: string, t?: 'ok' | 'err') => void
   onClose: () => void
@@ -1077,8 +1062,8 @@ function ContactAdminModal({ notify, onClose }: {
   const handleQrUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) return
     const url = await uploadBase64Image(await fileToBase64(file), 'contact')
-    if (url) { set('line_qr_url', url); notify('เธญเธฑเธเนเธซเธฅเธ” QR เธชเธณเน€เธฃเนเธ') }
-    else notify('เธญเธฑเธเนเธซเธฅเธ”เนเธกเนเธชเธณเน€เธฃเนเธ', 'err')
+    if (url) { set('line_qr_url', url); notify('อัปโหลด QR สำเร็จ') }
+    else notify('อัปโหลดไม่สำเร็จ', 'err')
   }
 
   const handleSave = async () => {
@@ -1086,8 +1071,8 @@ function ContactAdminModal({ notify, onClose }: {
     const { error } = await supabase
       .from('contact_settings')
       .upsert({ id: 'main', ...f, updated_at: new Date().toISOString() })
-    if (error) notify('เธเธฑเธเธ—เธถเธเนเธกเนเธชเธณเน€เธฃเนเธ: ' + error.message, 'err')
-    else { notify('เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเธ•เธดเธ”เธ•เนเธญเนเธฅเนเธง โ“'); onClose() }
+    if (error) notify('บันทึกไม่สำเร็จ: ' + error.message, 'err')
+    else { notify('บันทึกข้อมูลติดต่อแล้ว ✓'); onClose() }
     setSaving(false)
   }
 
@@ -1102,12 +1087,12 @@ function ContactAdminModal({ notify, onClose }: {
       <div className="modal-box" style={{ maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>๐“ เธเธฑเธ”เธเธฒเธฃเธเนเธญเธเธ—เธฒเธเธ•เธดเธ”เธ•เนเธญ</div>
-          <button className="btn-outline sm" onClick={onClose}>โ• เธเธดเธ”</button>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>📞 จัดการช่องทางติดต่อ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>เธเธณเธฅเธฑเธเนเธซเธฅเธ”...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
         ) : (
           <div style={{ display: 'grid', gap: 14 }}>
 
@@ -1119,8 +1104,8 @@ function ContactAdminModal({ notify, onClose }: {
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
-                  <div className="section-label">เธเธทเนเธญเธ—เธตเนเนเธชเธ”เธ</div>
-                  <input style={inp} value={f.facebook_label} onChange={e => set('facebook_label', e.target.value)} placeholder="เน€เธเนเธ Facebook Page" />
+                  <div className="section-label">ชื่อที่แสดง</div>
+                  <input style={inp} value={f.facebook_label} onChange={e => set('facebook_label', e.target.value)} placeholder="เช่น Facebook Page" />
                 </div>
                 <div>
                   <div className="section-label">Facebook URL (m.me/...)</div>
@@ -1137,8 +1122,8 @@ function ContactAdminModal({ notify, onClose }: {
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
-                  <div className="section-label">เธเธทเนเธญเธ—เธตเนเนเธชเธ”เธ</div>
-                  <input style={inp} value={f.line_label} onChange={e => set('line_label', e.target.value)} placeholder="เน€เธเนเธ Line Official" />
+                  <div className="section-label">ชื่อที่แสดง</div>
+                  <input style={inp} value={f.line_label} onChange={e => set('line_label', e.target.value)} placeholder="เช่น Line Official" />
                 </div>
                 <div>
                   <div className="section-label">Line URL (lin.ee/...)</div>
@@ -1155,8 +1140,8 @@ function ContactAdminModal({ notify, onClose }: {
                       <img src={f.line_qr_url} alt="QR" style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
                     )}
                     <div style={{ flex: 1 }}>
-                      <input style={{ ...inp, marginBottom: 6 }} value={f.line_qr_url} onChange={e => set('line_qr_url', e.target.value)} placeholder="URL เธฃเธนเธ QR เธซเธฃเธทเธญเธญเธฑเธเนเธซเธฅเธ”..." />
-                      <button className="btn-outline sm" onClick={() => qrInputRef.current?.click()}>๐“ท เธญเธฑเธเนเธซเธฅเธ” QR</button>
+                      <input style={{ ...inp, marginBottom: 6 }} value={f.line_qr_url} onChange={e => set('line_qr_url', e.target.value)} placeholder="URL รูป QR หรืออัปโหลด..." />
+                      <button className="btn-outline sm" onClick={() => qrInputRef.current?.click()}>📷 อัปโหลด QR</button>
                     </div>
                   </div>
                   <input ref={qrInputRef} type="file" accept="image/*" style={{ display: 'none' }}
@@ -1169,15 +1154,15 @@ function ContactAdminModal({ notify, onClose }: {
             <div style={{ background: '#c00', borderRadius: 10, padding: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#c00"/></svg>
-                เน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เน
+                เบอร์โทรศัพท์
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div>
-                  <div className="section-label">เน€เธเธญเธฃเนเธ—เธตเน 1</div>
+                  <div className="section-label">เบอร์ที่ 1</div>
                   <input style={inp} value={f.phone1} onChange={e => set('phone1', e.target.value)} placeholder="0xx-xxx-xxxx" />
                 </div>
                 <div>
-                  <div className="section-label">เน€เธเธญเธฃเนเธ—เธตเน 2</div>
+                  <div className="section-label">เบอร์ที่ 2</div>
                   <input style={inp} value={f.phone2} onChange={e => set('phone2', e.target.value)} placeholder="0xx-xxx-xxxx" />
                 </div>
               </div>
@@ -1185,18 +1170,18 @@ function ContactAdminModal({ notify, onClose }: {
 
             {/* Address */}
             <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>๐“ เธ—เธตเนเธญเธขเธนเนเธซเธเนเธฒเธฃเนเธฒเธ</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>📍 ที่อยู่หน้าร้าน</div>
               <textarea
                 style={{ ...inp, minHeight: 70, resize: 'vertical' as const }}
                 value={f.address}
                 onChange={e => set('address', e.target.value)}
-                placeholder="เน€เธฅเธเธ—เธตเน เธ–เธเธ เธ•เธณเธเธฅ เธญเธณเน€เธ เธญ เธเธฑเธเธซเธงเธฑเธ” เธฃเธซเธฑเธชเนเธเธฃเธฉเธ“เธตเธขเน"
+                placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
               />
             </div>
 
             {/* Save Button */}
             <button className="btn-red" style={{ width: '100%', padding: '12px' }} disabled={saving} onClick={handleSave}>
-              {saving ? 'โณ เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...' : '๐’พ เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเธ•เธดเธ”เธ•เนเธญ'}
+              {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกข้อมูลติดต่อ'}
             </button>
           </div>
         )}
@@ -1205,7 +1190,7 @@ function ContactAdminModal({ notify, onClose }: {
   )
 }
 
-/* โ”€โ”€ Welcome Modal โ”€โ”€ */
+/* ── Welcome Modal ── */
 function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
   shopSettings: { shop_name: string; shop_subtitle: string; logo_url: string | null }
   onBrowse: () => void
@@ -1225,26 +1210,26 @@ function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
         </div>
         {/* Name */}
         <div style={{ fontWeight: 800, fontSize: 22, color: '#fff', marginBottom: 8 }}>
-          {shopSettings.shop_name || 'เธญเธตเนเธงเธชเธเธญเธฃเนเธ•'}
+          {shopSettings.shop_name || 'อีโวสปอร์ต'}
         </div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 28 }}>
-          {shopSettings.shop_subtitle || 'เธฃเธงเธกเนเธเธเน€เธชเธทเนเธญเนเธฅเธฐเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”'}
+          {shopSettings.shop_subtitle || 'รวมแบบเสื้อและสินค้าทั้งหมด'}
         </div>
         {/* Buttons */}
         <button onClick={onBrowse}
           style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          ๐‘• เน€เธเนเธฒเธเธกเนเธเธเน€เธชเธทเนเธญ
+          👕 เข้าชมแบบเสื้อ
         </button>
         <button onClick={onAdmin}
           style={{ width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.15)', padding: '13px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          ๐” เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ Admin
+          🔐 เข้าสู่ระบบ Admin
         </button>
       </div>
     </div>
   )
 }
 
-/* โ”€โ”€ Shop Admin Modal โ”€โ”€ */
+/* ── Shop Admin Modal ── */
 function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
   shopSettings: { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
   setShopSettings: React.Dispatch<React.SetStateAction<any>>
@@ -1260,8 +1245,8 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
   const handleLogoUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) return
     const url = await uploadBase64Image(await fileToBase64(file), 'logos')
-    if (url) { setLogoUrl(url); notify('เธญเธฑเธเนเธซเธฅเธ”เนเธฅเนเธเนเธชเธณเน€เธฃเนเธ') }
-    else notify('เธญเธฑเธเนเธซเธฅเธ”เนเธกเนเธชเธณเน€เธฃเนเธ', 'err')
+    if (url) { setLogoUrl(url); notify('อัปโหลดโลโก้สำเร็จ') }
+    else notify('อัปโหลดไม่สำเร็จ', 'err')
   }
 
   const handleSave = async () => {
@@ -1269,10 +1254,10 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
     const { error } = await supabase.from('shop_settings').upsert({
       id: 'main', shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
     })
-    if (error) { notify('เธเธฑเธเธ—เธถเธเนเธกเนเธชเธณเน€เธฃเนเธ: ' + error.message, 'err') }
+    if (error) { notify('บันทึกไม่สำเร็จ: ' + error.message, 'err') }
     else {
       setShopSettings((p: any) => ({ ...p, shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null }))
-      notify('เธเธฑเธเธ—เธถเธเธซเธเนเธฒเธ•เนเธญเธเธฃเธฑเธเนเธฅเนเธง โ“')
+      notify('บันทึกหน้าต้อนรับแล้ว ✓')
       onClose()
     }
     setSaving(false)
@@ -1289,14 +1274,14 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
       <div className="modal-box" style={{ maxWidth: 420 }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>๐ช เนเธเนเนเธเธซเธเนเธฒเธ•เนเธญเธเธฃเธฑเธ</div>
-          <button className="btn-outline sm" onClick={onClose}>โ• เธเธดเธ”</button>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>🏪 แก้ไขหน้าต้อนรับ</div>
+          <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
 
         <div style={{ display: 'grid', gap: 16 }}>
           {/* Logo */}
           <div style={{ textAlign: 'center' }}>
-            <div className="section-label" style={{ textAlign: 'left', marginBottom: 8 }}>เนเธฅเนเธเนเธฃเนเธฒเธ</div>
+            <div className="section-label" style={{ textAlign: 'left', marginBottom: 8 }}>โลโก้ร้าน</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               {logoUrl ? (
                 <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(200,0,0,0.4)', flexShrink: 0 }} />
@@ -1304,8 +1289,8 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
                 <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
               )}
               <div style={{ flex: 1 }}>
-                <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL เนเธฅเนเธเน เธซเธฃเธทเธญเธญเธฑเธเนเธซเธฅเธ”..." />
-                <button className="btn-outline sm" onClick={() => logoInputRef.current?.click()}>๐“ท เธญเธฑเธเนเธซเธฅเธ”เนเธฅเนเธเน</button>
+                <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL โลโก้ หรืออัปโหลด..." />
+                <button className="btn-outline sm" onClick={() => logoInputRef.current?.click()}>📷 อัปโหลดโลโก้</button>
               </div>
             </div>
             <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
@@ -1314,14 +1299,14 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
           {/* Shop Name */}
           <div>
-            <div className="section-label">เธเธทเนเธญเธฃเนเธฒเธ</div>
-            <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="เธเธทเนเธญเธฃเนเธฒเธ" />
+            <div className="section-label">ชื่อร้าน</div>
+            <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="ชื่อร้าน" />
           </div>
 
           {/* Subtitle */}
           <div>
-            <div className="section-label">เธเธณเธญเธเธดเธเธฒเธขเนเธ•เนเธเธทเนเธญเธฃเนเธฒเธ</div>
-            <input style={inp} value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="เธฃเธงเธกเนเธเธเน€เธชเธทเนเธญเนเธฅเธฐเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”" />
+            <div className="section-label">คำอธิบายใต้ชื่อร้าน</div>
+            <input style={inp} value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="รวมแบบเสื้อและสินค้าทั้งหมด" />
           </div>
 
           {/* Preview */}
@@ -1332,12 +1317,12 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
             ) : (
               <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
             )}
-            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'เธเธทเนเธญเธฃเนเธฒเธ'}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'เธเธณเธญเธเธดเธเธฒเธข'}</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'ชื่อร้าน'}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'คำอธิบาย'}</div>
           </div>
 
           <button className="btn-red" style={{ width: '100%', padding: '12px' }} disabled={saving} onClick={handleSave}>
-            {saving ? 'โณ เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...' : '๐’พ เธเธฑเธเธ—เธถเธเธซเธเนเธฒเธ•เนเธญเธเธฃเธฑเธ'}
+            {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกหน้าต้อนรับ'}
           </button>
         </div>
       </div>
