@@ -251,7 +251,7 @@ export default function CatalogPage() {
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
                 <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>ยังไม่มีสินค้าในหมวดนี้</div>
-                {adminUser && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}
+                {adminUser && activeNav !== 'fabric' && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}{adminUser && activeNav === 'fabric' && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มเนื้อผ้า</button>}
               </div>
             ) : (
               <div className="grid-shirts">
@@ -476,7 +476,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
         {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
         {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
-        <div style={{ fontWeight: 700, fontSize: 16, color: '#ff4444' }}>{shirt.price ? `${Number(shirt.price).toLocaleString()} THB.-` : '—'}</div>
+        <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.3)' }}>{Number(shirt.price) > 0 ? `+${Number(shirt.price).toLocaleString()} บาท/ตัว` : 'ไม่บวกเพิ่ม'}</div>
         {showActionBtns && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
             <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>📞 สนใจสั่งซื้อ</button>
@@ -520,7 +520,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขแบบเสื้อ' : '+ เพิ่มแบบเสื้อใหม่'}</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขเนื้อผ้า' : '+ เพิ่มเนื้อผ้าใหม่'}</div>
           <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
         <div className="section-label">รูปภาพ (อัปโหลดสู่ Supabase Storage)</div>
@@ -543,38 +543,26 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
         <div className="divider" />
         <div style={{ display: 'grid', gap: 13 }}>
-          <div><div className="section-label">ชื่อทีม / ชื่องาน</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อแบบเสื้อ / ชื่อทีม" /></div>
-          <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
-            <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
-              <option value="">— เลือกประเภทคอ —</option>
-              {collars.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
+          <div><div className="section-label">เนื้อผ้า</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อเนื้อผ้า" /></div>
+
+
+          <div><div className="section-label">เนื้อผ้า +บวกเพิ่ม ตัวละ</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
+            </div>
           </div>
-          <div><div className="section-label">ประเภทสินค้า</div>
+          <div><div className="section-label">ประเภทเนื้อผ้า</div>
             <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-              <option value="">— เลือกประเภทสินค้า —</option>
+              <option value="">— เลือกประเภทเนื้อผ้า —</option>
               {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
-          <div><div className="section-label">ราคา (THB)</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
-            </div>
+          <div><div className="section-label">คุณสมบัติเนื้อผ้า</div>
+            <textarea className="input-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}
+              placeholder="เช่น น้ำหนัก 150 กรัม ระบายอากาศได้ดี ไม่หดตัว..."
+              style={{ minHeight: 80, resize: 'vertical' as const }} />
           </div>
-          <div><div className="section-label">หมวดหมู่</div>
-            <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="new">แบบเสื้อใหม่ (New)</option>
-              <option value="collar">คอเสื้อทั้งหมด</option>
-              <option value="other">แบบเสื้ออื่นๆ</option>
-              <option value="fabric">เนื้อผ้า</option>
-              <option value="photo">ภาพถ่ายงานจริง</option>
-            </select>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
-            <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
-          </label>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
@@ -598,16 +586,16 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, onClose, 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 580 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทเนื้อผ้า</div>
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-          {([['collar', `ประเภทคอ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
+          {([['collar', `ประเภทคอ (${collars.length})`], ['prod', `ประเภทเนื้อผ้า (${prodTypes.length})`]] as const).map(([id, lbl]) => (
             <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id)}>{lbl}</div>
           ))}
         </div>
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
-        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
+        {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
       </div>
     </div>
   )
