@@ -955,7 +955,7 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
   const [printPrice, setPrintPrice] = useState(30)
 
   const shirt = shirts.find((s) => s.id === selectedId)
-  const sewingUnit = SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
+  const sewingUnit = tiers.length > 0 ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece) : SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
   const fabricPrice = shirt ? Number(shirt.price) : 0
   const printTotal = hasPrint ? printPos * printPrice : 0
   const unitTotal = fabricPrice + sewingUnit + printTotal
