@@ -953,6 +953,11 @@ function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => 
   const [hasPrint, setHasPrint] = useState(false)
   const [printPos, setPrintPos] = useState(1)
   const [printPrice, setPrintPrice] = useState(30)
+  const [tiers, setTiers] = useState<{min_qty:number;max_qty:number|null;price_per_piece:number}[]>([])
+useEffect(() => {
+  supabase.from('pricing_rules').select('min_qty,max_qty,price_per_piece').order('sort_order')
+    .then(({ data }) => { if (data && data.length > 0) setTiers(data) })
+}, [])
 
   const shirt = shirts.find((s) => s.id === selectedId)
   const sewingUnit = tiers.length > 0 ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece) : SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250
