@@ -93,7 +93,7 @@ export default function CatalogPage() {
   }, [])
 
   const filtered = shirts.filter((s) => {
-    if (activeNav === 'all') return true
+    if (activeNav === 'all') return s.category === 'new' || s.category === 'other'
     if (activeNav === 'new') return s.category === 'new'
     if (activeNav === 'collar') return s.category === 'collar'
     if (activeNav === 'promotion') return s.is_promo
@@ -225,8 +225,13 @@ export default function CatalogPage() {
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
-                {activeNav !== 'fabric' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>}
+                {activeNav === 'new' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อใหม่</button>}
+                {activeNav === 'collar' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มคอเสื้อ</button>}
+                {activeNav === 'promotion' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มโปรโมชั่น</button>}
+                {activeNav === 'other' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มสินค้าใหม่</button>}
                 {activeNav === 'fabric' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มเนื้อผ้า</button>}
+                {activeNav === 'photo' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มรูปภาพ</button>}
+                {activeNav === 'all' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มสินค้าใหม่</button>}
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
@@ -252,7 +257,25 @@ export default function CatalogPage() {
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
                 <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 14, marginBottom: adminUser ? 18 : 0 }}>ยังไม่มีสินค้าในหมวดนี้</div>
-                {adminUser && activeNav !== 'fabric' && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อแรก</button>}{adminUser && activeNav === 'fabric' && <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>+ เพิ่มเนื้อผ้า</button>}
+                {adminUser && (
+                  <button className="btn-red" style={{ padding: '10px 30px' }} onClick={() => setShowAdd(true)}>
+                    {activeNav === 'new' ? '+ เพิ่มแบบเสื้อแรก' : activeNav === 'collar' ? '+ เพิ่มคอเสื้อ' : activeNav === 'promotion' ? '+ เพิ่มโปรโมชั่น' : activeNav === 'other' ? '+ เพิ่มสินค้าแรก' : activeNav === 'fabric' ? '+ เพิ่มเนื้อผ้า' : activeNav === 'photo' ? '+ เพิ่มรูปภาพ' : '+ เพิ่มสินค้าใหม่'}
+                  </button>
+                )}
+              </div>
+            ) : (activeNav === 'photo' || activeNav === 'promotion') ? (
+              <div style={{ columns: '2 160px', gap: 12 }}>
+                {filtered.map((s) => (
+                  <PhotoCard key={s.id} shirt={s} isAdmin={!!adminUser}
+                    onEdit={() => setEditShirt(s)}
+                    onDelete={async () => {
+                      await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
+                      await supabase.from('shirts').delete().eq('id', s.id)
+                      setShirts((prev) => prev.filter((x) => x.id !== s.id))
+                      notify('ลบรูปแล้ว', 'err')
+                    }}
+                  />
+                ))}
               </div>
             ) : (
               <div className="grid-shirts">
@@ -293,7 +316,7 @@ export default function CatalogPage() {
       {/* Modals */}
       {showAdd && (
         <ShirtModal collars={collars} prodTypes={prodTypes}
-          category={['all', 'promotion'].includes(activeNav) ? 'new' : activeNav}
+          category={activeNav === 'all' ? 'new' : activeNav}
           onSave={async (data, imgFile) => {
             let image_url = null
             if (imgFile) image_url = await uploadBase64Image(imgFile)
@@ -509,6 +532,29 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
   )
 }
 
+
+/* ── Photo Card (responsive image) ── */
+function PhotoCard({ shirt, isAdmin, onEdit, onDelete }: {
+  shirt: Shirt, isAdmin: boolean,
+  onEdit: () => void, onDelete: () => void
+}) {
+  return (
+    <div className="card-shirt" style={{ breakInside: 'avoid', marginBottom: 12, position: 'relative' }}>
+      {shirt.image_url ? (
+        <img src={shirt.image_url} alt={shirt.name || ''} style={{ width: '100%', display: 'block', borderRadius: '8px 8px 0 0' }} />
+      ) : (
+        <div style={{ width: '100%', aspectRatio: '4/3', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44, borderRadius: '8px 8px 0 0' }}>🖼</div>
+      )}
+      {isAdmin && (
+        <div style={{ display: 'flex', gap: 5, padding: '8px 10px' }}>
+          <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
+          <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Shirt Modal ── */
 function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: {
   initial?: Shirt, collars: Collar[], prodTypes: ProductType[],
@@ -534,7 +580,9 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial ? '✏ แก้ไขเนื้อผ้า' : '+ เพิ่มเนื้อผ้าใหม่'}</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{initial
+            ? (f.category === 'fabric' ? '✏ แก้ไขเนื้อผ้า' : f.category === 'collar' ? '✏ แก้ไขคอเสื้อ' : f.category === 'promotion' ? '✏ แก้ไขโปรโมชั่น' : f.category === 'photo' ? '✏ แก้ไขรูปภาพ' : '✏ แก้ไขแบบเสื้อ')
+            : (f.category === 'fabric' ? '+ เพิ่มเนื้อผ้าใหม่' : f.category === 'collar' ? '+ เพิ่มคอเสื้อ' : f.category === 'promotion' ? '+ เพิ่มโปรโมชั่น' : f.category === 'photo' ? '+ เพิ่มรูปภาพ' : '+ เพิ่มแบบเสื้อใหม่')}</div>
           <button className="btn-outline sm" onClick={onClose}>✕ ปิด</button>
         </div>
         <div className="section-label">รูปภาพ (อัปโหลดสู่ Supabase Storage)</div>
@@ -557,36 +605,93 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
         <div className="divider" />
         <div style={{ display: 'grid', gap: 13 }}>
-          <div><div className="section-label">เนื้อผ้า</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อเนื้อผ้า" /></div>
-
-
-          <div><div className="section-label">เนื้อผ้า +บวกเพิ่ม ตัวละ</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
+          {/* ── fabric ── */}
+          {f.category === 'fabric' && (<>
+            <div><div className="section-label">เนื้อผ้า</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อเนื้อผ้า" /></div>
+            <div><div className="section-label">เนื้อผ้า +บวกเพิ่ม ตัวละ</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="section-label">ประเภทเนื้อผ้า</div>
-            <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-              <option value="ไมโครโพลีเอสเตอร์ (Micro Polyester)">ไมโครโพลีเอสเตอร์ (Micro Polyester)</option>
-              <option value="แจ็คการ์ด (Jacquard)">แจ็คการ์ด (Jacquard)</option>
-              <option value="แฟชั่น (Fashion)">แฟชั่น (Fashion)</option>
-              <option value="อื่นๆ">อื่นๆ</option>
-              {prodTypes.filter((t) => {
-                const fixed = ['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ']
-                const hidden = ['เสื้อแขนสั้น','เสื้อแขนกุด','เสื้อแขนยาว','เสื้อแขนยาว ปลายจั๊ม','กางเกง','ปลอกแขน','ธงแลกเปลี่ยน','ธงเชียร์','ผ้าพันคอ']
-                return !fixed.includes(t.name) && !hidden.includes(t.name)
-              }).map((t) => (
-                <option key={t.id} value={t.name}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div><div className="section-label">คุณสมบัติเนื้อผ้า</div>
-            <textarea className="input-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}
-              placeholder="เช่น น้ำหนัก 150 กรัม ระบายอากาศได้ดี ไม่หดตัว..."
-              style={{ minHeight: 80, resize: 'vertical' as const }} />
-          </div>
+            <div><div className="section-label">ประเภทเนื้อผ้า</div>
+              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
+                <option value="ไมโครโพลีเอสเตอร์ (Micro Polyester)">ไมโครโพลีเอสเตอร์ (Micro Polyester)</option>
+                <option value="แจ็คการ์ด (Jacquard)">แจ็คการ์ด (Jacquard)</option>
+                <option value="แฟชั่น (Fashion)">แฟชั่น (Fashion)</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+                {prodTypes.filter((t) => {
+                  const fixed = ['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ']
+                  const hidden = ['เสื้อแขนสั้น','เสื้อแขนกุด','เสื้อแขนยาว','เสื้อแขนยาว ปลายจั๊ม','กางเกง','ปลอกแขน','ธงแลกเปลี่ยน','ธงเชียร์','ผ้าพันคอ']
+                  return !fixed.includes(t.name) && !hidden.includes(t.name)
+                }).map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <div><div className="section-label">คุณสมบัติเนื้อผ้า</div>
+              <textarea className="input-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}
+                placeholder="เช่น น้ำหนัก 150 กรัม ระบายอากาศได้ดี ไม่หดตัว..."
+                style={{ minHeight: 80, resize: 'vertical' as const }} />
+            </div>
+          </>)}
+          {/* ── collar ── */}
+          {f.category === 'collar' && (<>
+            <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
+              <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
+                <option value="">— เลือกประเภทคอ —</option>
+                {collars.map((col) => <option key={col.id} value={col.name}>{col.name}</option>)}
+              </select>
+            </div>
+            <div><div className="section-label">ประเภทสินค้า</div>
+              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
+                <option value="">— เลือกประเภทสินค้า —</option>
+                {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <div><div className="section-label">ราคา (THB)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
+              </div>
+            </div>
+          </>)}
+          {/* ── photo / promotion: รูปอย่างเดียว ── */}
+          {(f.category === 'photo' || f.category === 'promotion') && (
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '8px 0' }}>อัปโหลดรูปภาพด้านบนเพื่อบันทึก</div>
+          )}
+          {/* ── new / other / all ── */}
+          {(f.category === 'new' || f.category === 'other') && (<>
+            <div><div className="section-label">ชื่อทีม / ชื่องาน</div><input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="ชื่อแบบเสื้อ / ชื่อทีม" /></div>
+            <div><div className="section-label">คอเสื้อ / กางเกง / สินค้า</div>
+              <select className="select-d" value={f.collar_type} onChange={(e) => set('collar_type', e.target.value)}>
+                <option value="">— เลือกประเภทคอ —</option>
+                {collars.map((col) => <option key={col.id} value={col.name}>{col.name}</option>)}
+              </select>
+            </div>
+            <div><div className="section-label">ประเภทสินค้า</div>
+              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
+                <option value="">— เลือกประเภทสินค้า —</option>
+                {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <div><div className="section-label">ราคา (THB)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>THB.-</span>
+              </div>
+            </div>
+            <div><div className="section-label">หมวดหมู่</div>
+              <select className="select-d" value={f.category} onChange={(e) => set('category', e.target.value)}>
+                <option value="new">แบบเสื้อใหม่ (New)</option>
+                <option value="collar">คอเสื้อทั้งหมด</option>
+                <option value="other">แบบเสื้ออื่นๆ</option>
+                <option value="photo">ภาพถ่ายงานจริง</option>
+              </select>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
+              <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
+            </label>
+          </>)}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
           <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
