@@ -225,7 +225,8 @@ export default function CatalogPage() {
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
-                <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>
+                {activeNav !== 'fabric' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อ</button>}
+                {activeNav === 'fabric' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มเนื้อผ้า</button>}
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
@@ -502,7 +503,7 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || '', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
@@ -552,10 +553,16 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>บาท/ตัว</span>
             </div>
           </div>
-          <div><div className="section-label">ประเภทเนื้อผ้า</div>
+          <div>
+            <div className="section-label">ประเภทเนื้อผ้า</div>
             <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-              <option value="">— เลือกประเภทเนื้อผ้า —</option>
-              {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+              <option value="ไมโครโพลีเอสเตอร์ (Micro Polyester)">ไมโครโพลีเอสเตอร์ (Micro Polyester)</option>
+              <option value="แจ็คการ์ด (Jacquard)">แจ็คการ์ด (Jacquard)</option>
+              <option value="แฟชั่น (Fashion)">แฟชั่น (Fashion)</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+              {prodTypes.filter((t) => !['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ'].includes(t.name)).map((t) => (
+                <option key={t.id} value={t.name}>{t.name}</option>
+              ))}
             </select>
           </div>
           <div><div className="section-label">คุณสมบัติเนื้อผ้า</div>
