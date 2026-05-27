@@ -8,6 +8,9 @@ import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabas
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
 type FabricType = { id: string; name: string; sort_order: number }
+type Promotion = { id: string; name: string; is_active: boolean; min_qty: number; type: string; free_qty: number; discount_qty: number; discount_pct: number; discount_thb: number; sort_order: number }
+type ShippingRule = { id: string; name: string; min_qty: number; max_qty: number | null; price: number; sort_order: number }
+type CollarWithPrice = { id: string; name: string; price: number; sort_order: number }
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
   'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
@@ -41,6 +44,8 @@ export default function CatalogPage() {
   const [collars, setCollars] = useState<Collar[]>([])
   const [prodTypes, setProdTypes] = useState<ProductType[]>([])
   const [fabricTypes, setFabricTypes] = useState<FabricType[]>([])
+  const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [shippingRules, setShippingRules] = useState<ShippingRule[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
@@ -75,7 +80,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }] =
         await Promise.all([
           supabase.from('banners').select('*').order('sort_order'),
           supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
@@ -83,6 +88,8 @@ export default function CatalogPage() {
           supabase.from('product_types').select('*').order('sort_order'),
           supabase.from('customers').select('*').order('joined_at', { ascending: false }),
           supabase.from('fabric_types').select('*').order('sort_order'),
+          supabase.from('promotions').select('*').order('sort_order'),
+          supabase.from('shipping_rules').select('*').order('sort_order'),
         ])
       const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
@@ -91,6 +98,8 @@ export default function CatalogPage() {
       if (p) setProdTypes(p)
       if (cu) setCustomers(cu)
       if (ft) setFabricTypes(ft as FabricType[])
+      if (promo) setPromotions(promo as Promotion[])
+      if (ship) setShippingRules(ship as ShippingRule[])
       if (ss) setShopSettings(ss)
       setReady(true)
     })()
@@ -346,11 +355,11 @@ export default function CatalogPage() {
           onClose={() => setEditShirt(null)} />
       )}
       {showSettings && (
-        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes}
+        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes} promotions={promotions} setPromotions={setPromotions} shippingRules={shippingRules} setShippingRules={setShippingRules}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
-      {showCalculator && <PriceCalculator shirts={shirts} onClose={() => setShowCalculator(false)} />}
+      {showCalculator && <PriceCalculator shirts={shirts} collars={collars as CollarWithPrice[]} promotions={promotions} shippingRules={shippingRules} onClose={() => setShowCalculator(false)} />}
       {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
       {showShopAdmin && <ShopAdminModal shopSettings={shopSettings} setShopSettings={setShopSettings} notify={notify} onClose={() => setShowShopAdmin(false)} />}
       {showWelcome && <WelcomeModal shopSettings={shopSettings} onBrowse={() => setShowWelcome(false)} onAdmin={() => { setShowWelcome(false); setView('admin-login') }} />}
@@ -701,28 +710,41 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave
 }
 
 /* ── Settings Modal ── */
-function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, onClose, notify }: {
+function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, promotions, setPromotions, shippingRules, setShippingRules, onClose, notify }: {
   collars: Collar[], setCollars: React.Dispatch<React.SetStateAction<Collar[]>>,
   prodTypes: ProductType[], setProdTypes: React.Dispatch<React.SetStateAction<ProductType[]>>,
   fabricTypes: FabricType[], setFabricTypes: React.Dispatch<React.SetStateAction<FabricType[]>>,
+  promotions: Promotion[], setPromotions: React.Dispatch<React.SetStateAction<Promotion[]>>,
+  shippingRules: ShippingRule[], setShippingRules: React.Dispatch<React.SetStateAction<ShippingRule[]>>,
   onClose: () => void, notify: (m: string, t?: 'ok' | 'err') => void
 }) {
-  const [tab, setTab] = useState<'collar' | 'prod' | 'fabric'>('collar')
+  const [tab, setTab] = useState<'collar'|'prod'|'fabric'|'price'|'promo'|'ship'>('collar')
+  const TABS = [
+    ['collar', `ประเภทคอเสื้อ (${collars.length})`],
+    ['prod', `ประเภทสินค้า (${prodTypes.length})`],
+    ['fabric', `ประเภทเนื้อผ้า (${fabricTypes.length})`],
+    ['price', 'ราคาคอเสื้อ'],
+    ['promo', 'โปรโมชั่น'],
+    ['ship', 'ค่าขนส่ง'],
+  ] as const
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth: 580 }}>
+      <div className="modal-box" style={{ maxWidth: 640 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 }}>
-          {([['collar', `ประเภทคอเสื้อ (${collars.length})`], ['prod', `ประเภทสินค้า (${prodTypes.length})`], ['fabric', `ประเภทเนื้อผ้า (${fabricTypes.length})`]] as const).map(([id, lbl]) => (
-            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '6px 16px', borderRadius: 5 }} onClick={() => setTab(id as any)}>{lbl}</div>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12, flexWrap: 'wrap' }}>
+          {TABS.map(([id, lbl]) => (
+            <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '5px 12px', borderRadius: 5, fontSize: 12 }} onClick={() => setTab(id as any)}>{lbl}</div>
           ))}
         </div>
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
         {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
         {tab === 'fabric' && <SupabaseTypeList table="fabric_types" items={fabricTypes} setItems={setFabricTypes as any} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
+        {tab === 'price' && <CollarPriceList collars={collars as CollarWithPrice[]} setCollars={setCollars as any} notify={notify} />}
+        {tab === 'promo' && <PromotionList promotions={promotions} setPromotions={setPromotions} notify={notify} />}
+        {tab === 'ship' && <ShippingList shippingRules={shippingRules} setShippingRules={setShippingRules} notify={notify} />}
       </div>
     </div>
   )
@@ -770,6 +792,201 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
                 <button className="btn-outline sm" onClick={() => { setEi(i); setEv(item.name) }}>แก้ไข</button>
                 <button className="btn-ghost" onClick={() => del(i)}>ลบ</button></>
             }
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+
+/* ── Collar Price List ── */
+function CollarPriceList({ collars, setCollars, notify }: {
+  collars: CollarWithPrice[], setCollars: React.Dispatch<React.SetStateAction<any[]>>,
+  notify: (m: string, t?: 'ok' | 'err') => void
+}) {
+  const [editing, setEditing] = useState<Record<string, string>>({})
+  const save = async (col: CollarWithPrice) => {
+    const price = Number(editing[col.id] ?? col.price)
+    await supabase.from('collars').update({ price }).eq('id', col.id)
+    setCollars((prev: any[]) => prev.map((x) => x.id === col.id ? { ...x, price } : x))
+    setEditing((prev) => { const n = { ...prev }; delete n[col.id]; return n })
+    notify('บันทึกราคาแล้ว')
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 10 }}>กำหนดราคาต่อตัวสำหรับแต่ละประเภทคอเสื้อ</div>
+      <div style={{ maxHeight: 340, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {collars.map((col) => (
+          <div key={col.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '7px 12px', borderRadius: 5 }}>
+            <span style={{ flex: 1, fontSize: 13 }}>{col.name}</span>
+            <input className="input-d" type="number" value={editing[col.id] ?? col.price ?? 0}
+              onChange={(e) => setEditing((prev) => ({ ...prev, [col.id]: e.target.value }))}
+              style={{ width: 90, textAlign: 'right' }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>THB</span>
+            <button className="btn-red sm" onClick={() => save(col)}>บันทึก</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Promotion List ── */
+function PromotionList({ promotions, setPromotions, notify }: {
+  promotions: Promotion[], setPromotions: React.Dispatch<React.SetStateAction<Promotion[]>>,
+  notify: (m: string, t?: 'ok' | 'err') => void
+}) {
+  const [showAdd, setShowAdd] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const empty = { name: '', is_active: false, min_qty: 1, type: 'free', free_qty: 1, discount_qty: 1, discount_pct: 0, discount_thb: 0 }
+  const [f, setF] = useState<Omit<Promotion,'id'|'sort_order'>>(empty)
+  const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }))
+
+  const save = async () => {
+    if (!f.name.trim()) return
+    if (editId) {
+      await supabase.from('promotions').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      setPromotions((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
+      notify('บันทึกโปรโมชั่นแล้ว')
+    } else {
+      const { data } = await supabase.from('promotions').insert([{ ...f, sort_order: promotions.length }]).select().single()
+      if (data) { setPromotions((prev) => [...prev, data as Promotion]); notify('เพิ่มโปรโมชั่นแล้ว') }
+    }
+    setShowAdd(false); setEditId(null); setF(empty)
+  }
+  const del = async (id: string) => {
+    await supabase.from('promotions').delete().eq('id', id)
+    setPromotions((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
+  }
+  const toggleActive = async (p: Promotion) => {
+    await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id)
+    setPromotions((prev) => prev.map((x) => x.id === p.id ? { ...x, is_active: !p.is_active } : x))
+  }
+
+  const TYPE_LABELS: Record<string,string> = { free: 'แถมฟรี', discount_qty: 'ลดจำนวนตัว', discount_pct: 'ลด %', discount_thb: 'ลดเป็นบาท' }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>โปรโมชั่นที่ active จะนำมาคำนวณราคา</div>
+        <button className="btn-red sm" onClick={() => { setShowAdd(true); setEditId(null); setF(empty) }}>+ เพิ่ม</button>
+      </div>
+      {(showAdd || editId) && (
+        <div style={{ background: '#1a1a1a', borderRadius: 8, padding: 14, marginBottom: 12, display: 'grid', gap: 10 }}>
+          <div><div className="section-label">ชื่อโปรโมชั่น</div>
+            <input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="เช่น โปร 15 ตัว แถม 1" />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}><div className="section-label">จำนวนขั้นต่ำ (ตัว)</div>
+              <input className="input-d" type="number" value={f.min_qty} onChange={(e) => set('min_qty', Number(e.target.value))} />
+            </div>
+            <div style={{ flex: 1 }}><div className="section-label">ประเภทโปรโมชั่น</div>
+              <select className="select-d" value={f.type} onChange={(e) => set('type', e.target.value)}>
+                <option value="free">แถมฟรี (ตัว)</option>
+                <option value="discount_qty">ลดจำนวน (ตัว)</option>
+                <option value="discount_pct">ลด %</option>
+                <option value="discount_thb">ลดเป็นบาท</option>
+              </select>
+            </div>
+          </div>
+          {f.type === 'free' && <div><div className="section-label">จำนวนแถมฟรี (ตัว)</div><input className="input-d" type="number" value={f.free_qty} onChange={(e) => set('free_qty', Number(e.target.value))} /></div>}
+          {f.type === 'discount_qty' && <div><div className="section-label">ลดจำนวน (ตัว)</div><input className="input-d" type="number" value={f.discount_qty} onChange={(e) => set('discount_qty', Number(e.target.value))} /></div>}
+          {f.type === 'discount_pct' && <div><div className="section-label">ลด (%)</div><input className="input-d" type="number" value={f.discount_pct} onChange={(e) => set('discount_pct', Number(e.target.value))} /></div>}
+          {f.type === 'discount_thb' && <div><div className="section-label">ลด (บาท)</div><input className="input-d" type="number" value={f.discount_thb} onChange={(e) => set('discount_thb', Number(e.target.value))} /></div>}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />
+            <span style={{ fontSize: 13 }}>เปิดใช้งานโปรโมชั่นนี้</span>
+          </label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-red sm" onClick={save}>💾 บันทึก</button>
+            <button className="btn-outline sm" onClick={() => { setShowAdd(false); setEditId(null) }}>ยกเลิก</button>
+          </div>
+        </div>
+      )}
+      <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {promotions.map((p) => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #c00' : '1px solid transparent' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
+            </div>
+            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#c00' : '#333', color: '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
+            <button className="btn-outline sm" onClick={() => { setEditId(p.id); setShowAdd(false); setF({ name: p.name, is_active: p.is_active, min_qty: p.min_qty, type: p.type, free_qty: p.free_qty, discount_qty: p.discount_qty, discount_pct: p.discount_pct, discount_thb: p.discount_thb }) }}>แก้ไข</button>
+            <button className="btn-ghost" onClick={() => del(p.id)}>ลบ</button>
+          </div>
+        ))}
+        {promotions.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13, padding: 20 }}>ยังไม่มีโปรโมชั่น</div>}
+      </div>
+    </div>
+  )
+}
+
+/* ── Shipping List ── */
+function ShippingList({ shippingRules, setShippingRules, notify }: {
+  shippingRules: ShippingRule[], setShippingRules: React.Dispatch<React.SetStateAction<ShippingRule[]>>,
+  notify: (m: string, t?: 'ok' | 'err') => void
+}) {
+  const [showAdd, setShowAdd] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const empty = { name: '', min_qty: 0, max_qty: null as number | null, price: 0 }
+  const [f, setF] = useState<{ name: string; min_qty: number; max_qty: number | null; price: number }>(empty)
+  const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }))
+
+  const save = async () => {
+    if (!f.name.trim()) return
+    if (editId) {
+      await supabase.from('shipping_rules').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      setShippingRules((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
+      notify('บันทึกแล้ว')
+    } else {
+      const { data } = await supabase.from('shipping_rules').insert([{ ...f, sort_order: shippingRules.length }]).select().single()
+      if (data) { setShippingRules((prev) => [...prev, data as ShippingRule]); notify('เพิ่มช่องทางขนส่งแล้ว') }
+    }
+    setShowAdd(false); setEditId(null); setF(empty)
+  }
+  const del = async (id: string) => {
+    await supabase.from('shipping_rules').delete().eq('id', id)
+    setShippingRules((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>ค่าขนส่ง 0 บาท = ไม่คิดค่าจัดส่ง</div>
+        <button className="btn-red sm" onClick={() => { setShowAdd(true); setEditId(null); setF(empty) }}>+ เพิ่ม</button>
+      </div>
+      {(showAdd || editId) && (
+        <div style={{ background: '#1a1a1a', borderRadius: 8, padding: 14, marginBottom: 12, display: 'grid', gap: 10 }}>
+          <div><div className="section-label">ชื่อช่องทาง</div>
+            <input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="เช่น ขนส่งทั่วไป, รถไฟ EMS" />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1 }}><div className="section-label">จำนวนขั้นต่ำ</div>
+              <input className="input-d" type="number" value={f.min_qty} onChange={(e) => set('min_qty', Number(e.target.value))} />
+            </div>
+            <div style={{ flex: 1 }}><div className="section-label">จำนวนสูงสุด (ว่าง = ไม่จำกัด)</div>
+              <input className="input-d" type="number" value={f.max_qty ?? ''} onChange={(e) => set('max_qty', e.target.value === '' ? null : Number(e.target.value))} placeholder="ไม่จำกัด" />
+            </div>
+            <div style={{ flex: 1 }}><div className="section-label">ราคา (THB)</div>
+              <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', Number(e.target.value))} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-red sm" onClick={save}>💾 บันทึก</button>
+            <button className="btn-outline sm" onClick={() => { setShowAdd(false); setEditId(null) }}>ยกเลิก</button>
+          </div>
+        </div>
+      )}
+      <div style={{ maxHeight: 280, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {shippingRules.map((r) => (
+          <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{r.name}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{r.min_qty}{r.max_qty != null ? `–${r.max_qty}` : '+'} ตัว · ฿{Number(r.price).toLocaleString()}</div>
+            </div>
+            <button className="btn-outline sm" onClick={() => { setEditId(r.id); setShowAdd(false); setF({ name: r.name, min_qty: r.min_qty, max_qty: r.max_qty, price: r.price }) }}>แก้ไข</button>
+            <button className="btn-ghost" onClick={() => del(r.id)}>ลบ</button>
           </div>
         ))}
       </div>
@@ -1036,100 +1253,213 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Price Calculator ── */
-const SEWING_TIERS = [
-  { min: 1,   max: 11,  price: 250 },
-  { min: 12,  max: 24,  price: 220 },
-  { min: 25,  max: 49,  price: 200 },
-  { min: 50,  max: 99,  price: 185 },
-  { min: 100, max: 999, price: 170 },
-]
-
-function PriceCalculator({ shirts, onClose }: { shirts: Shirt[], onClose: () => void }) {
-  const [selectedId, setSelectedId] = useState('')
-  const [qty, setQty] = useState(12)
-  const [hasPrint, setHasPrint] = useState(false)
-  const [printPos, setPrintPos] = useState(1)
-  const [printPrice, setPrintPrice] = useState(30)
-  const [tiers, setTiers] = useState<{ min_qty: number; max_qty: number | null; price_per_piece: number }[]>([])
+function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }: {
+  shirts: Shirt[], collars: CollarWithPrice[],
+  promotions: Promotion[], shippingRules: ShippingRule[],
+  onClose: () => void
+}) {
+  const [collarId, setCollarId] = useState('')
+  const [fabricId, setFabricId] = useState('')
+  const [qty, setQty] = useState(1)
+  const [shippingId, setShippingId] = useState('')
+  const [promoChoice, setPromoChoice] = useState<'free'|'discount'|''>('')
+  const [calculated, setCalculated] = useState(false)
+  const [contact, setContact] = useState<any>(null)
+  const [showContact, setShowContact] = useState(false)
 
   useEffect(() => {
-    supabase.from('pricing_rules').select('min_qty,max_qty,price_per_piece').order('sort_order')
-      .then(({ data }) => { if (data && data.length > 0) setTiers(data) })
+    supabase.from('contact_settings').select('*').eq('id','main').single()
+      .then(({ data }) => { if (data) setContact(data) })
   }, [])
 
-  const shirt = shirts.find((s) => s.id === selectedId)
-  const sewingUnit = tiers.length > 0
-    ? (tiers.find((t) => qty >= t.min_qty && (t.max_qty === null || qty <= t.max_qty))?.price_per_piece ?? tiers[0].price_per_piece)
-    : (SEWING_TIERS.find((t) => qty >= t.min && qty <= t.max)?.price ?? 250)
-  const fabricPrice = shirt ? Number(shirt.price) : 0
-  const printTotal = hasPrint ? printPos * printPrice : 0
-  const unitTotal = fabricPrice + sewingUnit + printTotal
-  const grandTotal = unitTotal * qty
+  // ราคาคอเสื้อ
+  const collar = collars.find((c) => c.id === collarId)
+  const collarPrice = collar ? Number(collar.price) : 0
+
+  // ราคาเนื้อผ้า (เฉพาะ category=fabric, default=0)
+  const fabricShirts = shirts.filter((s) => s.category === 'fabric')
+  const fabric = fabricShirts.find((s) => s.id === fabricId)
+  const fabricPrice = fabric ? Number(fabric.price) : 0
+
+  // ราคาขนส่ง
+  const shipping = shippingRules.find((r) => r.id === shippingId)
+  const shippingPrice = shipping ? Number(shipping.price) : 0
+
+  // โปรโมชั่น active
+  const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
+
+  // คำนวณ
+  const unitPrice = collarPrice + fabricPrice
+  let subtotal = unitPrice * qty
+  let promoLabel = ''
+  let promoValue = 0
+  let bonusQty = 0
+
+  if (activePromo && promoChoice) {
+    if (promoChoice === 'free') {
+      bonusQty = activePromo.free_qty
+      promoLabel = `แถมฟรี ${bonusQty} ตัว`
+      promoValue = 0
+    } else {
+      if (activePromo.type === 'free' || activePromo.type === 'discount_qty') {
+        const dq = activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty
+        promoValue = unitPrice * dq
+        promoLabel = `ลดราคาเทียบเท่า ${dq} ตัว`
+      } else if (activePromo.type === 'discount_pct') {
+        promoValue = Math.round(subtotal * activePromo.discount_pct / 100)
+        promoLabel = `ลด ${activePromo.discount_pct}%`
+      } else if (activePromo.type === 'discount_thb') {
+        promoValue = activePromo.discount_thb
+        promoLabel = `ลด ฿${activePromo.discount_thb.toLocaleString()}`
+      }
+      subtotal = Math.max(0, subtotal - promoValue)
+    }
+  }
+
+  const grandTotal = subtotal + shippingPrice
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{ maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', padding: 20, overflow: 'hidden' }}><div style={{ overflowY: 'auto', maxHeight: '80vh' }}>
-        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-20px -20px 20px' }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🧮 คำนวณราคาเบื้องต้น</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>ประมาณการค่าใช้จ่ายเบื้องต้น</div>
-          </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-        </div>
-        <div className="section-label">เลือกแบบเสื้อ</div>
-        <select className="select-d" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={{ marginBottom: 14 }}>
-          <option value="">— เลือกแบบเสื้อ —</option>
-          {shirts.map((s) => <option key={s.id} value={s.id}>{s.name} (เนื้อผ้า ฿{Number(s.price).toLocaleString()})</option>)}
-        </select>
-        <div className="section-label">จำนวนชิ้น</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-          <button className="btn-outline sm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-          <input className="input-d" type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} style={{ width: 80, textAlign: 'center' }} />
-          <button className="btn-outline sm" onClick={() => setQty((q) => q + 1)}>+</button>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ตัดเย็บ {sewingUnit} บาท/ตัว</span>
-        </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 10 }}>
-          <input type="checkbox" checked={hasPrint} onChange={(e) => setHasPrint(e.target.checked)} />
-          <span style={{ fontSize: 13 }}>มีสกรีน/ปักโลโก้</span>
-        </label>
-        {hasPrint && (
-          <div style={{ paddingLeft: 24, display: 'grid', gap: 10, marginBottom: 10 }}>
+      <div className="modal-box" style={{ maxWidth: 440, maxHeight: '92vh', overflowY: 'auto', padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowY: 'auto', maxHeight: '92vh' }}>
+          {/* Header */}
+          <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div className="section-label">จำนวนจุดสกรีน</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[1, 2, 3, 4].map((n) => (
-                  <button key={n} className={printPos === n ? 'btn-red sm' : 'btn-outline sm'} onClick={() => setPrintPos(n)}>{n} จุด</button>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>ราคา = คอเสื้อ + เนื้อผ้า + ขนส่ง - โปรโมชั่น</div>
+            </div>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          </div>
+
+          <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
+            {/* ประเภทคอเสื้อ */}
+            <div>
+              <div className="section-label">ประเภทคอเสื้อ</div>
+              <select className="select-d" value={collarId} onChange={(e) => { setCollarId(e.target.value); setCalculated(false) }}>
+                <option value="">— เลือกประเภทคอเสื้อ —</option>
+                {collars.map((col) => (
+                  <option key={col.id} value={col.id}>{col.name} {Number(col.price) > 0 ? `(฿${Number(col.price).toLocaleString()})` : '(ยังไม่กำหนดราคา)'}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* เนื้อผ้า */}
+            <div>
+              <div className="section-label">เนื้อผ้า <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>(ไม่บวกเพิ่ม = เลือกไมโครเรียบ)</span></div>
+              <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); setCalculated(false) }}>
+                <option value="">ไมโครเรียบ (฿0)</option>
+                {fabricShirts.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name} {Number(s.price) > 0 ? `(+฿${Number(s.price).toLocaleString()})` : '(ไม่บวกเพิ่ม)'}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* จำนวน */}
+            <div>
+              <div className="section-label">จำนวน (ตัว)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); setCalculated(false) }}>−</button>
+                <input className="input-d" type="number" min={1} value={qty}
+                  onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); setCalculated(false) }}
+                  style={{ width: 80, textAlign: 'center' }} />
+                <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); setCalculated(false) }}>+</button>
               </div>
             </div>
+
+            {/* โปรโมชั่น */}
+            {activePromo && (
+              <div style={{ background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(activePromo.type === 'free') && (
+                    <button className={promoChoice === 'free' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                      onClick={() => { setPromoChoice('free'); setCalculated(false) }}>
+                      แถมฟรี {activePromo.free_qty} ตัว
+                    </button>
+                  )}
+                  <button className={promoChoice === 'discount' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                    onClick={() => { setPromoChoice('discount'); setCalculated(false) }}>
+                    {activePromo.type === 'free' || activePromo.type === 'discount_qty'
+                      ? `รับส่วนลด ${activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty} ตัว`
+                      : activePromo.type === 'discount_pct' ? `ลด ${activePromo.discount_pct}%`
+                      : `ลด ฿${activePromo.discount_thb.toLocaleString()}`}
+                  </button>
+                  <button className={promoChoice === '' ? 'btn-outline sm' : 'btn-ghost'} style={{ flex: 0.6 }}
+                    onClick={() => { setPromoChoice(''); setCalculated(false) }}>ไม่ใช้</button>
+                </div>
+              </div>
+            )}
+
+            {/* ค่าขนส่ง */}
             <div>
-              <div className="section-label">ราคาสกรีน/จุด/ตัว (บาท)</div>
-              <input className="input-d" type="number" value={printPrice} onChange={(e) => setPrintPrice(Math.max(0, Number(e.target.value)))} style={{ width: 100 }} />
+              <div className="section-label">ช่องทางจัดส่ง</div>
+              <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); setCalculated(false) }}>
+                <option value="">— เลือกช่องทาง —</option>
+                {shippingRules.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name} {Number(r.price) > 0 ? `(฿${Number(r.price).toLocaleString()})` : '(ฟรี)'}</option>
+                ))}
+              </select>
             </div>
+
+            {/* ปุ่มคำนวณ */}
+            <button className="btn-red" style={{ width: '100%', padding: '12px' }}
+              onClick={() => setCalculated(true)}>
+              🧮 คำนวณ
+            </button>
+
+            {/* ผลลัพธ์ */}
+            {calculated && (
+              <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>📋 สรุปราคาเบื้องต้น</div>
+                {[
+                  ['ประเภทคอเสื้อ', `฿${collarPrice.toLocaleString()}/ตัว`],
+                  ['เนื้อผ้า', fabricPrice > 0 ? `+฿${fabricPrice.toLocaleString()}/ตัว` : 'ไม่บวกเพิ่ม'],
+                  [`ราคาต่อตัว × ${qty}`, `฿${unitPrice.toLocaleString()} × ${qty} = ฿${(unitPrice*qty).toLocaleString()}`],
+                  ...(promoChoice && activePromo ? [[`โปรโมชั่น (${promoLabel})`, promoChoice === 'free' ? `+${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`]] : []),
+                  [`ค่าขนส่ง (${shipping?.name ?? 'ยังไม่เลือก'})`, shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : 'ฟรี'],
+                ].map(([label, val]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
+                    <span style={{ color: String(val).startsWith('-') ? '#6fdf6f' : '#fff' }}>{val}</span>
+                  </div>
+                ))}
+                {promoChoice === 'free' && bonusQty > 0 && (
+                  <div style={{ background: 'rgba(200,0,0,0.1)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#ff6060' }}>
+                    🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
+                  </div>
+                )}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 20, color: '#ff4444' }}>
+                  <span>รวมทั้งหมด</span>
+                  <span>฿{grandTotal.toLocaleString()}</span>
+                </div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
+
+                {/* ปุ่มสนใจสั่งซื้อ */}
+                <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
+                  {contact?.facebook_url && (
+                    <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      <span>📘</span> สนใจสั่งซื้อ ผ่าน Facebook
+                    </a>
+                  )}
+                  {contact?.line_url && (
+                    <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      <span>💬</span> สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (${contact.line_add})` : ''}
+                    </a>
+                  )}
+                  {contact?.phone1 && (
+                    <a href={`tel:${contact.phone1}`}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      <span>📱</span> โทร {contact.phone1}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        <div className="divider" />
-        <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
-          <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>📋 สรุปราคาเบื้องต้น</div>
-          {[
-            ['เนื้อผ้า', `${fabricPrice.toLocaleString()} บาท/ตัว`],
-            [`ตัดเย็บ (${qty} ตัว)`, `${sewingUnit.toLocaleString()} บาท/ตัว`],
-            ...(hasPrint ? [[`สกรีน ${printPos} จุด`, `${printTotal.toLocaleString()} บาท/ตัว`]] : []),
-          ].map(([label, val]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
-              <span>{val}</span>
-            </div>
-          ))}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-            <span>รวม/ตัว</span><span>{unitTotal.toLocaleString()} บาท</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 18, color: '#ff4444' }}>
-            <span>รวมทั้งหมด (×{qty})</span><span>{grandTotal.toLocaleString()} บาท</span>
-          </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>* ราคาประมาณการเบื้องต้น กรุณาติดต่อร้านเพื่อยืนยันราคาจริง</div>
         </div>
-      </div></div>
+      </div>
     </div>
   )
 }
