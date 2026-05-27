@@ -560,7 +560,11 @@ function ShirtModal({ initial, collars, prodTypes, category, onSave, onClose }: 
               <option value="แจ็คการ์ด (Jacquard)">แจ็คการ์ด (Jacquard)</option>
               <option value="แฟชั่น (Fashion)">แฟชั่น (Fashion)</option>
               <option value="อื่นๆ">อื่นๆ</option>
-              {prodTypes.filter((t) => !['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ'].includes(t.name)).map((t) => (
+              {prodTypes.filter((t) => {
+                const fixed = ['ไมโครโพลีเอสเตอร์ (Micro Polyester)','แจ็คการ์ด (Jacquard)','แฟชั่น (Fashion)','อื่นๆ']
+                const hidden = ['เสื้อแขนสั้น','เสื้อแขนกุด','เสื้อแขนยาว','เสื้อแขนยาว ปลายจั๊ม','กางเกง','ปลอกแขน','ธงแลกเปลี่ยน','ธงเชียร์','ผ้าพันคอ']
+                return !fixed.includes(t.name) && !hidden.includes(t.name)
+              }).map((t) => (
                 <option key={t.id} value={t.name}>{t.name}</option>
               ))}
             </select>
