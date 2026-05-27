@@ -1258,6 +1258,467 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
   promotions: Promotion[], shippingRules: ShippingRule[],
   onClose: () => void
 }) {
+  const [useCollar, setUseCollar] = useState(false)
+  const [collarId, setCollarId] = useState('')
+  const [shirtId, setShirtId] = useState('')       // เลือกแบบ (ดึงราคาจากการ์ด)
+  const [fabricId, setFabricId] = useState('')
+  const [qty, setQty] = useState(1)
+  const [shippingId, setShippingId] = useState('')
+  const [promoChoice, setPromoChoice] = useState<'free'|'discount'|''>('')
+  const [calculated, setCalculated] = useState(false)
+  const [contact, setContact] = useState<any>(null)
+
+  useEffect(() => {
+    supabase.from('contact_settings').select('*').eq('id','main').single()
+      .then(({ data }) => { if (data) setContact(data) })
+  }, [])
+
+  // เลือกแบบ: ดึงราคาจากการ์ด (new/other/collar category)
+  const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
+  const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
+  const shirtPrice = selectedShirt ? Number(selectedShirt.price) : 0
+
+  // ประเภทคอเสื้อ (ใช้เฉพาะตอน useCollar = true)
+  const collar = collars.find((col) => col.id === collarId)
+  const collarPrice = (useCollar && collar) ? Number(collar.price) : 0
+
+  // ราคาฐาน = ราคาจากการ์ด + คอเสื้อ (ถ้าเปลี่ยน)
+  const basePrice = shirtPrice + collarPrice
+
+  // เนื้อผ้า (เฉพาะ category=fabric, ซ่อนรายการที่ price=0 ยกเว้น default)
+  const fabricShirts = shirts.filter((s) => s.category === 'fabric')
+  const fabric = fabricShirts.find((s) => s.id === fabricId)
+  const fabricPrice = fabric ? Number(fabric.price) : 0
+
+  // ราคาขนส่ง
+  const shipping = shippingRules.find((r) => r.id === shippingId)
+  const shippingPrice = (shipping && Number(shipping.price) > 0) ? Number(shipping.price) : 0
+  const isCustomShipping = shipping && Number(shipping.price) === 0 && shipping.name !== 'รับหน้าร้าน / นัดรับ'
+
+  // โปรโมชั่น active
+  const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
+
+  // สูตร: ((ราคา + เนื้อผ้า) * จำนวน) + ขนส่ง
+  const unitPrice = basePrice + fabricPrice
+  let subtotal = unitPrice * qty
+  let promoLabel = ''
+  let promoValue = 0
+  let bonusQty = 0
+
+  if (activePromo && promoChoice) {
+    if (promoChoice === 'free') {
+      bonusQty = activePromo.free_qty
+      promoLabel = `แถมฟรี ${bonusQty} ตัว`
+    } else {
+      if (activePromo.type === 'free' || activePromo.type === 'discount_qty') {
+        const dq = activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty
+        promoValue = unitPrice * dq
+        promoLabel = `ลดเทียบเท่า ${dq} ตัว`
+      } else if (activePromo.type === 'discount_pct') {
+        promoValue = Math.round(subtotal * activePromo.discount_pct / 100)
+        promoLabel = `ลด ${activePromo.discount_pct}%`
+      } else if (activePromo.type === 'discount_thb') {
+        promoValue = activePromo.discount_thb
+        promoLabel = `ลด ฿${activePromo.discount_thb.toLocaleString()}`
+      }
+      subtotal = Math.max(0, subtotal - promoValue)
+    }
+  }
+
+  const grandTotal = subtotal + shippingPrice
+  const reset = () => setCalculated(false)
+
+  return (
+    <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 440, maxHeight: '92vh', padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowY: 'auto', maxHeight: '92vh' }}>
+
+          {/* Header */}
+          <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>((ราคา + เนื้อผ้า) × จำนวน) + ขนส่ง</div>
+            </div>
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          </div>
+
+          <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
+
+            {/* เลือกแบบ */}
+            <div>
+              <div className="section-label">เลือกแบบ</div>
+              <select className="select-d" value={shirtId} onChange={(e) => { setShirtId(e.target.value); reset() }}>
+                <option value="">เลือกตามแบบ</option>
+                {selectableShirts.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}{Number(s.price) > 0 ? ` (฿${Number(s.price).toLocaleString()})` : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* ประเภทคอเสื้อ */}
+            <div style={{ background: useCollar ? 'transparent' : 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: useCollar ? 10 : 0 }}>
+                <input type="checkbox" checked={useCollar} onChange={(e) => { setUseCollar(e.target.checked); setCollarId(''); reset() }} />
+                <span style={{ fontSize: 13, fontWeight: 600 }}>เปลี่ยนคอเสื้อ</span>
+                {!useCollar && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>— ประเภทคอเสื้อ (ใช้ตามแบบที่เลือก)</span>}
+              </label>
+              {useCollar && (
+                <select className="select-d" value={collarId} onChange={(e) => { setCollarId(e.target.value); reset() }}>
+                  <option value="">— เลือกประเภทคอเสื้อ —</option>
+                  {collars.map((col) => (
+                    <option key={col.id} value={col.id}>{col.name} {Number(col.price) > 0 ? `(฿${Number(col.price).toLocaleString()})` : '(ยังไม่กำหนดราคา)'}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* เนื้อผ้า */}
+            <div>
+              <div className="section-label">เนื้อผ้า</div>
+              <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); reset() }}>
+                <option value="">ไมโครเรียบ (ไม่บวกเพิ่ม)</option>
+                {fabricShirts.filter((s) => Number(s.price) > 0).map((s) => (
+                  <option key={s.id} value={s.id}>{s.name} (+฿{Number(s.price).toLocaleString()})</option>
+                ))}
+              </select>
+            </div>
+
+            {/* จำนวน */}
+            <div>
+              <div className="section-label">จำนวน (ตัว)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); reset() }}>−</button>
+                <input className="input-d" type="number" min={1} value={qty}
+                  onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); reset() }}
+                  style={{ width: 80, textAlign: 'center' }} />
+                <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); reset() }}>+</button>
+              </div>
+            </div>
+
+            {/* โปรโมชั่น active */}
+            {activePromo && (
+              <div style={{ background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+                <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {activePromo.type === 'free' && (
+                    <button className={promoChoice === 'free' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                      onClick={() => { setPromoChoice('free'); reset() }}>
+                      แถมฟรี {activePromo.free_qty} ตัว
+                    </button>
+                  )}
+                  <button className={promoChoice === 'discount' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                    onClick={() => { setPromoChoice('discount'); reset() }}>
+                    {activePromo.type === 'free' || activePromo.type === 'discount_qty'
+                      ? `รับส่วนลด ${activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty} ตัว`
+                      : activePromo.type === 'discount_pct' ? `ลด ${activePromo.discount_pct}%`
+                      : `ลด ฿${activePromo.discount_thb.toLocaleString()}`}
+                  </button>
+                  <button className={promoChoice === '' ? 'btn-outline sm' : 'btn-ghost'} style={{ flex: 0.6 }}
+                    onClick={() => { setPromoChoice(''); reset() }}>ไม่ใช้</button>
+                </div>
+              </div>
+            )}
+
+            {/* ช่องทางจัดส่ง */}
+            <div>
+              <div className="section-label">ช่องทางจัดส่ง</div>
+              <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); reset() }}>
+                <option value="">— เลือกช่องทาง —</option>
+                {shippingRules.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name} {Number(r.price) > 0 ? `(฿${Number(r.price).toLocaleString()})` : Number(r.price) === 0 && r.name === 'รับหน้าร้าน / นัดรับ' ? '(ฟรี)' : '(สอบถาม Admin)'}</option>
+                ))}
+              </select>
+              {isCustomShipping && (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#ffaa44', background: 'rgba(255,170,68,0.08)', border: '1px solid rgba(255,170,68,0.2)', borderRadius: 6, padding: '6px 10px' }}>
+                  ⚠️ ช่องการจัดส่งนอกจากที่มีให้เลือก รบกวนสอบถาม Admin
+                </div>
+              )}
+            </div>
+
+            {/* ปุ่มคำนวณ */}
+            <button className="btn-red" style={{ width: '100%', padding: '12px', fontSize: 15 }}
+              onClick={() => setCalculated(true)}>
+              🧮 คำนวณ
+            </button>
+
+            {/* ผลลัพธ์ */}
+            {calculated && (
+              <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>📋 สรุปราคาเบื้องต้น</div>
+                {[
+                  ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()})` : 'ตามแบบ'],
+                  ...(useCollar && collar ? [['เปลี่ยนคอเสื้อ', `${collar.name} +฿${collarPrice.toLocaleString()}`]] : []),
+                  ['เนื้อผ้า', fabricPrice > 0 ? `+฿${fabricPrice.toLocaleString()}/ตัว` : 'ไมโครเรียบ (ไม่บวกเพิ่ม)'],
+                  [`รวม/ตัว × ${qty}`, `฿${unitPrice.toLocaleString()} × ${qty} = ฿${(unitPrice*qty).toLocaleString()}`],
+                  ...(promoChoice && activePromo ? [[`โปรโมชั่น (${promoLabel})`, promoChoice === 'free' ? `🎁 +${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`]] : []),
+                  [`ค่าขนส่ง`, isCustomShipping ? 'สอบถาม Admin' : shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : shipping ? 'ฟรี' : 'ยังไม่เลือก'],
+                ].map(([label, val]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
+                    <span style={{ color: String(val).startsWith('-') ? '#6fdf6f' : String(val).startsWith('🎁') ? '#ff6060' : '#fff' }}>{val}</span>
+                  </div>
+                ))}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 20, color: '#ff4444' }}>
+                  <span>รวมทั้งหมด</span>
+                  <span>{isCustomShipping ? '฿' + subtotal.toLocaleString() + ' + ขนส่ง' : '฿' + grandTotal.toLocaleString()}</span>
+                </div>
+                {promoChoice === 'free' && bonusQty > 0 && (
+                  <div style={{ background: 'rgba(200,0,0,0.1)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#ff6060' }}>
+                    🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
+
+                {/* ปุ่มสนใจสั่งซื้อ */}
+                <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
+                  {contact?.facebook_url && (
+                    <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      📘 สนใจสั่งซื้อ ผ่าน Facebook
+                    </a>
+                  )}
+                  {contact?.line_url && (
+                    <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (${contact.line_add})` : ''}
+                    </a>
+                  )}
+                  {contact?.phone1 && (
+                    <a href={`tel:${contact.phone1}`}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      📱 โทร {contact.phone1}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Auth Pages ── */
+function AdminLogin({ onLogin, onBack }: { onLogin: (u: string) => void, onBack: () => void }) {
+  const [id, setId] = useState(''); const [pw, setPw] = useState(''); const [err, setErr] = useState('')
+  return (
+    <AuthShell title="เข้าสู่ระบบ Admin" badge="ADMIN ONLY">
+      <input className="input-d" placeholder="Name ID เช่น ceo edit00" value={id} onChange={(e) => setId(e.target.value)} style={{ marginBottom: 10 }} />
+      <input className="input-d" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'))} style={{ marginBottom: 14 }} />
+      {err && <ErrMsg msg={err} />}
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={() => ADMIN_ACCOUNTS[id] === pw ? onLogin(id) : setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')}>เข้าสู่ระบบ Admin</button>
+      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>← กลับ</button>
+    </AuthShell>
+  )
+}
+
+function CustLogin({ customers, onLogin, onBack, onReg }: {
+  customers: Customer[], onLogin: (u: Customer) => void, onBack: () => void, onReg: () => void
+}) {
+  const [em, setEm] = useState(''); const [pw, setPw] = useState(''); const [err, setErr] = useState('')
+  const go = () => { const u = customers.find((c) => c.email === em && c.password === pw); if (u) onLogin(u); else setErr('อีเมลหรือรหัสผ่านไม่ถูกต้อง') }
+  return (
+    <AuthShell title="เข้าสู่ระบบสมาชิก">
+      <input className="input-d" placeholder="อีเมล" value={em} onChange={(e) => setEm(e.target.value)} style={{ marginBottom: 10 }} />
+      <input className="input-d" type="password" placeholder="รหัสผ่าน" value={pw} onChange={(e) => setPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go()} style={{ marginBottom: 14 }} />
+      {err && <ErrMsg msg={err} />}
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} onClick={go}>เข้าสู่ระบบ</button>
+      <button className="btn-outline" style={{ width: '100%', marginBottom: 8 }} onClick={onReg}>สมัครสมาชิกใหม่</button>
+      <button className="btn-outline" style={{ width: '100%', opacity: .65, fontSize: 12 }} onClick={onBack}>ไม่ล็อคอิน — เข้าชมได้เลย</button>
+    </AuthShell>
+  )
+}
+
+function Register({ customers, onSave, onBack }: {
+  customers: Customer[], onSave: (d: Omit<Customer, 'id' | 'joined_at'>) => Promise<void>, onBack: () => void
+}) {
+  const [f, setF] = useState({ name: '', email: '', phone: '', facebook: '', password: '', confirm: '' })
+  const [err, setErr] = useState('')
+  const [saving, setSaving] = useState(false)
+  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }))
+  const go = async () => {
+    if (!f.name || !f.email || !f.password) return setErr('กรุณากรอกข้อมูลที่จำเป็น')
+    if (f.password !== f.confirm) return setErr('รหัสผ่านไม่ตรงกัน')
+    if (customers.find((c) => c.email === f.email)) return setErr('อีเมลนี้ถูกใช้งานแล้ว')
+    setSaving(true)
+    await onSave({ name: f.name, email: f.email, phone: f.phone, facebook: f.facebook, password: f.password })
+    setSaving(false)
+  }
+  return (
+    <AuthShell title="สมัครสมาชิก" sub="ข้อมูลถูกเก็บใน Supabase อย่างปลอดภัย">
+      {([['name', 'ชื่อ-นามสกุล *', 'text'], ['email', 'อีเมล *', 'email'], ['phone', 'เบอร์โทรศัพท์', 'tel'], ['facebook', 'Facebook (แนะนำ)', 'text'], ['password', 'รหัสผ่าน *', 'password'], ['confirm', 'ยืนยันรหัสผ่าน *', 'password']] as const).map(([k, lb, tp]) => (
+        <input key={k} className="input-d" type={tp} placeholder={lb} value={(f as any)[k]} onChange={(e) => set(k, e.target.value)} style={{ marginBottom: 10 }} />
+      ))}
+      {err && <ErrMsg msg={err} />}
+      <button className="btn-red" style={{ width: '100%', marginBottom: 8 }} disabled={saving} onClick={go}>{saving ? 'กำลังบันทึก...' : 'สมัครสมาชิก'}</button>
+      <button className="btn-outline" style={{ width: '100%' }} onClick={onBack}>← กลับ</button>
+    </AuthShell>
+  )
+}
+
+function AuthShell({ title, badge, sub, children }: { title: string, badge?: string, sub?: string, children: React.ReactNode }) {
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '36px 32px', width: '100%', maxWidth: 400 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
+          {badge && <div style={{ display: 'inline-block', background: '#c00', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#fff', marginBottom: 10 }}>{badge}</div>}
+          <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{title}</div>
+          {sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>{sub}</div>}
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ErrMsg({ msg }: { msg: string }) {
+  return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5, border: '1px solid rgba(200,0,0,0.25)' }}>{msg}</div>
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target?.result as string); r.readAsDataURL(file) })
+}
+
+/* ── Contact Modal ── */
+function ContactModal({ onClose }: { onClose: () => void }) {
+  const [contact, setContact] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.from('contact_settings').select('*').eq('id', 'main').single()
+      .then(({ data }) => { if (data) setContact(data); setLoading(false) })
+  }, [])
+
+  return (
+    <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+              📞 ช่องทางการติดต่อ
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
+          ) : !contact ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
+          ) : (
+            <>
+              {/* Facebook */}
+              {contact.facebook_url && (
+                <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderRadius: 10, background: '#1877f2', textDecoration: 'none', transition: 'opacity .15s' }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+                  onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {/* Facebook Logo SVG */}
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="18" cy="18" r="18" fill="white"/>
+                      <path d="M22.5 18H19.5V27H16.5V18H14.25V15.25H16.5V13.5C16.5 11.57 17.57 10 19.75 10H22.5V12.75H20.75C20.06 12.75 19.5 13.06 19.5 13.75V15.25H22.5L22.5 18Z" fill="#1877f2"/>
+                    </svg>
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.facebook_label || 'Facebook Page'}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>คลิกเพื่อไปยัง Facebook</div>
+                    </div>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
+                </a>
+              )}
+
+              {/* Line + QR */}
+              {contact.line_url && (
+                <div style={{ borderRadius: 10, background: '#06c755', overflow: 'hidden' }}>
+                  <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', textDecoration: 'none', transition: 'opacity .15s' }}
+                    onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
+                    onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {/* Line Logo SVG */}
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="18" cy="18" r="18" fill="white"/>
+                        <path d="M28 17.16C28 12.12 22.63 8 16 8S4 12.12 4 17.16c0 4.51 4 8.3 9.4 9.02.37.08.87.24.99.55.11.28.07.72.04.1l-.16 1c-.05.28-.23 1.1 1 .6 1.2-.5 6.5-3.83 8.87-6.55A8.15 8.15 0 0028 17.16z" fill="#06c755"/>
+                        <path d="M14.5 19.5h-2v-4.5h1v3.5h1v1zm1.5 0v-4.5h1v4.5h-1zm4.5 0h-1l-2-3v3h-1v-4.5h1l2 3v-3h1v4.5zm3.5 0h-3v-4.5h3v1h-2v.88h2v1h-2v.62h2v1z" fill="white"/>
+                      </svg>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{contact.line_label || 'Line Official'}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>คลิกเพื่อเพิ่มเพื่อนใน Line</div>
+                      </div>
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 18 }}>→</span>
+                  </a>
+                  {/* QR ใต้ปุ่ม Line */}
+                  {contact.line_qr_url && (
+                    <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <img src={contact.line_qr_url} alt="Line QR" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>สแกน QR เพิ่มเพื่อน Line</div>
+                        {contact.line_add && <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>ID: {contact.line_add}</div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Phone */}
+              {(contact.phone1 || contact.phone2) && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {contact.phone1 && (
+                    <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
+                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                      <span style={{ fontSize: 20 }}>📱</span>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone1}</div>
+                      </div>
+                    </a>
+                  )}
+                  {contact.phone2 && (
+                    <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
+                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                      <span style={{ fontSize: 20 }}>📱</span>
+                      <div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone2}</div>
+                      </div>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Address */}
+              {contact.address && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ fontSize: 20, marginTop: 2 }}>📍</span>
+                  <div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>ติดต่อที่หน้าร้าน</div>
+                    <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.6 }}>{contact.address}</div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Price Calculator ── */
+function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }: {
+  shirts: Shirt[], collars: CollarWithPrice[],
+  promotions: Promotion[], shippingRules: ShippingRule[],
+  onClose: () => void
+}) {
   const [collarId, setCollarId] = useState('')
   const [fabricId, setFabricId] = useState('')
   const [qty, setQty] = useState(1)
