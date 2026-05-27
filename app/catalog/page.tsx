@@ -1258,7 +1258,9 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
   promotions: Promotion[], shippingRules: ShippingRule[],
   onClose: () => void
 }) {
+  const [useCollar, setUseCollar] = useState(false)
   const [collarId, setCollarId] = useState('')
+  const [shirtId, setShirtId] = useState('')
   const [fabricId, setFabricId] = useState('')
   const [qty, setQty] = useState(1)
   const [shippingId, setShippingId] = useState('')
@@ -1272,9 +1274,14 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
       .then(({ data }) => { if (data) setContact(data) })
   }, [])
 
-  // ราคาคอเสื้อ
-  const collar = collars.find((c) => c.id === collarId)
-  const collarPrice = collar ? Number(collar.price) : 0
+  // เลือกแบบ
+  const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
+  const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
+  const shirtPrice = selectedShirt ? Number(selectedShirt.price) : 0
+
+  // ประเภทคอเสื้อ (เฉพาะตอน useCollar = true)
+  const collar = collars.find((col) => col.id === collarId)
+  const collarPrice = (useCollar && collar) ? Number(collar.price) : 0
 
   // ราคาเนื้อผ้า (เฉพาะ category=fabric, default=0)
   const fabricShirts = shirts.filter((s) => s.category === 'fabric')
@@ -1283,13 +1290,15 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
 
   // ราคาขนส่ง
   const shipping = shippingRules.find((r) => r.id === shippingId)
-  const shippingPrice = shipping ? Number(shipping.price) : 0
+  const shippingPrice = (shipping && Number(shipping.price) > 0) ? Number(shipping.price) : 0
+  const isCustomShipping = shipping && Number(shipping.price) === 0 && shipping.name !== 'รับหน้าร้าน / นัดรับ'
 
   // โปรโมชั่น active
   const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
 
-  // คำนวณ
-  const unitPrice = collarPrice + fabricPrice
+  // สูตร: ((ราคา + เนื้อผ้า) * จำนวน) + ขนส่ง
+  const basePrice = shirtPrice + collarPrice
+  const unitPrice = basePrice + fabricPrice
   let subtotal = unitPrice * qty
   let promoLabel = ''
   let promoValue = 0
@@ -1317,6 +1326,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
   }
 
   const grandTotal = subtotal + shippingPrice
+  const reset = () => setCalculated(false)
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -1326,30 +1336,47 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
           <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>ราคา = คอเสื้อ + เนื้อผ้า + ขนส่ง - โปรโมชั่น</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>((ราคา + เนื้อผ้า) × จำนวน) + ขนส่ง</div>
             </div>
             <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
 
           <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
-            {/* ประเภทคอเสื้อ */}
+            {/* เลือกแบบ */}
             <div>
-              <div className="section-label">ประเภทคอเสื้อ</div>
-              <select className="select-d" value={collarId} onChange={(e) => { setCollarId(e.target.value); setCalculated(false) }}>
-                <option value="">— เลือกประเภทคอเสื้อ —</option>
-                {collars.map((col) => (
-                  <option key={col.id} value={col.id}>{col.name} {Number(col.price) > 0 ? `(฿${Number(col.price).toLocaleString()})` : '(ยังไม่กำหนดราคา)'}</option>
+              <div className="section-label">เลือกแบบ</div>
+              <select className="select-d" value={shirtId} onChange={(e) => { setShirtId(e.target.value); reset() }}>
+                <option value="">เลือกตามแบบ</option>
+                {selectableShirts.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}{Number(s.price) > 0 ? ` (฿${Number(s.price).toLocaleString()})` : ''}</option>
                 ))}
               </select>
+            </div>
+
+            {/* ประเภทคอเสื้อ (toggle) */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: useCollar ? 10 : 0 }}>
+                <input type="checkbox" checked={useCollar} onChange={(e) => { setUseCollar(e.target.checked); setCollarId(''); reset() }} />
+                <span style={{ fontSize: 13, fontWeight: 600 }}>เปลี่ยนคอเสื้อ</span>
+                {!useCollar && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>— ใช้ตามแบบที่เลือก</span>}
+              </label>
+              {useCollar && (
+                <select className="select-d" value={collarId} onChange={(e) => { setCollarId(e.target.value); reset() }}>
+                  <option value="">— เลือกประเภทคอเสื้อ —</option>
+                  {collars.map((col) => (
+                    <option key={col.id} value={col.id}>{col.name} {Number(col.price) > 0 ? `(฿${Number(col.price).toLocaleString()})` : '(ยังไม่กำหนดราคา)'}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* เนื้อผ้า */}
             <div>
               <div className="section-label">เนื้อผ้า <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>(ไม่บวกเพิ่ม = เลือกไมโครเรียบ)</span></div>
-              <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); setCalculated(false) }}>
+              <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); reset() }}>
                 <option value="">ไมโครเรียบ (฿0)</option>
-                {fabricShirts.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} {Number(s.price) > 0 ? `(+฿${Number(s.price).toLocaleString()})` : '(ไม่บวกเพิ่ม)'}</option>
+                {fabricShirts.filter((s) => Number(s.price) > 0).map((s) => (
+                  <option key={s.id} value={s.id}>{s.name} (+฿{Number(s.price).toLocaleString()})</option>
                 ))}
               </select>
             </div>
@@ -1358,11 +1385,11 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
             <div>
               <div className="section-label">จำนวน (ตัว)</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); setCalculated(false) }}>−</button>
+                <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); reset() }}>−</button>
                 <input className="input-d" type="number" min={1} value={qty}
-                  onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); setCalculated(false) }}
+                  onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); reset() }}
                   style={{ width: 80, textAlign: 'center' }} />
-                <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); setCalculated(false) }}>+</button>
+                <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); reset() }}>+</button>
               </div>
             </div>
 
@@ -1393,12 +1420,17 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
             {/* ค่าขนส่ง */}
             <div>
               <div className="section-label">ช่องทางจัดส่ง</div>
-              <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); setCalculated(false) }}>
+              <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); reset() }}>
                 <option value="">— เลือกช่องทาง —</option>
                 {shippingRules.map((r) => (
                   <option key={r.id} value={r.id}>{r.name} {Number(r.price) > 0 ? `(฿${Number(r.price).toLocaleString()})` : '(ฟรี)'}</option>
                 ))}
               </select>
+              {isCustomShipping && (
+                <div style={{ marginTop: 6, fontSize: 11, color: '#ffaa44', background: 'rgba(255,170,68,0.08)', border: '1px solid rgba(255,170,68,0.2)', borderRadius: 6, padding: '6px 10px' }}>
+                  ⚠️ ช่องการจัดส่งนอกจากที่มีให้เลือก รบกวนสอบถาม Admin
+                </div>
+              )}
             </div>
 
             {/* ปุ่มคำนวณ */}
@@ -1412,11 +1444,12 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
               <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>📋 สรุปราคาเบื้องต้น</div>
                 {[
-                  ['ประเภทคอเสื้อ', `฿${collarPrice.toLocaleString()}/ตัว`],
-                  ['เนื้อผ้า', fabricPrice > 0 ? `+฿${fabricPrice.toLocaleString()}/ตัว` : 'ไม่บวกเพิ่ม'],
-                  [`ราคาต่อตัว × ${qty}`, `฿${unitPrice.toLocaleString()} × ${qty} = ฿${(unitPrice*qty).toLocaleString()}`],
-                  ...(promoChoice && activePromo ? [[`โปรโมชั่น (${promoLabel})`, promoChoice === 'free' ? `+${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`]] : []),
-                  [`ค่าขนส่ง (${shipping?.name ?? 'ยังไม่เลือก'})`, shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : 'ฟรี'],
+                  ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()})` : 'ตามแบบ'],
+                  ...(useCollar && collar ? [['เปลี่ยนคอเสื้อ', `${collar.name} +฿${collarPrice.toLocaleString()}`]] : []),
+                  ['เนื้อผ้า', fabricPrice > 0 ? `+฿${fabricPrice.toLocaleString()}/ตัว` : 'ไมโครเรียบ (ไม่บวกเพิ่ม)'],
+                  [`รวม/ตัว × ${qty}`, `฿${unitPrice.toLocaleString()} × ${qty} = ฿${(unitPrice*qty).toLocaleString()}`],
+                  ...(promoChoice && activePromo ? [[`โปรโมชั่น (${promoLabel})`, promoChoice === 'free' ? `🎁 +${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`]] : []),
+                  ['ค่าขนส่ง', isCustomShipping ? 'สอบถาม Admin' : shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : shipping ? 'ฟรี' : 'ยังไม่เลือก'],
                 ].map(([label, val]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
@@ -1430,7 +1463,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
                 )}
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 20, color: '#ff4444' }}>
                   <span>รวมทั้งหมด</span>
-                  <span>฿{grandTotal.toLocaleString()}</span>
+                  <span>{isCustomShipping ? '฿' + subtotal.toLocaleString() + ' + ขนส่ง' : '฿' + grandTotal.toLocaleString()}</span>
                 </div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
 
