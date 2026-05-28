@@ -1496,15 +1496,15 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {calculated && (
             <div style={{ padding: '16px 20px' }}>
               {/* ปุ่มปิด */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>📋 สรุปราคาเบื้องต้น</div>
+              <div style={{ background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>📋 สรุปราคาเบื้องต้น</div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn-outline sm" onClick={() => reset()}>← แก้ไข</button>
-                  <button onClick={onClose} style={{ background: '#333', border: 'none', color: '#fff', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                  <button className="btn-outline sm" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => reset()}>← แก้ไข</button>
+                  <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 13 }}>✕</button>
                 </div>
               </div>
 
-              <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
+              <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0 0 10px 10px', padding: '14px 16px', display: 'grid', gap: 8 }}>
                 {([
                   !useCollar && ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : 'เลือกตามแบบ (฿0)'],
                   useCollar && collar && ['คอเสื้อ', `${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)`],
@@ -1530,27 +1530,55 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                 )}
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
 
-                {/* ช่องทางติดต่อ */}
-                <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
-                  {contact?.facebook_url && (
-                    <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                      📘 สนใจสั่งซื้อ ผ่าน Facebook
-                    </a>
-                  )}
-                  {contact?.line_url && (
-                    <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                      💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
-                    </a>
-                  )}
-                  {contact?.phone1 && (
-                    <a href={`tel:${contact.phone1}`}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                      📱 โทร {contact.phone1}
-                    </a>
-                  )}
-                </div>
+                {/* ช่องทางติดต่อ — ส่งข้อความสรุปอัตโนมัติ */}
+                {(() => {
+                  const summaryLines = [
+                    '🧾 สนใจสั่งซื้อครับ',
+                    '─────────────────',
+                    !useCollar && selectedShirt ? `แบบ: ${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : '',
+                    useCollar && collar ? `คอเสื้อ: ${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)` : '',
+                    fabricPrice > 0 && fabric ? `เนื้อผ้า: ${fabric.name} (+฿${fabricPrice.toLocaleString()}/ตัว)` : '',
+                    addPants && pants ? `กางเกงพิมพ์ลาย: ${pants.name} (฿${pantsPrice.toLocaleString()}/ตัว)` : '',
+                    `จำนวน: ${qty} ตัว`,
+                    promoChoice && activePromo ? `โปรโมชั่น: ${promoLabel}${promoChoice === 'free' ? ` (แถม ${bonusQty} ตัว)` : ` (-฿${promoValue.toLocaleString()})`}` : '',
+                    shipping ? `จัดส่ง: ${shipping.name}${shippingPrice > 0 ? ` (฿${shippingPrice.toLocaleString()})` : isCustomShipping ? ' (สอบถาม Admin)' : ' (ฟรี)'}` : '',
+                    '─────────────────',
+                    isCustomShipping ? `รวม: ฿${subtotal.toLocaleString()} (ยังไม่รวมขนส่ง)` : `รวมทั้งหมด: ฿${grandTotal.toLocaleString()}`,
+                    promoChoice === 'free' && bonusQty > 0 ? `🎁 ร้านทำเสื้อให้ ${qty + bonusQty} ตัว (สั่ง ${qty} + แถม ${bonusQty})` : '',
+                  ].filter(Boolean).join('
+')
+
+                  const lineMsg = encodeURIComponent(summaryLines)
+                  const fbMsg = encodeURIComponent(summaryLines)
+                  const lineUrl = contact?.line_url
+                    ? (contact.line_url.includes('line.me') ? `${contact.line_url}` : contact.line_url)
+                    : ''
+
+                  return (
+                    <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
+                      {contact?.facebook_url && (
+                        <a href={`https://m.me/${contact.facebook_url.split('/').pop()}?ref=${fbMsg}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                          📘 สนใจสั่งซื้อ ผ่าน Facebook
+                        </a>
+                      )}
+                      {contact?.line_url && (
+                        <a href={`https://line.me/R/oaMessage/${(contact.line_add || '').replace('@','')}/?${lineMsg}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                          💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
+                        </a>
+                      )}
+                      {contact?.phone1 && (
+                        <a href={`tel:${contact.phone1}`}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                          📱 โทร {contact.phone1}
+                        </a>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           )}
