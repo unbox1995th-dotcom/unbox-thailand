@@ -459,7 +459,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
   onEdit: () => void, onDelete: () => void, onDupe: () => void,
-  onContact?: () => void, onCalculate?: () => void
+  onContact?: () => void, onCalculate?: (id: string) => void
 }) {
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMoved = useRef(false)
@@ -531,7 +531,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         {showActionBtns && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
             <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>📞 สนใจสั่งซื้อ</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onCalculate}>🧮 คำนวณราคา</button>
+            <button className="btn-outline sm" style={{ flex: 1 }} onClick={() => onCalculate?.(shirt.id)}>🧮 คำนวณราคา</button>
           </div>
         )}
         {isAdmin && (
