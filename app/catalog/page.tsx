@@ -1309,6 +1309,67 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
   const reset = () => setCalculated(false)
 
 
+
+  // เลือกแบบ
+  const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
+  const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
+  const shirtPrice = selectedShirt ? Number(selectedShirt.price) : 0
+
+  // คอเสื้อ
+  const shirtCollars = collars.filter((col) => !col.name.includes('กางเกง') && !col.name.includes('ปลอกแขน'))
+  const collar = shirtCollars.find((col) => col.id === collarId)
+  const collarPrice = (useCollar && collar) ? Number(collar.price) : 0
+
+  // กางเกง
+  const pantsCollars = collars.filter((col) => col.name.includes('กางเกง'))
+  const defaultPants = pantsCollars.find((col) => col.name.includes('พิมพ์ลาย')) ?? pantsCollars[0]
+  const activePantsId = pantsId || defaultPants?.id || ''
+  const pants = pantsCollars.find((col) => col.id === activePantsId)
+  const pantsPrice = (addPants && pants) ? Number(pants.price) : 0
+
+  // เนื้อผ้า
+  const fabricShirts = shirts.filter((s) => s.category === 'fabric')
+  const fabric = fabricShirts.find((s) => s.id === fabricId)
+  const fabricPrice = fabric ? Number(fabric.price) : 0
+
+  // ขนส่ง
+  const shipping = shippingRules.find((r) => r.id === shippingId)
+  const shippingPrice = (shipping && Number(shipping.price) > 0) ? Number(shipping.price) : 0
+  const isCustomShipping = shipping && Number(shipping.price) === 0 && shipping.name !== 'รับหน้าร้าน / นัดรับ'
+
+  // โปรโมชั่น
+  const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
+
+  // สูตร
+  const basePrice = useCollar ? collarPrice : shirtPrice
+  const unitPrice = basePrice + fabricPrice
+  let subtotal = (unitPrice * qty) + (pantsPrice * qty)
+  let promoLabel = ''
+  let promoValue = 0
+  let bonusQty = 0
+
+  if (activePromo && promoChoice) {
+    if (promoChoice === 'free') {
+      bonusQty = activePromo.free_qty
+      promoLabel = `แถมฟรี ${bonusQty} ตัว`
+    } else {
+      if (activePromo.type === 'free' || activePromo.type === 'discount_qty') {
+        const dq = activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty
+        promoValue = unitPrice * dq
+        promoLabel = `ลดเทียบเท่า ${dq} ตัว`
+      } else if (activePromo.type === 'discount_pct') {
+        promoValue = Math.round(subtotal * activePromo.discount_pct / 100)
+        promoLabel = `ลด ${activePromo.discount_pct}%`
+      } else if (activePromo.type === 'discount_thb') {
+        promoValue = activePromo.discount_thb
+        promoLabel = `ลด ฿${activePromo.discount_thb.toLocaleString()}`
+      }
+      subtotal = Math.max(0, subtotal - promoValue)
+    }
+  }
+
+  const grandTotal = subtotal + shippingPrice
+
   const summaryLines = [
     '🧾 สนใจสั่งซื้อครับ — อีโวสปอร์ต',
     '─────────────────────',
@@ -1376,65 +1437,6 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
   }
 
 
-  // เลือกแบบ
-  const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
-  const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
-  const shirtPrice = selectedShirt ? Number(selectedShirt.price) : 0
-
-  // คอเสื้อ
-  const shirtCollars = collars.filter((col) => !col.name.includes('กางเกง') && !col.name.includes('ปลอกแขน'))
-  const collar = shirtCollars.find((col) => col.id === collarId)
-  const collarPrice = (useCollar && collar) ? Number(collar.price) : 0
-
-  // กางเกง
-  const pantsCollars = collars.filter((col) => col.name.includes('กางเกง'))
-  const defaultPants = pantsCollars.find((col) => col.name.includes('พิมพ์ลาย')) ?? pantsCollars[0]
-  const activePantsId = pantsId || defaultPants?.id || ''
-  const pants = pantsCollars.find((col) => col.id === activePantsId)
-  const pantsPrice = (addPants && pants) ? Number(pants.price) : 0
-
-  // เนื้อผ้า
-  const fabricShirts = shirts.filter((s) => s.category === 'fabric')
-  const fabric = fabricShirts.find((s) => s.id === fabricId)
-  const fabricPrice = fabric ? Number(fabric.price) : 0
-
-  // ขนส่ง
-  const shipping = shippingRules.find((r) => r.id === shippingId)
-  const shippingPrice = (shipping && Number(shipping.price) > 0) ? Number(shipping.price) : 0
-  const isCustomShipping = shipping && Number(shipping.price) === 0 && shipping.name !== 'รับหน้าร้าน / นัดรับ'
-
-  // โปรโมชั่น
-  const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
-
-  // สูตร
-  const basePrice = useCollar ? collarPrice : shirtPrice
-  const unitPrice = basePrice + fabricPrice
-  let subtotal = (unitPrice * qty) + (pantsPrice * qty)
-  let promoLabel = ''
-  let promoValue = 0
-  let bonusQty = 0
-
-  if (activePromo && promoChoice) {
-    if (promoChoice === 'free') {
-      bonusQty = activePromo.free_qty
-      promoLabel = `แถมฟรี ${bonusQty} ตัว`
-    } else {
-      if (activePromo.type === 'free' || activePromo.type === 'discount_qty') {
-        const dq = activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty
-        promoValue = unitPrice * dq
-        promoLabel = `ลดเทียบเท่า ${dq} ตัว`
-      } else if (activePromo.type === 'discount_pct') {
-        promoValue = Math.round(subtotal * activePromo.discount_pct / 100)
-        promoLabel = `ลด ${activePromo.discount_pct}%`
-      } else if (activePromo.type === 'discount_thb') {
-        promoValue = activePromo.discount_thb
-        promoLabel = `ลด ฿${activePromo.discount_thb.toLocaleString()}`
-      }
-      subtotal = Math.max(0, subtotal - promoValue)
-    }
-  }
-
-  const grandTotal = subtotal + shippingPrice
 
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
