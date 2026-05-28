@@ -54,6 +54,7 @@ export default function CatalogPage() {
   const [showCustMgr, setShowCustMgr] = useState(false)
   const [showContact, setShowContact] = useState(false)
   const [showCalculator, setShowCalculator] = useState(false)
+  const [calcShirtId, setCalcShirtId] = useState('')
   const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [showShopAdmin, setShowShopAdmin] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
@@ -313,7 +314,7 @@ export default function CatalogPage() {
                       if (data) { setShirts((prev) => [data, ...prev]); notify('คัดลอกสำเร็จ') }
                     }}
                     onContact={() => setShowContact(true)}
-                    onCalculate={() => setShowCalculator(true)}
+                    onCalculate={(id: string) => { setCalcShirtId(id); setShowCalculator(true) }}
                   />
                 ))}
               </div>
@@ -359,7 +360,7 @@ export default function CatalogPage() {
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
-      {showCalculator && <PriceCalculator shirts={shirts} collars={collars as CollarWithPrice[]} promotions={promotions} shippingRules={shippingRules} onClose={() => setShowCalculator(false)} />}
+      {showCalculator && <PriceCalculator shirts={shirts} collars={collars as CollarWithPrice[]} promotions={promotions} shippingRules={shippingRules} initShirtId={calcShirtId} onClose={() => { setShowCalculator(false); setCalcShirtId('') }} />}
       {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
       {showShopAdmin && <ShopAdminModal shopSettings={shopSettings} setShopSettings={setShopSettings} notify={notify} onClose={() => setShowShopAdmin(false)} />}
       {showWelcome && <WelcomeModal shopSettings={shopSettings} onBrowse={() => setShowWelcome(false)} onAdmin={() => { setShowWelcome(false); setView('admin-login') }} />}
@@ -1253,13 +1254,13 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 }
 
 /* ── Price Calculator ── */
-function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }: {
+function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirtId, onClose }: {
   shirts: Shirt[], collars: CollarWithPrice[],
   promotions: Promotion[], shippingRules: ShippingRule[],
+  initShirtId: string,
   onClose: () => void
 }) {
-  // ── State ──
-  const [shirtId, setShirtId] = useState('')
+  const [shirtId, setShirtId] = useState(initShirtId)
   const [useCollar, setUseCollar] = useState(false)
   const [collarId, setCollarId] = useState('')
   const [addPants, setAddPants] = useState(false)
@@ -1278,45 +1279,40 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
 
   const reset = () => setCalculated(false)
 
-  // ── เลือกแบบ ──
+  // เลือกแบบ
   const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
   const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
   const shirtPrice = selectedShirt ? Number(selectedShirt.price) : 0
 
-  // ── คอเสื้อ ──
-  const shirtCollars = collars.filter((col) =>
-    !col.name.includes('กางเกง') && !col.name.includes('ปลอกแขน')
-  )
+  // คอเสื้อ
+  const shirtCollars = collars.filter((col) => !col.name.includes('กางเกง') && !col.name.includes('ปลอกแขน'))
   const collar = shirtCollars.find((col) => col.id === collarId)
   const collarPrice = (useCollar && collar) ? Number(collar.price) : 0
 
-  // ── กางเกง: filter เฉพาะที่มีคำว่า "กางเกง" ──
+  // กางเกง
   const pantsCollars = collars.filter((col) => col.name.includes('กางเกง'))
-  // default กางเกงพิมพ์ลาย
   const defaultPants = pantsCollars.find((col) => col.name.includes('พิมพ์ลาย')) ?? pantsCollars[0]
   const activePantsId = pantsId || defaultPants?.id || ''
   const pants = pantsCollars.find((col) => col.id === activePantsId)
   const pantsPrice = (addPants && pants) ? Number(pants.price) : 0
 
-  // ── เนื้อผ้า ──
+  // เนื้อผ้า
   const fabricShirts = shirts.filter((s) => s.category === 'fabric')
   const fabric = fabricShirts.find((s) => s.id === fabricId)
   const fabricPrice = fabric ? Number(fabric.price) : 0
 
-  // ── ขนส่ง ──
+  // ขนส่ง
   const shipping = shippingRules.find((r) => r.id === shippingId)
   const shippingPrice = (shipping && Number(shipping.price) > 0) ? Number(shipping.price) : 0
   const isCustomShipping = shipping && Number(shipping.price) === 0 && shipping.name !== 'รับหน้าร้าน / นัดรับ'
 
-  // ── โปรโมชั่น ──
+  // โปรโมชั่น
   const activePromo = promotions.find((p) => p.is_active && qty >= p.min_qty)
 
-  // ── สูตรคำนวณ ──
-  // basePrice = ราคาเสื้อ (จากแบบ หรือ จากคอเสื้อถ้าเปลี่ยน)
+  // สูตร
   const basePrice = useCollar ? collarPrice : shirtPrice
   const unitPrice = basePrice + fabricPrice
   let subtotal = (unitPrice * qty) + (pantsPrice * qty)
-
   let promoLabel = ''
   let promoValue = 0
   let bonusQty = 0
@@ -1348,177 +1344,182 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
       <div className="modal-box" style={{ maxWidth: 440, maxHeight: '92vh', padding: 0, overflow: 'hidden' }}>
         <div style={{ overflowY: 'auto', maxHeight: '92vh' }}>
 
-          {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-                {useCollar
-                  ? addPants ? '((คอเสื้อ+ผ้า)×จำนวน) + (กางเกง×จำนวน) + ขนส่ง' : '((คอเสื้อ+ผ้า)×จำนวน) + ขนส่ง'
-                  : addPants ? '((ราคา+ผ้า)×จำนวน) + (กางเกง×จำนวน) + ขนส่ง' : '((ราคา+ผ้า)×จำนวน) + ขนส่ง'}
-              </div>
-            </div>
-            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-          </div>
-
-          <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
-
-            {/* เลือกแบบ (แสดงเสมอ, disable ถ้า useCollar) */}
-            <div>
-              <div className="section-label">เลือกแบบ</div>
-              <select className="select-d" value={shirtId}
-                disabled={useCollar}
-                style={{ opacity: useCollar ? 0.4 : 1 }}
-                onChange={(e) => { setShirtId(e.target.value); reset() }}>
-                <option value="">เลือกตามแบบ</option>
-                {selectableShirts.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}{Number(s.price) > 0 ? ` (฿${Number(s.price).toLocaleString()})` : ''}
-                  </option>
-                ))}
-              </select>
-              {useCollar && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>* ปิดใช้งาน — กำลังใช้ราคาจากคอเสื้อที่เลือก</div>}
-            </div>
-
-            {/* Checkbox เปลี่ยนคอเสื้อ */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input type="checkbox" checked={useCollar}
-                  onChange={(e) => { setUseCollar(e.target.checked); setCollarId(''); reset() }} />
+          {/* Header — ซ่อนเมื่อคำนวณแล้ว */}
+          {!calculated && (
+            <>
+              <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>เปลี่ยนคอเสื้อ</div>
-                  {!useCollar && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ใช้ราคาจากคอเสื้อที่เลือกแทน</div>}
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                    {useCollar
+                      ? addPants ? '((คอเสื้อ+ผ้า)×จำนวน)+(กางเกง×จำนวน)+ขนส่ง' : '((คอเสื้อ+ผ้า)×จำนวน)+ขนส่ง'
+                      : addPants ? '((ราคา+ผ้า)×จำนวน)+(กางเกง×จำนวน)+ขนส่ง' : '((ราคา+ผ้า)×จำนวน)+ขนส่ง'}
+                  </div>
                 </div>
-              </label>
-              {useCollar && (
-                <div style={{ marginTop: 10 }}>
-                  <select className="select-d" value={collarId}
-                    onChange={(e) => { setCollarId(e.target.value); reset() }}>
-                    <option value="">— เลือกประเภทคอเสื้อ —</option>
-                    {shirtCollars.map((col) => (
-                      <option key={col.id} value={col.id}>
-                        {col.name}{Number(col.price) > 0 ? ` (฿${Number(col.price).toLocaleString()})` : ' (ยังไม่กำหนดราคา)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Checkbox เพิ่มกางเกงพิมพ์ลาย */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input type="checkbox" checked={addPants}
-                  onChange={(e) => { setAddPants(e.target.checked); reset() }} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>เพิ่มกางเกงพิมพ์ลาย</div>
-                  {!addPants && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>บวกราคากางเกงต่อตัว</div>}
-                </div>
-              </label>
-              {addPants && (
-                <div style={{ marginTop: 10 }}>
-                  <select className="select-d" value={activePantsId}
-                    onChange={(e) => { setPantsId(e.target.value); reset() }}>
-                    {pantsCollars.map((col) => (
-                      <option key={col.id} value={col.id}>
-                        {col.name}{Number(col.price) > 0 ? ` (฿${Number(col.price).toLocaleString()})` : ' (ยังไม่กำหนดราคา)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* เนื้อผ้า */}
-            <div>
-              <div className="section-label">เนื้อผ้า</div>
-              <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); reset() }}>
-                <option value="">ไมโครเรียบ (ไม่บวกเพิ่ม)</option>
-                {fabricShirts.filter((s) => Number(s.price) > 0).map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} (+฿{Number(s.price).toLocaleString()})</option>
-                ))}
-              </select>
-            </div>
-
-            {/* จำนวน */}
-            <div>
-              <div className="section-label">จำนวน (ตัว)</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); reset() }}>−</button>
-                <input className="input-d" type="number" min={1} value={qty}
-                  onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); reset() }}
-                  style={{ width: 80, textAlign: 'center' }} />
-                <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); reset() }}>+</button>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
-            </div>
 
-            {/* โปรโมชั่น */}
-            {activePromo && (
-              <div style={{ background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {activePromo.type === 'free' && (
-                    <button className={promoChoice === 'free' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
-                      onClick={() => { setPromoChoice('free'); reset() }}>
-                      แถมฟรี {activePromo.free_qty} ตัว
-                    </button>
+              <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
+
+                {/* เลือกแบบ — read-only label */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>แบบที่เลือก</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: useCollar ? 'rgba(255,255,255,0.3)' : '#fff' }}>
+                    {selectedShirt ? selectedShirt.name : 'ไม่ได้เลือกแบบ'}
+                  </div>
+                  {!useCollar && Number(shirtPrice) > 0 && (
+                    <div style={{ fontSize: 12, color: '#ff4444', marginTop: 2 }}>฿{shirtPrice.toLocaleString()}/ตัว</div>
                   )}
-                  <button className={promoChoice === 'discount' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
-                    onClick={() => { setPromoChoice('discount'); reset() }}>
-                    {activePromo.type === 'free' || activePromo.type === 'discount_qty'
-                      ? `รับส่วนลด ${activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty} ตัว`
-                      : activePromo.type === 'discount_pct' ? `ลด ${activePromo.discount_pct}%`
-                      : `ลด ฿${activePromo.discount_thb.toLocaleString()}`}
-                  </button>
-                  <button className={promoChoice === '' ? 'btn-outline sm' : 'btn-ghost'} style={{ flex: 0.6 }}
-                    onClick={() => { setPromoChoice(''); reset() }}>ไม่ใช้</button>
+                  {useCollar && (
+                    <div style={{ fontSize: 11, color: '#ffaa44', marginTop: 4 }}>
+                      ⚠️ ราคาจากแบบนี้ถูกแทนที่ด้วยคอเสื้อที่เลือก
+                    </div>
+                  )}
+                </div>
+
+                {/* เปลี่ยนคอเสื้อ */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={useCollar}
+                      onChange={(e) => { setUseCollar(e.target.checked); setCollarId(''); reset() }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>เปลี่ยนคอเสื้อ</div>
+                      {!useCollar && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ใช้ราคาจากคอเสื้อที่เลือกแทน</div>}
+                    </div>
+                  </label>
+                  {useCollar && (
+                    <div style={{ marginTop: 10 }}>
+                      <select className="select-d" value={collarId} onChange={(e) => { setCollarId(e.target.value); reset() }}>
+                        <option value="">— เลือกประเภทคอเสื้อ —</option>
+                        {shirtCollars.map((col) => (
+                          <option key={col.id} value={col.id}>{col.name}{Number(col.price) > 0 ? ` (฿${Number(col.price).toLocaleString()})` : ' (ยังไม่กำหนดราคา)'}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* เพิ่มกางเกง */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={addPants}
+                      onChange={(e) => { setAddPants(e.target.checked); reset() }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>เพิ่มกางเกงพิมพ์ลาย</div>
+                      {!addPants && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>บวกราคากางเกงต่อตัว</div>}
+                    </div>
+                  </label>
+                  {addPants && (
+                    <div style={{ marginTop: 10 }}>
+                      <select className="select-d" value={activePantsId} onChange={(e) => { setPantsId(e.target.value); reset() }}>
+                        {pantsCollars.map((col) => (
+                          <option key={col.id} value={col.id}>{col.name}{Number(col.price) > 0 ? ` (฿${Number(col.price).toLocaleString()})` : ' (ยังไม่กำหนดราคา)'}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* เนื้อผ้า */}
+                <div>
+                  <div className="section-label">เนื้อผ้า</div>
+                  <select className="select-d" value={fabricId} onChange={(e) => { setFabricId(e.target.value); reset() }}>
+                    <option value="">ไมโครเรียบ (ไม่บวกเพิ่ม)</option>
+                    {fabricShirts.filter((s) => Number(s.price) > 0).map((s) => (
+                      <option key={s.id} value={s.id}>{s.name} (+฿{Number(s.price).toLocaleString()})</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* จำนวน */}
+                <div>
+                  <div className="section-label">จำนวน (ตัว)</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button className="btn-outline sm" onClick={() => { setQty((q) => Math.max(1, q - 1)); reset() }}>−</button>
+                    <input className="input-d" type="number" min={1} value={qty}
+                      onChange={(e) => { setQty(Math.max(1, Number(e.target.value))); reset() }}
+                      style={{ width: 80, textAlign: 'center' }} />
+                    <button className="btn-outline sm" onClick={() => { setQty((q) => q + 1); reset() }}>+</button>
+                  </div>
+                </div>
+
+                {/* โปรโมชั่น */}
+                {activePromo && (
+                  <div style={{ background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+                    <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {activePromo.type === 'free' && (
+                        <button className={promoChoice === 'free' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                          onClick={() => { setPromoChoice('free'); reset() }}>
+                          แถมฟรี {activePromo.free_qty} ตัว
+                        </button>
+                      )}
+                      <button className={promoChoice === 'discount' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
+                        onClick={() => { setPromoChoice('discount'); reset() }}>
+                        {activePromo.type === 'free' || activePromo.type === 'discount_qty'
+                          ? `รับส่วนลด ${activePromo.type === 'free' ? activePromo.free_qty : activePromo.discount_qty} ตัว`
+                          : activePromo.type === 'discount_pct' ? `ลด ${activePromo.discount_pct}%`
+                          : `ลด ฿${activePromo.discount_thb.toLocaleString()}`}
+                      </button>
+                      <button className={promoChoice === '' ? 'btn-outline sm' : 'btn-ghost'} style={{ flex: 0.6 }}
+                        onClick={() => { setPromoChoice(''); reset() }}>ไม่ใช้</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ขนส่ง */}
+                <div>
+                  <div className="section-label">ช่องทางจัดส่ง</div>
+                  <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); reset() }}>
+                    <option value="">— เลือกช่องทาง —</option>
+                    {shippingRules.map((r) => (
+                      <option key={r.id} value={r.id}>{r.name} {Number(r.price) > 0 ? `(฿${Number(r.price).toLocaleString()})` : r.name === 'รับหน้าร้าน / นัดรับ' ? '(ฟรี)' : '(สอบถาม Admin)'}</option>
+                    ))}
+                  </select>
+                  {isCustomShipping && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: '#ffaa44', background: 'rgba(255,170,68,0.08)', border: '1px solid rgba(255,170,68,0.2)', borderRadius: 6, padding: '6px 10px' }}>
+                      ⚠️ ช่องการจัดส่งนอกจากที่มีให้เลือก รบกวนสอบถาม Admin
+                    </div>
+                  )}
+                </div>
+
+                {/* ปุ่มคำนวณ */}
+                <button className="btn-red" style={{ width: '100%', padding: '12px', fontSize: 15 }}
+                  onClick={() => setCalculated(true)}>
+                  🧮 คำนวณ
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ผลลัพธ์ — แสดงเมื่อคำนวณแล้ว */}
+          {calculated && (
+            <div style={{ padding: '16px 20px' }}>
+              {/* ปุ่มปิด */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>📋 สรุปราคาเบื้องต้น</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn-outline sm" onClick={() => reset()}>← แก้ไข</button>
+                  <button onClick={onClose} style={{ background: '#333', border: 'none', color: '#fff', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 13 }}>✕</button>
                 </div>
               </div>
-            )}
 
-            {/* ขนส่ง */}
-            <div>
-              <div className="section-label">ช่องทางจัดส่ง</div>
-              <select className="select-d" value={shippingId} onChange={(e) => { setShippingId(e.target.value); reset() }}>
-                <option value="">— เลือกช่องทาง —</option>
-                {shippingRules.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} {Number(r.price) > 0 ? `(฿${Number(r.price).toLocaleString()})` : r.name === 'รับหน้าร้าน / นัดรับ' ? '(ฟรี)' : '(สอบถาม Admin)'}
-                  </option>
-                ))}
-              </select>
-              {isCustomShipping && (
-                <div style={{ marginTop: 6, fontSize: 11, color: '#ffaa44', background: 'rgba(255,170,68,0.08)', border: '1px solid rgba(255,170,68,0.2)', borderRadius: 6, padding: '6px 10px' }}>
-                  ⚠️ ช่องการจัดส่งนอกจากที่มีให้เลือก รบกวนสอบถาม Admin
-                </div>
-              )}
-            </div>
-
-            {/* ปุ่มคำนวณ */}
-            <button className="btn-red" style={{ width: '100%', padding: '12px', fontSize: 15 }}
-              onClick={() => setCalculated(true)}>
-              🧮 คำนวณ
-            </button>
-
-            {/* ผลลัพธ์ */}
-            {calculated && (
               <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '14px 16px', display: 'grid', gap: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>📋 สรุปราคาเบื้องต้น</div>
                 {([
-                  !useCollar && ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : 'เลือกตามแบบ'],
+                  !useCollar && ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : 'เลือกตามแบบ (฿0)'],
                   useCollar && collar && ['คอเสื้อ', `${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)`],
                   fabricPrice > 0 && ['เนื้อผ้า', `+฿${fabricPrice.toLocaleString()}/ตัว`],
                   addPants && pants && ['กางเกงพิมพ์ลาย', `${pants.name} (฿${pantsPrice.toLocaleString()}/ตัว)`],
-                  [`รวม/ตัว × ${qty}`, `฿${unitPrice.toLocaleString()}${addPants ? ` + ฿${pantsPrice.toLocaleString()}(กางเกง)` : ''} × ${qty}`],
-                  promoChoice && activePromo && [`โปรโมชั่น`, promoChoice === 'free' ? `🎁 +${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`],
+                  [`รวม/ตัว × ${qty}`, `฿${unitPrice.toLocaleString()}${addPants ? ` + ฿${pantsPrice.toLocaleString()}` : ''} × ${qty} = ฿${(unitPrice * qty + pantsPrice * qty).toLocaleString()}`],
+                  promoChoice && activePromo && ['โปรโมชั่น', promoChoice === 'free' ? `🎁 +${bonusQty} ตัวฟรี` : `-฿${promoValue.toLocaleString()}`],
                   ['ค่าขนส่ง', isCustomShipping ? 'สอบถาม Admin' : shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : shipping ? 'ฟรี' : 'ยังไม่เลือก'],
-                ] as any[]).filter(Boolean).map(([label, val]: [string,string]) => (
+                ] as any[]).filter(Boolean).map(([label, val]: [string, string]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
                     <span style={{ color: String(val).startsWith('-') ? '#6fdf6f' : String(val).startsWith('🎁') ? '#ff6060' : '#fff' }}>{val}</span>
                   </div>
                 ))}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 20, color: '#ff4444' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#ff4444' }}>
                   <span>รวมทั้งหมด</span>
                   <span>{isCustomShipping ? `฿${subtotal.toLocaleString()} + ขนส่ง` : `฿${grandTotal.toLocaleString()}`}</span>
                 </div>
@@ -1529,30 +1530,30 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, onClose }
                 )}
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
 
-                {/* ปุ่มสนใจสั่งซื้อ */}
-                <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
+                {/* ช่องทางติดต่อ */}
+                <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
                   {contact?.facebook_url && (
                     <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
                       📘 สนใจสั่งซื้อ ผ่าน Facebook
                     </a>
                   )}
                   {contact?.line_url && (
                     <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                      💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (${contact.line_add})` : ''}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
                     </a>
                   )}
                   {contact?.phone1 && (
                     <a href={`tel:${contact.phone1}`}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
                       📱 โทร {contact.phone1}
                     </a>
                   )}
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
