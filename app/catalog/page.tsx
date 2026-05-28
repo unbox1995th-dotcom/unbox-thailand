@@ -55,6 +55,7 @@ export default function CatalogPage() {
   const [showContact, setShowContact] = useState(false)
   const [showCalculator, setShowCalculator] = useState(false)
   const [calcShirtId, setCalcShirtId] = useState('')
+  const [lightboxUrl, setLightboxUrl] = useState('')
   const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [showShopAdmin, setShowShopAdmin] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
@@ -282,6 +283,7 @@ export default function CatalogPage() {
                 {filtered.map((s) => (
                   <PhotoCard key={s.id} shirt={s} isAdmin={!!adminUser}
                     onEdit={() => setEditShirt(s)}
+                    onImageClick={(url) => setLightboxUrl(url)}
                     onDelete={async () => {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
                       await supabase.from('shirts').delete().eq('id', s.id)
@@ -315,6 +317,7 @@ export default function CatalogPage() {
                     }}
                     onContact={() => setShowContact(true)}
                     onCalculate={(id: string) => { setCalcShirtId(id); setShowCalculator(true) }}
+                    onImageClick={(url: string) => setLightboxUrl(url)}
                   />
                 ))}
               </div>
@@ -360,6 +363,23 @@ export default function CatalogPage() {
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
+      {lightboxUrl && (
+        <div
+          onClick={() => setLightboxUrl('')}
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, cursor: 'zoom-out' }}>
+          <button
+            onClick={() => setLightboxUrl('')}
+            style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 40, height: 40, borderRadius: '50%', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+            ✕
+          </button>
+          <img
+            src={lightboxUrl}
+            alt=""
+            style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', borderRadius: 8, objectFit: 'contain', boxShadow: '0 8px 40px rgba(0,0,0,0.8)' }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       {showCalculator && <PriceCalculator shirts={shirts} collars={collars as CollarWithPrice[]} promotions={promotions} shippingRules={shippingRules} initShirtId={calcShirtId} onClose={() => { setShowCalculator(false); setCalcShirtId('') }} />}
       {showContactAdmin && <ContactAdminModal notify={notify} onClose={() => setShowContactAdmin(false)} />}
       {showShopAdmin && <ShopAdminModal shopSettings={shopSettings} setShopSettings={setShopSettings} notify={notify} onClose={() => setShowShopAdmin(false)} />}
@@ -459,7 +479,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
   onEdit: () => void, onDelete: () => void, onDupe: () => void,
-  onContact?: () => void, onCalculate?: (id: string) => void
+  onContact?: () => void, onCalculate?: (id: string) => void, onImageClick?: (url: string) => void
 }) {
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMoved = useRef(false)
@@ -500,11 +520,17 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
       {canDrag && (
         <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>⠿</div>
       )}
-      <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden', cursor: shirt.image_url ? 'zoom-in' : 'default' }}
+        onClick={() => shirt.image_url && onImageClick?.(shirt.image_url)}>
         {shirt.image_url
-          ? <img src={shirt.image_url} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={shirt.image_url} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44 }}>👕</div>
         }
+        {shirt.image_url && (
+          <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 7px', fontSize: 11, color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }}>🔍</div>
+        )}
         <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {shirt.category === 'new' && <span style={{ background: '#c00', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
           {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>โปร</span>}
@@ -548,14 +574,17 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
 
 
 /* ── Photo Card (responsive image) ── */
-function PhotoCard({ shirt, isAdmin, onEdit, onDelete }: {
+function PhotoCard({ shirt, isAdmin, onEdit, onDelete, onImageClick }: {
   shirt: Shirt, isAdmin: boolean,
-  onEdit: () => void, onDelete: () => void
+  onEdit: () => void, onDelete: () => void, onImageClick?: (url: string) => void
 }) {
   return (
     <div className="card-shirt" style={{ breakInside: 'avoid', marginBottom: 12, position: 'relative' }}>
       {shirt.image_url ? (
-        <img src={shirt.image_url} alt={shirt.name || ''} style={{ width: '100%', display: 'block', borderRadius: '8px 8px 0 0' }} />
+        <div style={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => onImageClick?.(shirt.image_url!)}>
+          <img src={shirt.image_url} alt={shirt.name || ''} style={{ width: '100%', display: 'block', borderRadius: '8px 8px 0 0' }} />
+          <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 7px', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>🔍</div>
+        </div>
       ) : (
         <div style={{ width: '100%', aspectRatio: '4/3', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44, borderRadius: '8px 8px 0 0' }}>🖼</div>
       )}
@@ -1279,6 +1308,74 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
 
   const reset = () => setCalculated(false)
 
+
+  const summaryLines = [
+    '🧾 สนใจสั่งซื้อครับ — อีโวสปอร์ต',
+    '─────────────────────',
+    !useCollar && selectedShirt ? ('แบบ: ' + (selectedShirt?.name || '') + ' (฿' + shirtPrice.toLocaleString() + '/ตัว)') : null,
+    useCollar && collar ? ('คอเสื้อ: ' + collar.name + ' (฿' + collarPrice.toLocaleString() + '/ตัว)') : null,
+    fabricPrice > 0 && fabric ? ('เนื้อผ้า: ' + fabric.name + ' (+฿' + fabricPrice.toLocaleString() + '/ตัว)') : null,
+    addPants && pants ? ('กางเกง: ' + pants.name + ' (฿' + pantsPrice.toLocaleString() + '/ตัว)') : null,
+    'จำนวน: ' + qty + ' ตัว',
+    promoChoice && activePromo ? ('โปรโมชั่น: ' + promoLabel + (promoChoice === 'free' ? ' (แถม ' + bonusQty + ' ตัว)' : ' (-฿' + promoValue.toLocaleString() + ')')) : null,
+    shipping ? ('จัดส่ง: ' + shipping.name + (shippingPrice > 0 ? ' (฿' + shippingPrice.toLocaleString() + ')' : isCustomShipping ? ' (สอบถาม Admin)' : ' (ฟรี)')) : null,
+    '─────────────────────',
+    isCustomShipping ? ('รวม: ฿' + subtotal.toLocaleString() + ' (ยังไม่รวมขนส่ง)') : ('รวมทั้งหมด: ฿' + grandTotal.toLocaleString()),
+    promoChoice === 'free' && bonusQty > 0 ? ('🎁 ร้านทำเสื้อให้ ' + (qty + bonusQty) + ' ตัว (สั่ง ' + qty + ' + แถม ' + bonusQty + ')') : null,
+  ].filter(Boolean).join('\n') as string
+
+    const saveAsImage = () => {
+    const lines = summaryLines.split('\n')
+    const W = 480, pad = 24, lineH = 28, titleH = 56
+    const H = titleH + pad + lines.length * lineH + pad * 2 + 56
+    const canvas = document.createElement('canvas')
+    canvas.width = W * 2; canvas.height = H * 2
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(2, 2)
+
+    // background
+    ctx.fillStyle = '#111'
+    ctx.fillRect(0, 0, W, H)
+
+    // header
+    const grad = ctx.createLinearGradient(0, 0, W, 0)
+    grad.addColorStop(0, '#cc0000')
+    grad.addColorStop(1, '#880000')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, W, titleH)
+
+    // title
+    ctx.fillStyle = '#fff'
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillText('📋 สรุปราคาเบื้องต้น — อีโวสปอร์ต', pad, 36)
+
+    // summary lines
+    let y = titleH + pad + 16
+    lines.forEach((line, i) => {
+      if (line.startsWith('─')) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+        ctx.beginPath(); ctx.moveTo(pad, y - 8); ctx.lineTo(W - pad, y - 8); ctx.stroke()
+        y += 4; return
+      }
+      const isTotal = line.startsWith('รวมทั้งหมด') || line.startsWith('รวม:')
+      ctx.font = isTotal ? 'bold 18px sans-serif' : '13px sans-serif'
+      ctx.fillStyle = isTotal ? '#ff4444' : 'rgba(255,255,255,0.85)'
+      ctx.fillText(line, pad, y)
+      y += isTotal ? lineH + 4 : lineH
+    })
+
+    // footer
+    ctx.font = '10px sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'
+    ctx.fillText('* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน', pad, H - 12)
+
+    const link = document.createElement('a')
+    link.download = 'สรุปราคา-evosport.png'
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
+
+
   // เลือกแบบ
   const selectableShirts = shirts.filter((s) => s.category !== 'fabric' && s.category !== 'photo' && s.category !== 'promotion')
   const selectedShirt = selectableShirts.find((s) => s.id === shirtId)
@@ -1530,76 +1627,32 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                 )}
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
 
-                {/* ช่องทางติดต่อ — ส่งข้อความสรุปอัตโนมัติ */}
-                {(() => {
-                  const summaryLines = [
-                    '🧾 สนใจสั่งซื้อครับ',
-                    '─────────────────',
-                    !useCollar && selectedShirt ? `แบบ: ${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : '',
-                    useCollar && collar ? `คอเสื้อ: ${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)` : '',
-                    fabricPrice > 0 && fabric ? `เนื้อผ้า: ${fabric.name} (+฿${fabricPrice.toLocaleString()}/ตัว)` : '',
-                    addPants && pants ? `กางเกงพิมพ์ลาย: ${pants.name} (฿${pantsPrice.toLocaleString()}/ตัว)` : '',
-                    `จำนวน: ${qty} ตัว`,
-                    promoChoice && activePromo ? `โปรโมชั่น: ${promoLabel}${promoChoice === 'free' ? ` (แถม ${bonusQty} ตัว)` : ` (-฿${promoValue.toLocaleString()})`}` : '',
-                    shipping ? `จัดส่ง: ${shipping.name}${shippingPrice > 0 ? ` (฿${shippingPrice.toLocaleString()})` : isCustomShipping ? ' (สอบถาม Admin)' : ' (ฟรี)'}` : '',
-                    '─────────────────',
-                    isCustomShipping ? `รวม: ฿${subtotal.toLocaleString()} (ยังไม่รวมขนส่ง)` : `รวมทั้งหมด: ฿${grandTotal.toLocaleString()}`,
-                    promoChoice === 'free' && bonusQty > 0 ? `🎁 ร้านทำเสื้อให้ ${qty + bonusQty} ตัว (สั่ง ${qty} + แถม ${bonusQty})` : '',
-                  ].filter(Boolean).join('\n')
-
-
-                  const lineMsg = encodeURIComponent(summaryLines)
-                  const fbMsg = encodeURIComponent(summaryLines)
-                  const lineUrl = contact?.line_url
-                    ? (contact.line_url.includes('line.me') ? `${contact.line_url}` : contact.line_url)
-                    : ''
-
-                  return (
-                    <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
-                      {contact?.facebook_url && (
-                        <div style={{ display: 'grid', gap: 6 }}>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard?.writeText(summaryLines).catch(() => {})
-                              window.open(contact.facebook_url, '_blank')
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
-                            📘 สนใจสั่งซื้อ ผ่าน Facebook
-                          </button>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-                            * ระบบจะคัดลอกสรุปราคาไว้ให้แล้ว วางในช่อง Messenger ได้เลย
-                          </div>
-                        </div>
-                      )}
-                      {contact?.line_url && (
-                        <div style={{ display: 'grid', gap: 6 }}>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard?.writeText(summaryLines).catch(() => {})
-                              window.open(contact.line_url, '_blank')
-                            }}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
-                            💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
-                          </button>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-                            * ระบบจะคัดลอกสรุปราคาไว้ให้แล้ว วางในช่อง Line ได้เลย
-                          </div>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => navigator.clipboard?.writeText(summaryLines).then(() => alert('คัดลอกสรุปราคาแล้ว!')).catch(() => {})}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', borderRadius: 8, background: '#222', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 600, fontSize: 13, width: '100%' }}>
-                        📋 คัดลอกสรุปราคา
-                      </button>
-                      {contact?.phone1 && (
-                        <a href={`tel:${contact.phone1}`}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                          📱 โทร {contact.phone1}
-                        </a>
-                      )}
-                    </div>
-                  )
-                })()}
+                {/* ช่องทางติดต่อ */}
+                <div id="summary-card-inner" style={{ display: 'grid', gap: 8, marginTop: 6 }}>
+                  {contact?.facebook_url && (
+                    <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      📘 สนใจสั่งซื้อ ผ่าน Facebook
+                    </a>
+                  )}
+                  {contact?.line_url && (
+                    <a href={contact.line_url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
+                    </a>
+                  )}
+                  {contact?.phone1 && (
+                    <a href={`tel:${contact.phone1}`}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      📱 โทร {contact.phone1}
+                    </a>
+                  )}
+                  <button
+                    onClick={saveAsImage}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#2d2d2d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
+                    💾 บันทึกสรุปราคา (.png)
+                  </button>
+                </div>
               </div>
             </div>
           )}
