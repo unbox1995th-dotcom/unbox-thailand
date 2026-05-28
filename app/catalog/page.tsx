@@ -1431,8 +1431,8 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
     ctx.fillText('* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน', pad, H - 12)
 
     const link = document.createElement('a')
-    link.download = 'สรุปราคา-evosport.png'
-    link.href = canvas.toDataURL('image/png')
+    link.download = 'สรุปราคา-evosport.jpeg'
+    link.href = canvas.toDataURL('image/jpeg', 0.92)
     link.click()
   }
 
@@ -1627,10 +1627,15 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                     🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
                   </div>
                 )}
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>* ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้าน</div>
+                <div style={{ fontSize: 10, color: '#ff4444' }}>*ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้านหรือ Admin</div>
 
                 {/* ช่องทางติดต่อ */}
                 <div id="summary-card-inner" style={{ display: 'grid', gap: 8, marginTop: 6 }}>
+                  <button
+                    onClick={saveAsImage}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#2d2d2d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
+                    💾 บันทึกสรุปราคา
+                  </button>
                   {contact?.facebook_url && (
                     <a href={contact.facebook_url} target="_blank" rel="noopener noreferrer"
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
@@ -1649,11 +1654,6 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                       📱 โทร {contact.phone1}
                     </a>
                   )}
-                  <button
-                    onClick={saveAsImage}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#2d2d2d', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
-                    💾 บันทึกสรุปราคา (.png)
-                  </button>
                 </div>
               </div>
             </div>
