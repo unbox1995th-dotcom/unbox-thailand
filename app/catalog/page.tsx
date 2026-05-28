@@ -1545,8 +1545,8 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                     '─────────────────',
                     isCustomShipping ? `รวม: ฿${subtotal.toLocaleString()} (ยังไม่รวมขนส่ง)` : `รวมทั้งหมด: ฿${grandTotal.toLocaleString()}`,
                     promoChoice === 'free' && bonusQty > 0 ? `🎁 ร้านทำเสื้อให้ ${qty + bonusQty} ตัว (สั่ง ${qty} + แถม ${bonusQty})` : '',
-                  ].filter(Boolean).join('
-')
+                  ].filter(Boolean).join('\n')
+
 
                   const lineMsg = encodeURIComponent(summaryLines)
                   const fbMsg = encodeURIComponent(summaryLines)
