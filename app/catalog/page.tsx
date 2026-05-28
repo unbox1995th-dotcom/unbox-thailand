@@ -474,7 +474,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
 }
 
 /* ── Shirt Card ── */
-function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact, onCalculate }: {
+function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStart, onDragOver, onDragEnd, onEdit, onDelete, onDupe, onContact, onCalculate, onImageClick }: {
   shirt: Shirt, isAdmin: boolean,
   canDrag?: boolean, isDragging?: boolean, isDragOver?: boolean,
   onDragStart?: () => void, onDragOver?: () => void, onDragEnd?: () => void,
