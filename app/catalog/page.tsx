@@ -1557,19 +1557,40 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                   return (
                     <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
                       {contact?.facebook_url && (
-                        <a href={`https://m.me/${contact.facebook_url.split('/').pop()}?ref=${fbMsg}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                          📘 สนใจสั่งซื้อ ผ่าน Facebook
-                        </a>
+                        <div style={{ display: 'grid', gap: 6 }}>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard?.writeText(summaryLines).catch(() => {})
+                              window.open(contact.facebook_url, '_blank')
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1877f2', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
+                            📘 สนใจสั่งซื้อ ผ่าน Facebook
+                          </button>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
+                            * ระบบจะคัดลอกสรุปราคาไว้ให้แล้ว วางในช่อง Messenger ได้เลย
+                          </div>
+                        </div>
                       )}
                       {contact?.line_url && (
-                        <a href={`https://line.me/R/oaMessage/${(contact.line_add || '').replace('@','')}/?${lineMsg}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
-                          💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
-                        </a>
+                        <div style={{ display: 'grid', gap: 6 }}>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard?.writeText(summaryLines).catch(() => {})
+                              window.open(contact.line_url, '_blank')
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#06c755', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, width: '100%' }}>
+                            💬 สนใจสั่งซื้อ ผ่าน Line{contact.line_add ? ` (@${contact.line_add.replace('@','')})` : ''}
+                          </button>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
+                            * ระบบจะคัดลอกสรุปราคาไว้ให้แล้ว วางในช่อง Line ได้เลย
+                          </div>
+                        </div>
                       )}
+                      <button
+                        onClick={() => navigator.clipboard?.writeText(summaryLines).then(() => alert('คัดลอกสรุปราคาแล้ว!')).catch(() => {})}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', borderRadius: 8, background: '#222', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 600, fontSize: 13, width: '100%' }}>
+                        📋 คัดลอกสรุปราคา
+                      </button>
                       {contact?.phone1 && (
                         <a href={`tel:${contact.phone1}`}
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
