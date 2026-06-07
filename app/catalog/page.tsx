@@ -1,6 +1,5 @@
 'use client'
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
