@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { db } from '@/lib/supabase'
 import type { Shirt } from '@/lib/supabase'
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
@@ -77,10 +77,10 @@ export default function ExportPage() {
     setSelected(new Set())
     const currentTab = TABS.find(t => t.id === tab)
     const query = currentTab?.isPromo
-      ? supabase.from('shirts').select('*').eq('is_promo', true)
+      ? db.from('shirts').select('*').eq('is_promo', true)
       : tab === 'all'
-        ? supabase.from('shirts').select('*')
-        : supabase.from('shirts').select('*').eq('category', tab)
+        ? db.from('shirts').select('*')
+        : db.from('shirts').select('*').eq('category', tab)
     query.order('sort_order').order('created_at', { ascending: false }).then(({ data }) => {
       setShirts(data || [])
       setLoading(false)
