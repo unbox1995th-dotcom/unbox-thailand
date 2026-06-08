@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
+import { supabase, db, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
@@ -84,16 +84,16 @@ export default function CatalogPage() {
     ;(async () => {
       const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }] =
         await Promise.all([
-          supabase.from('banners').select('*').order('sort_order'),
-          supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
-          supabase.from('collars').select('*').order('sort_order'),
-          supabase.from('product_types').select('*').order('sort_order'),
-          supabase.from('customers').select('*').order('joined_at', { ascending: false }),
-          supabase.from('fabric_types').select('*').order('sort_order'),
-          supabase.from('promotions').select('*').order('sort_order'),
-          supabase.from('shipping_rules').select('*').order('sort_order'),
+          db.from('banners').select('*').order('sort_order'),
+          db.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
+          db.from('collars').select('*').order('sort_order'),
+          db.from('product_types').select('*').order('sort_order'),
+          db.from('customers').select('*').order('joined_at', { ascending: false }),
+          db.from('fabric_types').select('*').order('sort_order'),
+          db.from('promotions').select('*').order('sort_order'),
+          db.from('shipping_rules').select('*').order('sort_order'),
         ])
-      const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
+      const { data: ss } = await db.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
@@ -143,7 +143,7 @@ export default function CatalogPage() {
     saveSortTimer.current = setTimeout(async () => {
       const updates = shirts.map((s, i) => ({ id: s.id, sort_order: i }))
       for (const u of updates) {
-        await supabase.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
+        await db.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
       }
       notify('บันทึกลำดับแล้ว')
     }, 800)
@@ -160,7 +160,7 @@ export default function CatalogPage() {
   )
   if (view === 'register') return (
     <Register onSave={async (data) => {
-      const { data: newCust, error } = await supabase.from('customers').insert([data]).select().single()
+      const { data: newCust, error } = await db.from('customers').insert([data]).select().single()
       if (error) { notify('สมัครสมาชิกไม่สำเร็จ: ' + error.message, 'err'); return }
       setCustomers((prev) => [newCust, ...prev])
       setView('cust-login')
@@ -286,7 +286,7 @@ export default function CatalogPage() {
                     onImageClick={(url) => setLightboxUrl(url)}
                     onDelete={async () => {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
-                      await supabase.from('shirts').delete().eq('id', s.id)
+                      await db.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
                       notify('ลบรูปแล้ว', 'err')
                     }}
@@ -306,13 +306,13 @@ export default function CatalogPage() {
                     onEdit={() => setEditShirt(s)}
                     onDelete={async () => {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
-                      await supabase.from('shirts').delete().eq('id', s.id)
+                      await db.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
                       notify('ลบสินค้าแล้ว', 'err')
                     }}
                     onDupe={async () => {
                       const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = s
-                      const { data } = await supabase.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
+                      const { data } = await db.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
                       if (data) { setShirts((prev) => [data, ...prev]); notify('คัดลอกสำเร็จ') }
                     }}
                     onContact={() => setShowContact(true)}
@@ -337,7 +337,7 @@ export default function CatalogPage() {
           onSave={async (data, imgFile) => {
             let image_url = null
             if (imgFile) image_url = await uploadBase64Image(imgFile)
-            const { data: newShirt } = await supabase.from('shirts').insert([{ ...data, image_url }]).select().single()
+            const { data: newShirt } = await db.from('shirts').insert([{ ...data, image_url }]).select().single()
             if (newShirt) { setShirts((prev) => [newShirt, ...prev]); setShowAdd(false); notify('เพิ่มแบบเสื้อแล้ว — บันทึกสู่ Supabase') }
           }}
           onClose={() => setShowAdd(false)} />
@@ -353,7 +353,7 @@ export default function CatalogPage() {
                 image_url = newUrl
               }
             }
-            const { data: updated } = await supabase.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
+            const { data: updated } = await db.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
             if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
           }}
           onClose={() => setEditShirt(null)} />
@@ -420,7 +420,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
     if (!file.type.startsWith('image/')) return
     const url = await uploadBase64Image(await fileToBase64(file), 'banners')
     if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); return }
-    const { data } = await supabase.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
+    const { data } = await db.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
     if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
   }
 
@@ -447,7 +447,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
                 <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เพิ่ม</button>
                 <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={async () => {
                   const b = banners[idx]
-                  await supabase.from('banners').delete().eq('id', b.id)
+                  await db.from('banners').delete().eq('id', b.id)
                   setBanners((prev) => prev.filter((_, i) => i !== idx))
                   setCur(0); notify('ลบ Banner แล้ว', 'err')
                 }}>ลบ</button>
@@ -791,17 +791,17 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
 
   const add = async () => {
     if (!nv.trim()) return
-    const { data } = await supabase.from(table).insert([{ name: nv.trim(), sort_order: items.length }]).select().single()
+    const { data } = await db.from(table).insert([{ name: nv.trim(), sort_order: items.length }]).select().single()
     if (data) { setItems((prev: any[]) => [...prev, data]); setNv(''); notify('เพิ่มสำเร็จ') }
   }
   const save = async (i: number) => {
     const item = items[i]
-    await supabase.from(table).update({ name: ev }).eq('id', item.id)
+    await db.from(table).update({ name: ev }).eq('id', item.id)
     setItems((prev: any[]) => prev.map((x, j) => j === i ? { ...x, name: ev } : x))
     setEi(null); notify('บันทึกแล้ว')
   }
   const del = async (i: number) => {
-    await supabase.from(table).delete().eq('id', items[i].id)
+    await db.from(table).delete().eq('id', items[i].id)
     setItems((prev: any[]) => prev.filter((_, j) => j !== i)); notify('ลบแล้ว', 'err')
   }
 
@@ -838,7 +838,7 @@ function CollarPriceList({ collars, setCollars, notify }: {
   const [editing, setEditing] = useState<Record<string, string>>({})
   const save = async (col: CollarWithPrice) => {
     const price = Number(editing[col.id] ?? col.price)
-    await supabase.from('collars').update({ price }).eq('id', col.id)
+    await db.from('collars').update({ price }).eq('id', col.id)
     setCollars((prev: any[]) => prev.map((x) => x.id === col.id ? { ...x, price } : x))
     setEditing((prev) => { const n = { ...prev }; delete n[col.id]; return n })
     notify('บันทึกราคาแล้ว')
@@ -876,21 +876,21 @@ function PromotionList({ promotions, setPromotions, notify }: {
   const save = async () => {
     if (!f.name.trim()) return
     if (editId) {
-      await supabase.from('promotions').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      await db.from('promotions').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
       setPromotions((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
       notify('บันทึกโปรโมชั่นแล้ว')
     } else {
-      const { data } = await supabase.from('promotions').insert([{ ...f, sort_order: promotions.length }]).select().single()
+      const { data } = await db.from('promotions').insert([{ ...f, sort_order: promotions.length }]).select().single()
       if (data) { setPromotions((prev) => [...prev, data as Promotion]); notify('เพิ่มโปรโมชั่นแล้ว') }
     }
     setShowAdd(false); setEditId(null); setF(empty)
   }
   const del = async (id: string) => {
-    await supabase.from('promotions').delete().eq('id', id)
+    await db.from('promotions').delete().eq('id', id)
     setPromotions((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
   }
   const toggleActive = async (p: Promotion) => {
-    await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id)
+    await db.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id)
     setPromotions((prev) => prev.map((x) => x.id === p.id ? { ...x, is_active: !p.is_active } : x))
   }
 
@@ -966,17 +966,17 @@ function ShippingList({ shippingRules, setShippingRules, notify }: {
   const save = async () => {
     if (!f.name.trim()) return
     if (editId) {
-      await supabase.from('shipping_rules').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      await db.from('shipping_rules').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
       setShippingRules((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
       notify('บันทึกแล้ว')
     } else {
-      const { data } = await supabase.from('shipping_rules').insert([{ ...f, sort_order: shippingRules.length }]).select().single()
+      const { data } = await db.from('shipping_rules').insert([{ ...f, sort_order: shippingRules.length }]).select().single()
       if (data) { setShippingRules((prev) => [...prev, data as ShippingRule]); notify('เพิ่มช่องทางขนส่งแล้ว') }
     }
     setShowAdd(false); setEditId(null); setF(empty)
   }
   const del = async (id: string) => {
-    await supabase.from('shipping_rules').delete().eq('id', id)
+    await db.from('shipping_rules').delete().eq('id', id)
     setShippingRules((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
   }
 
@@ -1056,7 +1056,7 @@ function CustomerMgr({ customers, setCustomers, notify }: {
                 </div>
               </div>
               <button className="btn-ghost" onClick={async () => {
-                await supabase.from('customers').delete().eq('id', c.id)
+                await db.from('customers').delete().eq('id', c.id)
                 setCustomers((prev) => prev.filter((x) => x.id !== c.id))
                 notify('ลบสมาชิกแล้ว', 'err')
               }}>✕ ลบ</button>
@@ -1156,7 +1156,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.from('contact_settings').select('*').eq('id', 'main').single()
+    db.from('contact_settings').select('*').eq('id', 'main').single()
       .then(({ data }) => { if (data) setContact(data); setLoading(false) })
   }, [])
 
@@ -1302,7 +1302,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
   const [contact, setContact] = useState<any>(null)
 
   useEffect(() => {
-    supabase.from('contact_settings').select('*').eq('id','main').single()
+    db.from('contact_settings').select('*').eq('id','main').single()
       .then(({ data }) => { if (data) setContact(data) })
   }, [])
 
@@ -1685,7 +1685,7 @@ function ContactAdminModal({ notify, onClose }: {
   const qrInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    supabase.from('contact_settings').select('*').eq('id', 'main').single()
+    db.from('contact_settings').select('*').eq('id', 'main').single()
       .then(({ data }) => {
         if (data) setF({
           facebook_url: data.facebook_url || '',
@@ -1896,7 +1896,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
   const handleSave = async () => {
     setSaving(true)
-    const { error } = await supabase.from('shop_settings').upsert({
+    const { error } = await db.from('shop_settings').upsert({
       id: 'main', shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
     })
     if (error) { notify('บันทึกไม่สำเร็จ: ' + error.message, 'err') }
