@@ -6,8 +6,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // Client หลัก (สำหรับ Storage เท่านั้น)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Client สำหรับ shirt_catalog schema
-export const db = supabase
+// Client สำหรับ shirt_catalog schema โดยเฉพาะ
+export const db = createClient(supabaseUrl, supabaseAnonKey, {
+  db: { schema: 'shirt_catalog' },
+})
 
 export type Shirt = {
   id: string
@@ -73,7 +75,7 @@ export async function uploadBase64Image(base64: string, folder = 'shirts'): Prom
   return uploadImage(file, folder)
 }
 
-// ⚠️ SAFE DELETE — ไม่ลบไฟล์จาก Storage จริง
+// ⚠️ SAFE DELETE — ไม่ลบไฟล์จาก Storage จริง เพื่อป้องกันรูปหาย
 export async function deleteImage(_url: string): Promise<void> {
   return
 }
