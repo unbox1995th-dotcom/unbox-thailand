@@ -5,6 +5,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Client สำหรับ shirt_catalog schema โดยเฉพาะ
+export const db = createClient(supabaseUrl, supabaseAnonKey, {
+  db: { schema: 'shirt_catalog' },
+})
+
 export type Shirt = {
   id: string
   name: string
@@ -70,14 +75,11 @@ export async function uploadBase64Image(base64: string, folder = 'shirts'): Prom
 }
 
 // ⚠️ SAFE DELETE — ไม่ลบไฟล์จาก Storage จริง เพื่อป้องกันรูปหาย
-// รูปทุกใบจะอยู่ใน Storage ตลอด แม้ลบ record ออกจาก database แล้ว
-// ถ้าต้องการลบไฟล์จริงๆ ให้ทำผ่าน Supabase Dashboard โดยตรงเท่านั้น
 export async function deleteImage(_url: string): Promise<void> {
-  // intentionally left empty — do NOT delete from storage
   return
 }
 
-// บันทึก log ก่อนลบ record (เรียกก่อน supabase.from('shirts').delete())
+// บันทึก log ก่อนลบ record
 export async function logDeletion(params: {
   table_name: string
   record_id: string
@@ -86,7 +88,7 @@ export async function logDeletion(params: {
   deleted_by?: string
 }): Promise<void> {
   try {
-    await supabase.from('deletion_log').insert([{
+    await db.from('deletion_log').insert([{
       table_name: params.table_name,
       record_id: params.record_id,
       record_name: params.record_name || '',
