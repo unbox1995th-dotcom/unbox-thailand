@@ -6,10 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // Client หลัก (สำหรับ Storage เท่านั้น)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Client สำหรับ shirt_catalog schema โดยเฉพาะ
-export const db = createClient(supabaseUrl, supabaseAnonKey, {
-  db: { schema: 'shirt_catalog' },
-})
+export const db = supabase
 
 export type Shirt = {
   id: string
@@ -100,3 +97,4 @@ export async function logDeletion(params: {
     console.error('Log deletion error:', e)
   }
 }
+
