@@ -2091,6 +2091,48 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
   const [editIcon, setEditIcon] = useState('')
   const [editSlug, setEditSlug] = useState('')
   const [saving, setSaving] = useState(false)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const sortTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const saveOrder = (list: ShirtType[]) => {
+    if (sortTimer.current) clearTimeout(sortTimer.current)
+    sortTimer.current = setTimeout(async () => {
+      for (let i = 0; i < list.length; i++) {
+        await db.from('shirt_types').update({ sort_order: i }).eq('id', list[i].id)
+      }
+      notify('บันทึกลำดับแล้ว')
+    }, 600)
+  }
+
+  const moveItem = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= shirtTypes.length) return
+    const arr = [...shirtTypes]
+    const [moved] = arr.splice(fromIdx, 1)
+    arr.splice(toIdx, 0, moved)
+    setShirtTypes(arr)
+    saveOrder(arr)
+  }
+
+  const handleDragOver = (overId: string) => {
+    if (!dragId || dragId === overId) return
+    setDragOverId(overId)
+    setShirtTypes(prev => {
+      const arr = [...prev]
+      const from = arr.findIndex(t => t.id === dragId)
+      const to = arr.findIndex(t => t.id === overId)
+      if (from === -1 || to === -1) return prev
+      const [moved] = arr.splice(from, 1)
+      arr.splice(to, 0, moved)
+      return arr
+    })
+  }
+
+  const handleDragEnd = () => {
+    setDragId(null)
+    setDragOverId(null)
+    saveOrder(shirtTypes)
+  }
 
   const handleAdd = async () => {
     if (!newName.trim() || !newSlug.trim()) { notify('กรุณากรอกชื่อและ slug', 'err'); return }
@@ -2140,10 +2182,30 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
         </div>
       </div>
 
+      {/* hint */}
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span>☰</span> ลากเพื่อเรียงลำดับ &nbsp;|&nbsp; ปุ่ม ↑↓ สำหรับมือถือ
+      </div>
+
       {/* List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
-        {shirtTypes.map(type => (
-          <div key={type.id} style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 8, padding: '10px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto' }}>
+        {shirtTypes.map((type, idx) => (
+          <div
+            key={type.id}
+            draggable
+            onDragStart={() => setDragId(type.id)}
+            onDragOver={e => { e.preventDefault(); handleDragOver(type.id) }}
+            onDragEnd={handleDragEnd}
+            style={{
+              background: '#0d0d0d',
+              border: dragOverId === type.id ? '1px dashed #c00' : '1px solid #1a1a1a',
+              borderRadius: 8,
+              padding: '10px 12px',
+              opacity: dragId === type.id ? 0.4 : 1,
+              cursor: 'grab',
+              transition: 'opacity 0.15s, border 0.15s',
+            }}
+          >
             {editId === type.id ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input className="input-d" style={{ width: 46, textAlign: 'center', fontSize: 18, padding: '4px' }} value={editIcon} onChange={e => setEditIcon(Array.from(e.target.value).slice(0,2).join(''))} maxLength={4} title="พิมพ์ emoji" />
@@ -2154,15 +2216,33 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                {/* drag handle + info */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 16, cursor: 'grab', userSelect: 'none' }}>⠿</span>
                   <span style={{ fontSize: 20 }}>{type.icon || '👕'}</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{type.name}</div>
-                    <div style={{ fontSize: 10, color: '#555' }}>slug: {type.slug}</div>
+                    <div style={{ fontSize: 10, color: '#555' }}>slug: {type.slug} · ลำดับ {idx + 1}</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 5 }}>
-                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }}>✏ แก้ไข</button>
+                {/* actions */}
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  {/* ↑↓ สำหรับมือถือ */}
+                  <button
+                    className="btn-outline sm"
+                    disabled={idx === 0}
+                    onClick={() => moveItem(idx, idx - 1)}
+                    style={{ padding: '4px 8px', opacity: idx === 0 ? 0.3 : 1 }}
+                    title="เลื่อนขึ้น"
+                  >↑</button>
+                  <button
+                    className="btn-outline sm"
+                    disabled={idx === shirtTypes.length - 1}
+                    onClick={() => moveItem(idx, idx + 1)}
+                    style={{ padding: '4px 8px', opacity: idx === shirtTypes.length - 1 ? 0.3 : 1 }}
+                    title="เลื่อนลง"
+                  >↓</button>
+                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }}>✏</button>
                   <button className="btn-ghost sm" onClick={() => handleDelete(type.id, type.name)}>✕</button>
                 </div>
               </div>
