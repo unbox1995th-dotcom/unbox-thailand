@@ -8,6 +8,7 @@ import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabas
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
 type FabricType = { id: string; name: string; sort_order: number }
+type ShirtType = { id: string; name: string; slug: string; icon: string; sort_order: number }
 type Promotion = { id: string; name: string; is_active: boolean; min_qty: number; type: string; free_qty: number; discount_qty: number; discount_pct: number; discount_thb: number; sort_order: number }
 type ShippingRule = { id: string; name: string; min_qty: number; max_qty: number | null; price: number; sort_order: number }
 type CollarWithPrice = { id: string; name: string; price: number; sort_order: number }
@@ -47,6 +48,8 @@ export default function CatalogPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [shippingRules, setShippingRules] = useState<ShippingRule[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [shirtTypes, setShirtTypes] = useState<ShirtType[]>([])
+  const [selectedShirtType, setSelectedShirtType] = useState<string | null>(null)
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -82,7 +85,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }, { data: st }] =
         await Promise.all([
           db.from('banners').select('*').order('sort_order'),
           db.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
@@ -92,6 +95,7 @@ export default function CatalogPage() {
           db.from('fabric_types').select('*').order('sort_order'),
           db.from('promotions').select('*').order('sort_order'),
           db.from('shipping_rules').select('*').order('sort_order'),
+          db.from('shirt_types').select('*').order('sort_order'),
         ])
       const { data: ss } = await db.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
@@ -102,6 +106,7 @@ export default function CatalogPage() {
       if (ft) setFabricTypes(ft as FabricType[])
       if (promo) setPromotions(promo as Promotion[])
       if (ship) setShippingRules(ship as ShippingRule[])
+      if (st) setShirtTypes(st as ShirtType[])
       if (ss) setShopSettings(ss)
       setReady(true)
     })()
@@ -116,7 +121,19 @@ export default function CatalogPage() {
     if (activeNav === 'fabric') return s.category === 'fabric'
     if (activeNav === 'photo') return s.category === 'photo'
     return true
+  }).filter((s) => {
+    if (activeNav !== 'new' || !selectedShirtType) return true
+    return (s as any).shirt_type === selectedShirtType
   })
+
+  // นับจำนวนเสื้อแต่ละประเภท
+  const shirtTypeCounts = shirts
+    .filter((s) => s.category === 'new')
+    .reduce((acc: Record<string, number>, s) => {
+      const t = (s as any).shirt_type
+      if (t) acc[t] = (acc[t] ?? 0) + 1
+      return acc
+    }, {})
 
   const canDrag = !!adminUser && activeNav !== 'all'
 
@@ -228,13 +245,46 @@ export default function CatalogPage() {
           <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto' }}>
             <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', padding: '0 16px' }}>
               {NAV_ITEMS.map((n) => (
-                <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => setActiveNav(n.id)}>
+                <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => { setActiveNav(n.id); setSelectedShirtType(null) }}>
                   {n.label}
                   {n.badge && <span style={{ display: 'inline-block', background: '#c00', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 700, marginLeft: 6, verticalAlign: 'middle' }}>{n.badge}</span>}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Filter bar ประเภทเสื้อ — แสดงเฉพาะ tab แบบเสื้อใหม่ */}
+          {activeNav === 'new' && shirtTypes.length > 0 && (
+            <div style={{ background: '#0d0d0d', borderBottom: '1px solid #1a1a1a', padding: '8px 0' }}>
+              <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', gap: 8, overflowX: 'auto', padding: '2px 16px', scrollbarWidth: 'none' }}>
+                <button
+                  onClick={() => setSelectedShirtType(null)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, border: selectedShirtType === null ? '1px solid #c00' : '1px solid #2a2a2a', background: selectedShirtType === null ? '#c00' : '#1a1a1a', color: selectedShirtType === null ? '#fff' : '#aaa', fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0, fontWeight: selectedShirtType === null ? 700 : 400, boxShadow: selectedShirtType === null ? '0 0 10px rgba(200,0,0,0.35)' : 'none' }}
+                >
+                  🗂️ ทั้งหมด
+                  <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 999, padding: '0 6px', fontSize: 10, lineHeight: '17px' }}>
+                    {shirts.filter(s => s.category === 'new').length}
+                  </span>
+                </button>
+                {shirtTypes.map((type) => {
+                  const count = shirtTypeCounts[type.slug] ?? 0
+                  const isActive = selectedShirtType === type.slug
+                  return (
+                    <button
+                      key={type.id}
+                      onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 999, border: isActive ? '1px solid #c00' : '1px solid #2a2a2a', background: isActive ? '#c00' : '#1a1a1a', color: isActive ? '#fff' : '#aaa', fontSize: 12, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0, fontWeight: isActive ? 700 : 400, boxShadow: isActive ? '0 0 10px rgba(200,0,0,0.35)' : 'none', transition: 'all 0.15s' }}
+                    >
+                      {type.icon || '👕'} {type.name}
+                      {count > 0 && (
+                        <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 999, padding: '0 6px', fontSize: 10, lineHeight: '17px' }}>{count}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {adminUser && (
             <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
@@ -333,7 +383,7 @@ export default function CatalogPage() {
 
       {/* Modals */}
       {showAdd && (
-        <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
+        <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
           category={activeNav === 'all' ? 'new' : activeNav}
           onSave={async (data, imgFile) => {
             let image_url = null
@@ -344,7 +394,7 @@ export default function CatalogPage() {
           onClose={() => setShowAdd(false)} />
       )}
       {editShirt && (
-        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
+        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
           onSave={async (data, imgFile) => {
             let image_url = editShirt.image_url
             if (imgFile) {
@@ -360,7 +410,7 @@ export default function CatalogPage() {
           onClose={() => setEditShirt(null)} />
       )}
       {showSettings && (
-        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes} promotions={promotions} setPromotions={setPromotions} shippingRules={shippingRules} setShippingRules={setShippingRules}
+        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes} promotions={promotions} setPromotions={setPromotions} shippingRules={shippingRules} setShippingRules={setShippingRules} shirtTypes={shirtTypes} setShirtTypes={setShirtTypes}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
@@ -551,7 +601,14 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           <>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
             {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
-            {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
+            {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
+            {(shirt as any).shirt_type && (shirt as any).shirt_type_name && (
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', color: '#ff8080', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
+                  {(shirt as any).shirt_type_icon || '👕'} {(shirt as any).shirt_type_name}
+                </span>
+              </div>
+            )}
             <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.3)' }}>{Number(shirt.price) > 0 ? `${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : '—'}</div>
           </>
         )}
@@ -600,13 +657,13 @@ function PhotoCard({ shirt, isAdmin, onEdit, onDelete, onImageClick }: {
 }
 
 /* ── Shirt Modal ── */
-function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave, onClose }: {
-  initial?: Shirt, collars: Collar[], prodTypes: ProductType[], fabricTypes: FabricType[],
+function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, category, onSave, onClose }: {
+  initial?: Shirt, collars: Collar[], prodTypes: ProductType[], fabricTypes: FabricType[], shirtTypes: ShirtType[],
   category?: string,
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false, shirt_type: (initial as any)?.shirt_type || '' })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
@@ -727,6 +784,23 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave
               <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
               <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
             </label>
+            {shirtTypes.length > 0 && (
+              <div>
+                <div className="section-label">ประเภทเสื้อ (สำหรับ Filter)</div>
+                <select className="select-d" value={f.shirt_type} onChange={(e) => set('shirt_type', e.target.value)}>
+                  <option value="">— ไม่ระบุประเภท —</option>
+                  {shirtTypes.map((t) => <option key={t.id} value={t.slug}>{t.icon} {t.name}</option>)}
+                </select>
+                {f.shirt_type && (
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: '#555' }}>Preview:</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', color: '#ff8080', borderRadius: 4, padding: '1px 8px', fontSize: 11 }}>
+                      {shirtTypes.find(t => t.slug === f.shirt_type)?.icon} {shirtTypes.find(t => t.slug === f.shirt_type)?.name}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </>)}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
@@ -741,19 +815,21 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave
 }
 
 /* ── Settings Modal ── */
-function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, promotions, setPromotions, shippingRules, setShippingRules, onClose, notify }: {
+function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, promotions, setPromotions, shippingRules, setShippingRules, shirtTypes, setShirtTypes, onClose, notify }: {
   collars: Collar[], setCollars: React.Dispatch<React.SetStateAction<Collar[]>>,
   prodTypes: ProductType[], setProdTypes: React.Dispatch<React.SetStateAction<ProductType[]>>,
   fabricTypes: FabricType[], setFabricTypes: React.Dispatch<React.SetStateAction<FabricType[]>>,
   promotions: Promotion[], setPromotions: React.Dispatch<React.SetStateAction<Promotion[]>>,
   shippingRules: ShippingRule[], setShippingRules: React.Dispatch<React.SetStateAction<ShippingRule[]>>,
+  shirtTypes: ShirtType[], setShirtTypes: React.Dispatch<React.SetStateAction<ShirtType[]>>,
   onClose: () => void, notify: (m: string, t?: 'ok' | 'err') => void
 }) {
-  const [tab, setTab] = useState<'collar'|'prod'|'fabric'|'price'|'promo'|'ship'>('collar')
+  const [tab, setTab] = useState<'collar'|'prod'|'fabric'|'price'|'promo'|'ship'|'shirttype'>('collar')
   const TABS = [
     ['collar', `ประเภทคอเสื้อ (${collars.length})`],
     ['prod', `ประเภทสินค้า (${prodTypes.length})`],
     ['fabric', `ประเภทเนื้อผ้า (${fabricTypes.length})`],
+    ['shirttype', `🏷️ ประเภทเสื้อ (${shirtTypes.length})`],
     ['price', 'ราคาคอเสื้อ'],
     ['promo', 'โปรโมชั่น'],
     ['ship', 'ค่าขนส่ง'],
@@ -773,6 +849,7 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTyp
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
         {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
         {tab === 'fabric' && <SupabaseTypeList table="fabric_types" items={fabricTypes} setItems={setFabricTypes as any} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
+        {tab === 'shirttype' && <ShirtTypeManager shirtTypes={shirtTypes} setShirtTypes={setShirtTypes} notify={notify} />}
         {tab === 'price' && <CollarPriceList collars={collars as CollarWithPrice[]} setCollars={setCollars as any} notify={notify} />}
         {tab === 'promo' && <PromotionList promotions={promotions} setPromotions={setPromotions} notify={notify} />}
         {tab === 'ship' && <ShippingList shippingRules={shippingRules} setShippingRules={setShippingRules} notify={notify} />}
@@ -1976,3 +2053,102 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
   )
 }
 
+
+/* ── ShirtTypeManager — จัดการประเภทเสื้อใน SettingsModal ── */
+const EMOJI_PICKS = ['⚽','🏀','🏐','🏈','🎾','🏸','🏃','🚴','🧗','🏊','🏫','🎓','🏢','🏛️','🏭','👔','👕','🧥','🥼','🦺','🐓','🐟','🚗','🏎️','✈️','👥','🤝','👑','🌟','✨','🏆','🥇','🔥','💎']
+
+function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
+  shirtTypes: ShirtType[], setShirtTypes: React.Dispatch<React.SetStateAction<ShirtType[]>>,
+  notify: (m: string, t?: 'ok' | 'err') => void
+}) {
+  const [newName, setNewName] = useState('')
+  const [newSlug, setNewSlug] = useState('')
+  const [newIcon, setNewIcon] = useState('👕')
+  const [showPicker, setShowPicker] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editIcon, setEditIcon] = useState('')
+  const [editSlug, setEditSlug] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleAdd = async () => {
+    if (!newName.trim() || !newSlug.trim()) { notify('กรุณากรอกชื่อและ slug', 'err'); return }
+    setSaving(true)
+    const { data, error } = await db.from('shirt_types').insert([{ name: newName.trim(), slug: newSlug.trim(), icon: newIcon, sort_order: shirtTypes.length }]).select().single()
+    if (error) notify('เพิ่มไม่สำเร็จ: ' + error.message, 'err')
+    else { setShirtTypes(prev => [...prev, data as ShirtType]); setNewName(''); setNewSlug(''); setNewIcon('👕'); notify('เพิ่มประเภทเสื้อสำเร็จ') }
+    setSaving(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editId) return
+    setSaving(true)
+    const { data, error } = await db.from('shirt_types').update({ name: editName, slug: editSlug, icon: editIcon }).eq('id', editId).select().single()
+    if (error) notify('บันทึกไม่สำเร็จ', 'err')
+    else { setShirtTypes(prev => prev.map(t => t.id === editId ? data as ShirtType : t)); setEditId(null); notify('บันทึกสำเร็จ') }
+    setSaving(false)
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`ลบ "${name}"?`)) return
+    await db.from('shirt_types').delete().eq('id', id)
+    setShirtTypes(prev => prev.filter(t => t.id !== id))
+    notify('ลบสำเร็จ', 'err')
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Add Form */}
+      <div style={{ background: '#0d0d0d', border: '1px solid #1e1e1e', borderRadius: 8, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: 12, color: '#c00', fontWeight: 700 }}>+ เพิ่มประเภทเสื้อใหม่</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative' }}>
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowPicker(!showPicker)} style={{ fontSize: 22, background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>{newIcon}</button>
+            {showPicker && (
+              <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 999, background: '#111', border: '1px solid #222', borderRadius: 8, padding: 8, display: 'flex', flexWrap: 'wrap', gap: 4, width: 220 }}>
+                {EMOJI_PICKS.map(e => (
+                  <button key={e} onClick={() => { setNewIcon(e); setShowPicker(false) }} style={{ fontSize: 18, background: newIcon === e ? '#c00' : '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 5, padding: '3px 6px', cursor: 'pointer' }}>{e}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <input className="input-d" style={{ flex: 1, minWidth: 120 }} placeholder="ชื่อประเภท เช่น เสื้อบอล" value={newName}
+            onChange={e => { setNewName(e.target.value); setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g,'-').replace(/^-|-$/g,'')) }} />
+          <input className="input-d" style={{ flex: 1, minWidth: 100 }} placeholder="slug: football" value={newSlug} onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/\s/g, '-'))} />
+          <button className="btn-red sm" disabled={saving} onClick={handleAdd}>+ เพิ่ม</button>
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
+        {shirtTypes.map(type => (
+          <div key={type.id} style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 8, padding: '10px 12px' }}>
+            {editId === type.id ? (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input className="input-d" style={{ width: 46, textAlign: 'center', fontSize: 18, padding: '4px' }} value={editIcon} onChange={e => setEditIcon(Array.from(e.target.value).slice(0,2).join(''))} maxLength={4} title="พิมพ์ emoji" />
+                <input className="input-d" style={{ flex: 1, minWidth: 100 }} value={editName} onChange={e => setEditName(e.target.value)} placeholder="ชื่อ" />
+                <input className="input-d" style={{ flex: 1, minWidth: 80 }} value={editSlug} onChange={e => setEditSlug(e.target.value)} placeholder="slug" />
+                <button className="btn-red sm" disabled={saving} onClick={handleSaveEdit}>💾 บันทึก</button>
+                <button className="btn-outline sm" onClick={() => setEditId(null)}>ยกเลิก</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>{type.icon || '👕'}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{type.name}</div>
+                    <div style={{ fontSize: 10, color: '#555' }}>slug: {type.slug}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }}>✏ แก้ไข</button>
+                  <button className="btn-ghost sm" onClick={() => handleDelete(type.id, type.name)}>✕</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
