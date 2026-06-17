@@ -22,7 +22,6 @@ const ADMIN_ACCOUNTS: Record<string, string> = {
 
 const NAV_ITEMS = [
   { id: 'new', label: 'แบบเสื้อใหม่', badge: 'New' },
-  { id: 'other', label: 'แบบเสื้ออื่นๆ' },
   { id: 'promotion', label: 'โปรโมชั่น' },
   { id: 'collar', label: 'คอเสื้อทั้งหมด' },
   { id: 'fabric', label: 'เนื้อผ้า' },
