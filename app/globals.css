@@ -144,3 +144,71 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
   .grid-shirts { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .btn-red.sm, .btn-outline.sm { padding: 4px 8px; font-size: 11px; }
 }
+
+/* ── Shirt Type Filter — Responsive ── */
+
+/* Mobile: horizontal scroll chips (default) */
+.shirt-type-mobile-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 0 8px;
+  scrollbar-width: none;
+  margin-bottom: 12px;
+}
+.shirt-type-mobile-filter::-webkit-scrollbar { display: none; }
+
+.stf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #aaa;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.stf-chip:hover { border-color: #c00; color: #fff; }
+.stf-chip.stf-active {
+  background: #c00;
+  border-color: #c00;
+  color: #fff;
+  font-weight: 700;
+}
+.stf-count {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 16px;
+  min-width: 16px;
+  text-align: center;
+}
+.stf-chip.stf-active .stf-count { background: rgba(0,0,0,0.2); }
+
+/* Desktop sidebar: hidden on mobile */
+.shirt-type-sidebar {
+  display: none;
+}
+
+/* Desktop (≥768px): show sidebar, hide mobile chips */
+@media (min-width: 768px) {
+  .shirt-type-mobile-filter {
+    display: none;
+  }
+  .shirt-type-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 155px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 56px;
+    gap: 2px;
+  }
+}

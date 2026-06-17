@@ -291,48 +291,66 @@ export default function CatalogPage() {
             {/* Layout: sidebar ซ้าย + content ขวา เฉพาะ tab new */}
             <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
-              {/* Sidebar ประเภทเสื้อ */}
+              {/* Sidebar ประเภทเสื้อ — desktop เท่านั้น */}
               {activeNav === 'new' && shirtTypes.length > 0 && (
-                <div style={{ width: 180, flexShrink: 0, position: 'sticky', top: 56, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
+                <>
+                  {/* Mobile: horizontal scroll bar */}
+                  <div className="shirt-type-mobile-filter">
+                    <button
+                      onClick={() => setSelectedShirtType(null)}
+                      className={`stf-chip${selectedShirtType === null ? ' stf-active' : ''}`}
+                    >
+                      🗂️ ทั้งหมด
+                      <span className="stf-count">{shirts.filter(s => s.category === 'new').length}</span>
+                    </button>
+                    {shirtTypes.map((type) => {
+                      const isActive = selectedShirtType === type.slug
+                      const count = shirtTypeCounts[type.slug] ?? 0
+                      return (
+                        <button key={type.id} onClick={() => setSelectedShirtType(isActive ? null : type.slug)} className={`stf-chip${isActive ? ' stf-active' : ''}`}>
+                          {type.icon || '👕'} {type.name}
+                          {count > 0 && <span className="stf-count">{count}</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
 
-                  {/* ปุ่มทั้งหมด */}
-                  <button
-                    onClick={() => setSelectedShirtType(null)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#c00' : '#f5f5f5', color: selectedShirtType === null ? '#fff' : '#333', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s' }}
-                  >
-                    <span>🗂️ ทั้งหมด</span>
-                    <span style={{ background: selectedShirtType === null ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: selectedShirtType === null ? '#fff' : '#555', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
-                      {shirts.filter(s => s.category === 'new').length}
-                    </span>
-                  </button>
-
-                  {/* Divider */}
-                  <div style={{ height: 1, background: '#e5e5e5', margin: '4px 0' }} />
-
-                  {/* ปุ่มแต่ละประเภท */}
-                  {shirtTypes.map((type) => {
-                    const count = shirtTypeCounts[type.slug] ?? 0
-                    const isActive = selectedShirtType === type.slug
-                    return (
-                      <button
-                        key={type.id}
-                        onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: 'none', background: isActive ? '#c00' : '#f5f5f5', color: isActive ? '#fff' : '#333', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s' }}
-                        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
-                        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                          <span style={{ flexShrink: 0 }}>{type.icon || '👕'}</span>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type.name}</span>
-                        </span>
-                        {count > 0 && (
-                          <span style={{ background: isActive ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: isActive ? '#fff' : '#555', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+                  {/* Desktop: sidebar */}
+                  <div className="shirt-type-sidebar">
+                    <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
+                    <button
+                      onClick={() => setSelectedShirtType(null)}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#c00' : '#f5f5f5', color: selectedShirtType === null ? '#fff' : '#333', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
+                    >
+                      <span>🗂️ ทั้งหมด</span>
+                      <span style={{ background: selectedShirtType === null ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: selectedShirtType === null ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
+                        {shirts.filter(s => s.category === 'new').length}
+                      </span>
+                    </button>
+                    <div style={{ height: 1, background: '#e5e5e5', margin: '4px 0' }} />
+                    {shirtTypes.map((type) => {
+                      const count = shirtTypeCounts[type.slug] ?? 0
+                      const isActive = selectedShirtType === type.slug
+                      return (
+                        <button
+                          key={type.id}
+                          onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: isActive ? '#c00' : '#f5f5f5', color: isActive ? '#fff' : '#333', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
+                            <span style={{ flexShrink: 0, fontSize: 13 }}>{type.icon || '👕'}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }}>{type.name}</span>
+                          </span>
+                          {count > 0 && (
+                            <span style={{ background: isActive ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: isActive ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
               )}
 
               {/* Content area */}
