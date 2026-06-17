@@ -289,7 +289,7 @@ export default function CatalogPage() {
             )}
 
             {/* Layout: sidebar ซ้าย + content ขวา เฉพาะ tab new */}
-            <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+            <div className="shirt-layout-wrapper">
 
               {/* Sidebar ประเภทเสื้อ — desktop เท่านั้น */}
               {activeNav === 'new' && shirtTypes.length > 0 && (
