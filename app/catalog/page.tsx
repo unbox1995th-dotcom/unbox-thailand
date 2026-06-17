@@ -49,7 +49,7 @@ export default function CatalogPage() {
   const [shippingRules, setShippingRules] = useState<ShippingRule[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
   const [shirtTypes, setShirtTypes] = useState<ShirtType[]>([])
-  const [selectedShirtType, setSelectedShirtType] = useState<string | null>(null)
+  const [selectedShirtType, setSelectedShirtType] = useState<string | null>('football')
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -684,7 +684,7 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false, shirt_type: (initial as any)?.shirt_type || '' })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false, shirt_type: (initial as any)?.shirt_type || 'football' })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
