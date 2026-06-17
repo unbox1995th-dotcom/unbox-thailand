@@ -295,21 +295,21 @@ export default function CatalogPage() {
               {/* Sidebar ประเภทเสื้อ */}
               {activeNav === 'new' && shirtTypes.length > 0 && (
                 <div style={{ width: 180, flexShrink: 0, position: 'sticky', top: 56, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
+                  <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
 
                   {/* ปุ่มทั้งหมด */}
                   <button
                     onClick={() => setSelectedShirtType(null)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: selectedShirtType === null ? '1px solid #c00' : '1px solid transparent', background: selectedShirtType === null ? 'rgba(200,0,0,0.15)' : 'transparent', color: selectedShirtType === null ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 400, transition: 'all 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#c00' : '#f5f5f5', color: selectedShirtType === null ? '#fff' : '#333', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s' }}
                   >
                     <span>🗂️ ทั้งหมด</span>
-                    <span style={{ background: selectedShirtType === null ? '#c00' : 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
+                    <span style={{ background: selectedShirtType === null ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: selectedShirtType === null ? '#fff' : '#555', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 700 }}>
                       {shirts.filter(s => s.category === 'new').length}
                     </span>
                   </button>
 
                   {/* Divider */}
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
+                  <div style={{ height: 1, background: '#e5e5e5', margin: '4px 0' }} />
 
                   {/* ปุ่มแต่ละประเภท */}
                   {shirtTypes.map((type) => {
@@ -319,16 +319,16 @@ export default function CatalogPage() {
                       <button
                         key={type.id}
                         onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: isActive ? '1px solid #c00' : '1px solid transparent', background: isActive ? 'rgba(200,0,0,0.15)' : 'transparent', color: isActive ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s' }}
-                        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLButtonElement).style.color = '#fff' }}
-                        onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)' } }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '7px 10px', borderRadius: 7, border: 'none', background: isActive ? '#c00' : '#f5f5f5', color: isActive ? '#fff' : '#333', fontSize: 12.5, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s' }}
+                        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
+                        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
                           <span style={{ flexShrink: 0 }}>{type.icon || '👕'}</span>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type.name}</span>
                         </span>
                         {count > 0 && (
-                          <span style={{ background: isActive ? '#c00' : 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
+                          <span style={{ background: isActive ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: isActive ? '#fff' : '#555', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
                         )}
                       </button>
                     )
