@@ -339,9 +339,9 @@ export default function CatalogPage() {
                           onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
                           onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
+                          <span style={{ display: 'flex', alignItems: 'flex-start', gap: 4, flex: 1 }}>
                             <span className="sidebar-emoji" style={{ flexShrink: 0, fontSize: 14 }}>{type.icon || '👕'}</span>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }}>{type.name}</span>
+                            <span style={{ fontSize: 12, lineHeight: 1.4 }}>{type.name}</span>
                           </span>
                           {count > 0 && (
                             <span style={{ background: isActive ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: isActive ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
