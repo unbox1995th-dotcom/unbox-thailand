@@ -253,8 +253,3 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
   }
   .shirt-layout-wrapper { gap: 20px; }
 }
-
-/* Mobile: ซ่อน emoji แสดงแค่ชื่อ + ตัวเลข */
-@media (max-width: 639px) {
-  .sidebar-emoji { display: none !important; }
-}
