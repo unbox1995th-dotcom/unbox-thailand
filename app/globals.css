@@ -198,30 +198,47 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
   display: none;
 }
 
-/* Desktop (≥768px): show sidebar, hide mobile chips */
-@media (min-width: 1024px) {
-  .shirt-type-mobile-filter {
-    display: none;
-  }
-  .shirt-type-sidebar {
-    display: flex;
-    flex-direction: column;
-    width: 155px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 56px;
-    gap: 2px;
-  }
-}
-
 /* ── Shirt Layout Wrapper ── */
 .shirt-layout-wrapper {
-  display: block; /* mobile: stack vertically */
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
+
+/* ── Shirt Type Sidebar — always vertical, size by screen ── */
+.shirt-type-sidebar {
+  display: flex !important;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 56px;
+  gap: 2px;
+  width: 130px; /* mobile default */
+}
+
+/* ซ่อน chips บนมือถือ — ใช้ sidebar แทน */
+.shirt-type-mobile-filter {
+  display: none !important;
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+  .shirt-type-sidebar { width: 150px; }
+}
+
+/* Desktop */
 @media (min-width: 1024px) {
-  .shirt-layout-wrapper {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
+  .shirt-type-sidebar { width: 170px; }
+  .shirt-layout-wrapper { gap: 20px; }
+}
+
+/* Sidebar button size by screen */
+@media (max-width: 639px) {
+  .shirt-type-sidebar button {
+    font-size: 11px !important;
+    padding: 5px 7px !important;
+  }
+  .shirt-type-sidebar span {
+    font-size: 10px !important;
   }
 }

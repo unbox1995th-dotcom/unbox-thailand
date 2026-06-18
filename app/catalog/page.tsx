@@ -316,7 +316,15 @@ export default function CatalogPage() {
                   </div>
 
                   {/* Desktop: sidebar */}
-                  <div className="shirt-type-sidebar">
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: 'clamp(120px, 20%, 160px)',
+                    flexShrink: 0,
+                    position: 'sticky',
+                    top: 56,
+                    gap: 2,
+                  }} className="shirt-type-sidebar">
                     <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
                     <button
                       onClick={() => setSelectedShirtType(null)}
