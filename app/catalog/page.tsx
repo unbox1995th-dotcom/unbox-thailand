@@ -330,7 +330,7 @@ export default function CatalogPage() {
                       onClick={() => setSelectedShirtType(null)}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#c00' : '#f5f5f5', color: selectedShirtType === null ? '#fff' : '#333', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
                     >
-                      <span>🗂️ ทั้งหมด</span>
+                      <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
                       <span style={{ background: selectedShirtType === null ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: selectedShirtType === null ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
                         {shirts.filter(s => s.category === 'new').length}
                       </span>
@@ -347,8 +347,8 @@ export default function CatalogPage() {
                           onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
                           onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
                         >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden' }}>
-                            <span style={{ flexShrink: 0, fontSize: 13 }}>{type.icon || '👕'}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
+                            <span className="sidebar-emoji" style={{ flexShrink: 0, fontSize: 14 }}>{type.icon || '👕'}</span>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }}>{type.name}</span>
                           </span>
                           {count > 0 && (
