@@ -213,39 +213,38 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
   position: sticky;
   top: 56px;
   gap: 2px;
-  width: 72px; /* มือถือ ~10% */
+  width: 20vw; /* 1/5 ของหน้าจอทุกอุปกรณ์ */
+  min-width: 60px;
+  max-width: 180px;
 }
 
-/* ซ่อน chips บนมือถือ — ใช้ sidebar แทน */
-.shirt-type-mobile-filter {
-  display: none !important;
+.shirt-type-mobile-filter { display: none !important; }
+
+/* ขนาดตัวอักษรและ padding ตาม vw */
+.shirt-type-sidebar button {
+  font-size: clamp(9px, 1.8vw, 13px) !important;
+  padding: clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 10px) !important;
+  border-radius: 6px !important;
+  margin-bottom: 2px;
 }
 
-/* Tablet */
-@media (min-width: 640px) {
-  .shirt-type-sidebar { width: 120px; }
+.shirt-type-sidebar .sidebar-emoji {
+  font-size: clamp(10px, 2vw, 15px) !important;
 }
 
-/* Desktop */
+/* Desktop ≥1024px: กว้างขึ้นหน่อย */
 @media (min-width: 1024px) {
-  .shirt-type-sidebar { width: 160px; }
-  .shirt-layout-wrapper { gap: 20px; }
-}
-
-/* Mobile: ตัวอักษร+ปุ่มเล็กลง */
-@media (max-width: 639px) {
+  .shirt-type-sidebar {
+    width: 170px;
+  }
   .shirt-type-sidebar button {
-    font-size: 10px !important;
-    padding: 5px 5px !important;
-    border-radius: 6px !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
   }
-  .shirt-type-sidebar button span:first-child {
-    font-size: 13px !important;
-  }
+  .shirt-layout-wrapper { gap: 20px; }
 }
 
 /* Mobile: ซ่อน emoji แสดงแค่ชื่อ + ตัวเลข */
 @media (max-width: 639px) {
   .sidebar-emoji { display: none !important; }
-  .sidebar-label { display: inline !important; }
 }
