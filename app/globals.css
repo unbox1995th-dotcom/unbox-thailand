@@ -238,6 +238,21 @@ input[type=checkbox] { accent-color: #c00; width: 14px; height: 14px; cursor: po
   word-break: break-word;
 }
 
+/* Mobile <1024px: ellipsis แทนการแตกบรรทัด */
+@media (max-width: 1023px) {
+  .shirt-type-sidebar button {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    align-items: center !important;
+  }
+  .shirt-type-sidebar button > span:first-child {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: normal !important;
+  }
+}
+
 .shirt-type-sidebar .sidebar-emoji {
   font-size: clamp(10px, 2vw, 15px) !important;
 }
