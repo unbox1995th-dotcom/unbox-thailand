@@ -111,7 +111,7 @@ export default function CatalogPage() {
     })()
   }, [])
 
-  const filtered = shirts.filter((s) => {
+  const filteredByNav = shirts.filter((s) => {
     if (activeNav === 'all') return s.category === 'new' || s.category === 'other'
     if (activeNav === 'new') return s.category === 'new'
     if (activeNav === 'collar') return s.category === 'collar'
@@ -120,19 +120,19 @@ export default function CatalogPage() {
     if (activeNav === 'fabric') return s.category === 'fabric'
     if (activeNav === 'photo') return s.category === 'photo'
     return true
-  }).filter((s) => {
-    if (activeNav !== 'new' || !selectedShirtType) return true
+  })
+
+  const filtered = filteredByNav.filter((s) => {
+    if (!selectedShirtType) return true
     return (s as any).shirt_type === selectedShirtType
   })
 
-  // นับจำนวนเสื้อแต่ละประเภท
-  const shirtTypeCounts = shirts
-    .filter((s) => s.category === 'new')
-    .reduce((acc: Record<string, number>, s) => {
-      const t = (s as any).shirt_type
-      if (t) acc[t] = (acc[t] ?? 0) + 1
-      return acc
-    }, {})
+  // นับจำนวนเสื้อแต่ละประเภทตาม nav ปัจจุบัน
+  const shirtTypeCounts = filteredByNav.reduce((acc: Record<string, number>, s) => {
+    const t = (s as any).shirt_type
+    if (t) acc[t] = (acc[t] ?? 0) + 1
+    return acc
+  }, {})
 
   const canDrag = !!adminUser && activeNav !== 'all'
 
@@ -294,11 +294,11 @@ export default function CatalogPage() {
               </div>
             )}
 
-            {/* Layout: sidebar ซ้าย + content ขวา เฉพาะ tab new */}
+            {/* Layout: sidebar ซ้าย + content ขวา — ทุก tab */}
             <div className="shirt-layout-wrapper">
 
-              {/* Sidebar ประเภทเสื้อ — desktop เท่านั้น */}
-              {activeNav === 'new' && shirtTypes.length > 0 && (
+              {/* Sidebar ประเภทเสื้อ — ทุก tab */}
+              {shirtTypes.length > 0 && (
                 <>
                   {/* Mobile: horizontal scroll bar */}
                   <div className="shirt-type-mobile-filter">
@@ -307,9 +307,9 @@ export default function CatalogPage() {
                       className={`stf-chip${selectedShirtType === null ? ' stf-active' : ''}`}
                     >
                       🗂️ ทั้งหมด
-                      <span className="stf-count">{shirts.filter(s => s.category === 'new').length}</span>
+                      <span className="stf-count">{filteredByNav.length}</span>
                     </button>
-                    {shirtTypes.map((type) => {
+                    {shirtTypes.filter(type => (shirtTypeCounts[type.slug] ?? 0) > 0).map((type) => {
                       const isActive = selectedShirtType === type.slug
                       const count = shirtTypeCounts[type.slug] ?? 0
                       return (
@@ -330,11 +330,11 @@ export default function CatalogPage() {
                     >
                       <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
                       <span style={{ background: selectedShirtType === null ? '#111' : '#cdd0da', color: selectedShirtType === null ? '#FFE000' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
-                        {shirts.filter(s => s.category === 'new').length}
+                        {filteredByNav.length}
                       </span>
                     </button>
                     <div style={{ height: 1, background: '#cdd0da', margin: '4px 0' }} />
-                    {shirtTypes.map((type) => {
+                    {shirtTypes.filter(type => (shirtTypeCounts[type.slug] ?? 0) > 0).map((type) => {
                       const count = shirtTypeCounts[type.slug] ?? 0
                       const isActive = selectedShirtType === type.slug
                       return (
