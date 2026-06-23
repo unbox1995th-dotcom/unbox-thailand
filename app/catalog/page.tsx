@@ -196,9 +196,15 @@ export default function CatalogPage() {
       <div style={{ background: '#fff', borderBottom: '2px solid #111' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, background: '#F5C400', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#111' }}>U</div>
+            {shopSettings.logo_url ? (
+              <img src={shopSettings.logo_url} alt="logo" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain', background: '#F5C400' }} />
+            ) : (
+              <div style={{ width: 44, height: 44, background: '#F5C400', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#111' }}>U</div>
+            )}
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: '#111' }}>รวมแบบเสื้อและสินค้าทั้งหมด</div>
+              <a href="https://www.facebook.com/unbox.sports" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: 15, color: '#111', textDecoration: 'none' }}>
+                {shopSettings.shop_name || 'UNBOX เสื้อพิมพ์ลายราคาถูกจากโรงงาน'}
+              </a>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 9, color: '#999', letterSpacing: 2 }}>SHIRT CATALOG</span>
                 <span style={{ fontSize: 9, color: '#3d9a3d', display: 'flex', alignItems: 'center', gap: 3 }}>

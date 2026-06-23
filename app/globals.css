@@ -42,16 +42,17 @@ body {
 
 /* ── Inputs ── */
 .input-d {
-  background: #fff; border: 1px solid #ddd;
-  color: #111; padding: 9px 12px; border-radius: 5px;
+  background: #1a1a1a; border: 1px solid #333;
+  color: #fff; padding: 9px 12px; border-radius: 5px;
   font-family: inherit; font-size: 13px; width: 100%;
   display: block; transition: border .18s;
 }
 .input-d:focus { outline: none; border-color: #F5C400; }
+.input-d::placeholder { color: #666; }
 
 .select-d {
-  background: #fff; border: 1px solid #ddd;
-  color: #111; padding: 9px 12px; border-radius: 5px;
+  background: #1a1a1a; border: 1px solid #333;
+  color: #fff; padding: 9px 12px; border-radius: 5px;
   font-family: inherit; font-size: 13px; width: 100%; cursor: pointer;
 }
 .select-d:focus { outline: none; border-color: #F5C400; }
