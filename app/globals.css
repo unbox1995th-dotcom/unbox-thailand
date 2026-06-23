@@ -81,7 +81,7 @@ body {
 /* ── Shirt Card ── */
 .card-shirt {
   position: relative;
-  background: #fff; border: 2px solid #F5C400;
+  background: #e5e8ef; border: 2px solid #F5C400;
   border-radius: 10px; overflow: hidden; transition: all .22s;
 }
 .card-shirt:hover {

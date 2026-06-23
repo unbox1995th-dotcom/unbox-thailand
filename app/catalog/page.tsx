@@ -316,18 +316,18 @@ export default function CatalogPage() {
                   </div>
 
                   {/* Desktop: sidebar */}
-                  <div className="shirt-type-sidebar">
+                <div style={{ background: '#e5e8ef', border: '2px solid #F5C400', borderRadius: 10, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 3 }} className="shirt-type-sidebar">
                     <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
                     <button
                       onClick={() => setSelectedShirtType(null)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#F5C400' : '#f5f5f5', color: selectedShirtType === null ? '#fff' : '#333', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#F5C400' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
                     >
                       <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
-                      <span style={{ background: selectedShirtType === null ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: selectedShirtType === null ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
+                      <span style={{ background: selectedShirtType === null ? '#111' : '#cdd0da', color: selectedShirtType === null ? '#F5C400' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
                         {shirts.filter(s => s.category === 'new').length}
                       </span>
                     </button>
-                    <div style={{ height: 1, background: '#e5e5e5', margin: '4px 0' }} />
+                    <div style={{ height: 1, background: '#cdd0da', margin: '4px 0' }} />
                     {shirtTypes.map((type) => {
                       const count = shirtTypeCounts[type.slug] ?? 0
                       const isActive = selectedShirtType === type.slug
@@ -335,16 +335,16 @@ export default function CatalogPage() {
                         <button
                           key={type.id}
                           onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: isActive ? '#F5C400' : '#f5f5f5', color: isActive ? '#fff' : '#333', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
-                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#ebebeb' }}
-                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#f5f5f5' }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: isActive ? 'none' : '1px solid #cdd0da', background: isActive ? '#F5C400' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#eef0f4' }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#fff' }}
                         >
                           <span style={{ display: 'flex', alignItems: 'flex-start', gap: 4, flex: 1 }}>
                             <span className="sidebar-emoji" style={{ flexShrink: 0, fontSize: 14 }}>{type.icon || '👕'}</span>
                             <span style={{ fontSize: 12, lineHeight: 1.4 }}>{type.name}</span>
                           </span>
                           {count > 0 && (
-                            <span style={{ background: isActive ? 'rgba(255,255,255,0.25)' : '#e0e0e0', color: isActive ? '#fff' : '#555', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
+                            <span style={{ background: isActive ? '#111' : '#cdd0da', color: isActive ? '#F5C400' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
                           )}
                         </button>
                       )
