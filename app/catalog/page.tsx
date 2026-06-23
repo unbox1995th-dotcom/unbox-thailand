@@ -187,7 +187,7 @@ export default function CatalogPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#F5C400'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#FFE000'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
         </div>
       )}
@@ -197,9 +197,9 @@ export default function CatalogPage() {
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {shopSettings.logo_url ? (
-              <img src={shopSettings.logo_url} alt="logo" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain', background: '#F5C400' }} />
+              <img src={shopSettings.logo_url} alt="logo" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain', background: '#FFE000' }} />
             ) : (
-              <div style={{ width: 44, height: 44, background: '#F5C400', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#111' }}>U</div>
+              <div style={{ width: 44, height: 44, background: '#FFE000', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#111' }}>U</div>
             )}
             <div>
               <a href="https://www.facebook.com/unbox.sports" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: 15, color: '#111', textDecoration: 'none' }}>
@@ -217,7 +217,7 @@ export default function CatalogPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {adminUser ? (
               <>
-                <span style={{ background: '#111', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#F5C400' }}>ADMIN</span>
+                <span style={{ background: '#111', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#FFE000' }}>ADMIN</span>
                 <span style={{ fontSize: 12, color: '#555' }}>{adminUser}</span>
                 <button className="btn-outline sm" onClick={() => setShowCustMgr(!showCustMgr)}>{showCustMgr ? '← กลับ' : `สมาชิก (${customers.length})`}</button>
                 <button className="btn-outline sm" onClick={() => { setAdminUser(null); setShowCustMgr(false); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
@@ -252,7 +252,7 @@ export default function CatalogPage() {
               {NAV_ITEMS.map((n) => (
                 <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => { setActiveNav(n.id); setSelectedShirtType(null) }}>
                   {n.label}
-                  {n.badge && <span style={{ display: 'inline-block', background: '#F5C400', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 700, marginLeft: 6, verticalAlign: 'middle' }}>{n.badge}</span>}
+                  {n.badge && <span style={{ display: 'inline-block', background: '#FFE000', color: '#111', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 700, marginLeft: 6, verticalAlign: 'middle' }}>{n.badge}</span>}
                 </div>
               ))}
             </div>
@@ -276,7 +276,7 @@ export default function CatalogPage() {
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
                 
                 <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#111', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
-                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#F5C400'; (e.currentTarget as HTMLAnchorElement).style.color='#F5C400' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#FFE000'; (e.currentTarget as HTMLAnchorElement).style.color='#FFE000' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
                   📥 Export ภาพ
                 </a>
@@ -322,14 +322,14 @@ export default function CatalogPage() {
                   </div>
 
                   {/* Desktop: sidebar */}
-                <div style={{ background: '#e5e8ef', border: '2px solid #F5C400', borderRadius: 10, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 3 }} className="shirt-type-sidebar">
+                <div style={{ background: '#e5e8ef', border: '2px solid #FFE000', borderRadius: 10, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 3 }} className="shirt-type-sidebar">
                     <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
                     <button
                       onClick={() => setSelectedShirtType(null)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#F5C400' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#FFE000' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
                     >
                       <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
-                      <span style={{ background: selectedShirtType === null ? '#111' : '#cdd0da', color: selectedShirtType === null ? '#F5C400' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
+                      <span style={{ background: selectedShirtType === null ? '#111' : '#cdd0da', color: selectedShirtType === null ? '#FFE000' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
                         {shirts.filter(s => s.category === 'new').length}
                       </span>
                     </button>
@@ -341,7 +341,7 @@ export default function CatalogPage() {
                         <button
                           key={type.id}
                           onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: isActive ? 'none' : '1px solid #cdd0da', background: isActive ? '#F5C400' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: isActive ? 'none' : '1px solid #cdd0da', background: isActive ? '#FFE000' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
                           onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#eef0f4' }}
                           onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#fff' }}
                         >
@@ -350,7 +350,7 @@ export default function CatalogPage() {
                             <span style={{ fontSize: 12, lineHeight: 1.4 }}>{type.name}</span>
                           </span>
                           {count > 0 && (
-                            <span style={{ background: isActive ? '#111' : '#cdd0da', color: isActive ? '#F5C400' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
+                            <span style={{ background: isActive ? '#111' : '#cdd0da', color: isActive ? '#FFE000' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
                           )}
                         </button>
                       )
@@ -487,10 +487,10 @@ export default function CatalogPage() {
 function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
+      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>กำลังโหลดข้อมูลจาก Supabase...</div>
       <div style={{ width: 160, height: 3, background: '#1c1c1c', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: '#F5C400', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
+        <div style={{ height: '100%', background: '#FFE000', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
       </div>
     </div>
   )
@@ -533,7 +533,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
                 <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>‹</button>
                 <button onClick={() => setCur((c) => (c + 1) % banners.length)} style={{ position: 'absolute', right: isAdmin ? 130 : 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>›</button>
                 <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#F5C400' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
+                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#FFE000' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
                 </div>
               </>
             )}
@@ -556,7 +556,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
             <div style={{ fontSize: 32 }}>🖼</div>
-            <div style={{ color: '#F5C400', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
+            <div style={{ color: '#FFE000', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
             <div style={{ fontSize: 11, color: '#aaa' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         ) : (
@@ -607,7 +607,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
       style={{
         opacity: isDragging ? 0.4 : 1,
         transform: isDragOver ? 'scale(1.03)' : 'none',
-        border: isDragOver ? '2px dashed #F5C400' : undefined,
+        border: isDragOver ? '2px dashed #FFE000' : undefined,
         cursor: canDrag ? 'grab' : 'default',
         transition: 'opacity 0.15s, transform 0.15s, border 0.15s',
       }}
@@ -627,14 +627,14 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 7px', fontSize: 11, color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }}>🔍</div>
         )}
         <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {shirt.category === 'new' && <span style={{ background: '#F5C400', color: '#111', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
+          {shirt.category === 'new' && <span style={{ background: '#FFE000', color: '#111', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
           {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>โปร</span>}
         </div>
       </div>
       <div style={{ padding: '13px 14px 12px' }}>
         {shirt.category === 'fabric' ? (
           <>
-            <div style={{ background: '#F5C400', borderRadius: 6, padding: '5px 10px', marginBottom: 8, display: 'inline-block' }}>
+            <div style={{ background: '#FFE000', borderRadius: 6, padding: '5px 10px', marginBottom: 8, display: 'inline-block' }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</span>
             </div>
             {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.7)', background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 4 }}><span style={{ color: '#111', fontWeight: 700 }}>คุณสมบัติผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.collar_type}</span></div>}
@@ -743,7 +743,7 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
             <div style={{ fontSize: 28 }}>📷</div>
-            <div style={{ color: '#F5C400', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
+            <div style={{ color: '#FFE000', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
             <div style={{ fontSize: 11, color: '#aaa' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         )}
@@ -1058,12 +1058,12 @@ function PromotionList({ promotions, setPromotions, notify }: {
       )}
       <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {promotions.map((p) => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #F5C400' : '1px solid transparent' }}>
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #FFE000' : '1px solid transparent' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
             </div>
-            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#F5C400' : '#333', color: '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
+            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#FFE000' : '#333', color: p.is_active ? '#111' : '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
             <button className="btn-outline sm" onClick={() => { setEditId(p.id); setShowAdd(false); setF({ name: p.name, is_active: p.is_active, min_qty: p.min_qty, type: p.type, free_qty: p.free_qty, discount_qty: p.discount_qty, discount_pct: p.discount_pct, discount_thb: p.discount_thb }) }}>แก้ไข</button>
             <button className="btn-ghost" onClick={() => del(p.id)}>ลบ</button>
           </div>
@@ -1167,7 +1167,7 @@ function CustomerMgr({ customers, setCustomers, notify }: {
         : <div style={{ display: 'grid', gap: 10 }}>
           {list.map((c) => (
             <div key={c.id} style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#F5C400,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#FFE000,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1253,8 +1253,8 @@ function AuthShell({ title, badge, sub, children }: { title: string, badge?: str
     <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '36px 32px', width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
-          {badge && <div style={{ display: 'inline-block', background: '#F5C400', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#fff', marginBottom: 10 }}>{badge}</div>}
+          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
+          {badge && <div style={{ display: 'inline-block', background: '#FFE000', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#111', marginBottom: 10 }}>{badge}</div>}
           <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{title}</div>
           {sub && <div style={{ fontSize: 11, color: '#aaa', marginTop: 5 }}>{sub}</div>}
         </div>
@@ -1286,7 +1286,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#F5C400,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
               📞 ช่องทางการติดต่อ
@@ -1363,7 +1363,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   {contact.phone1 && (
                     <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#F5C400')}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
@@ -1374,7 +1374,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                   )}
                   {contact.phone2 && (
                     <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#F5C400')}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
@@ -1568,7 +1568,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {/* Header — ซ่อนเมื่อคำนวณแล้ว */}
           {!calculated && (
             <>
-              <div style={{ background: 'linear-gradient(135deg,#F5C400,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
@@ -1717,7 +1717,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {calculated && (
             <div style={{ padding: '16px 20px' }}>
               {/* ปุ่มปิด */}
-              <div style={{ background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>📋 สรุปราคาเบื้องต้น</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn-outline sm" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => reset()}>← แก้ไข</button>
@@ -1918,9 +1918,9 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Phone */}
-            <div style={{ background: '#F5C400', borderRadius: 10, padding: 14 }}>
+            <div style={{ background: '#FFE000', borderRadius: 10, padding: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#F5C400"/></svg>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#FFE000"/></svg>
                 เบอร์โทรศัพท์
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
@@ -1972,7 +1972,7 @@ function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
             <img src={shopSettings.logo_url} alt="logo"
               style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(245,196,0,0.5)', margin: '0 auto' }} />
           ) : (
-            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
+            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
           )}
         </div>
         {/* Name */}
@@ -1984,7 +1984,7 @@ function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
         </div>
         {/* Buttons */}
         <button onClick={onBrowse}
-          style={{ width: '100%', background: '#F5C400', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          style={{ width: '100%', background: '#FFE000', color: '#111', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           👕 เข้าชมแบบเสื้อ
         </button>
         <button onClick={onAdmin}
@@ -2053,7 +2053,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
               {logoUrl ? (
                 <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(245,196,0,0.4)', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
+                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
               )}
               <div style={{ flex: 1 }}>
                 <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL โลโก้ หรืออัปโหลด..." />
@@ -2082,7 +2082,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
             {logoUrl ? (
               <img src={logoUrl} alt="preview" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px', display: 'block' }} />
             ) : (
-              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#F5C400,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
+              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
             )}
             <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'ชื่อร้าน'}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'คำอธิบาย'}</div>
@@ -2186,14 +2186,14 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Add Form */}
       <div style={{ background: '#0d0d0d', border: '1px solid #1e1e1e', borderRadius: 8, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 12, color: '#F5C400', fontWeight: 700 }}>+ เพิ่มประเภทเสื้อใหม่</div>
+        <div style={{ fontSize: 12, color: '#FFE000', fontWeight: 700 }}>+ เพิ่มประเภทเสื้อใหม่</div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative' }}>
           <div style={{ position: 'relative' }}>
             <button onClick={() => setShowPicker(!showPicker)} style={{ fontSize: 22, background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>{newIcon}</button>
             {showPicker && (
               <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 999, background: '#111', border: '1px solid #222', borderRadius: 8, padding: 8, display: 'flex', flexWrap: 'wrap', gap: 4, width: 220 }}>
                 {EMOJI_PICKS.map(e => (
-                  <button key={e} onClick={() => { setNewIcon(e); setShowPicker(false) }} style={{ fontSize: 18, background: newIcon === e ? '#F5C400' : '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 5, padding: '3px 6px', cursor: 'pointer' }}>{e}</button>
+                  <button key={e} onClick={() => { setNewIcon(e); setShowPicker(false) }} style={{ fontSize: 18, background: newIcon === e ? '#FFE000' : '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 5, padding: '3px 6px', cursor: 'pointer' }}>{e}</button>
                 ))}
               </div>
             )}
@@ -2221,7 +2221,7 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
             onDragEnd={handleDragEnd}
             style={{
               background: '#0d0d0d',
-              border: dragOverId === type.id ? '1px dashed #F5C400' : '1px solid #1a1a1a',
+              border: dragOverId === type.id ? '1px dashed #FFE000' : '1px solid #1a1a1a',
               borderRadius: 8,
               padding: '10px 12px',
               opacity: dragId === type.id ? 0.4 : 1,

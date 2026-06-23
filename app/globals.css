@@ -11,16 +11,16 @@ body {
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #f0f0f0; }
-::-webkit-scrollbar-thumb { background: #F5C400; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #FFE000; border-radius: 2px; }
 
 /* ── Buttons ── */
 .btn-red {
-  background: #F5C400; color: #111; border: none;
+  background: #FFE000; color: #111; border: none;
   padding: 9px 20px; border-radius: 5px; cursor: pointer;
   font-family: inherit; font-weight: 700; font-size: 13px;
   transition: background .18s;
 }
-.btn-red:hover { background: #e0b000; }
+.btn-red:hover { background: #ccb000; }
 .btn-red.sm { padding: 6px 14px; font-size: 12px; }
 
 .btn-outline {
@@ -47,7 +47,7 @@ body {
   font-family: inherit; font-size: 13px; width: 100%;
   display: block; transition: border .18s;
 }
-.input-d:focus { outline: none; border-color: #F5C400; }
+.input-d:focus { outline: none; border-color: #FFE000; }
 .input-d::placeholder { color: #666; }
 
 .select-d {
@@ -55,7 +55,7 @@ body {
   color: #fff; padding: 9px 12px; border-radius: 5px;
   font-family: inherit; font-size: 13px; width: 100%; cursor: pointer;
 }
-.select-d:focus { outline: none; border-color: #F5C400; }
+.select-d:focus { outline: none; border-color: #FFE000; }
 
 /* ── Modal ── */
 .modal-bg {
@@ -71,22 +71,22 @@ body {
 
 /* ── Drag zone ── */
 .drag-zone {
-  border: 2px dashed #F5C400; border-radius: 8px;
+  border: 2px dashed #FFE000; border-radius: 8px;
   padding: 28px; text-align: center; cursor: pointer;
   transition: all .18s; background: #FFFDF0;
 }
 .drag-zone:hover, .drag-zone.ov {
-  border-color: #e0b000; background: #FFF9E6;
+  border-color: #ccb000; background: #FFF9E6;
 }
 
 /* ── Shirt Card ── */
 .card-shirt {
   position: relative;
-  background: #e5e8ef; border: 2px solid #F5C400;
+  background: #e5e8ef; border: 2px solid #FFE000;
   border-radius: 10px; overflow: hidden; transition: all .22s;
 }
 .card-shirt:hover {
-  border-color: #e0b000;
+  border-color: #ccb000;
   transform: translateY(-2px);
 }
 
@@ -120,7 +120,7 @@ body {
 
 .divider { height: 1px; background: #e5e5e5; margin: 16px 0; }
 
-input[type=checkbox] { accent-color: #F5C400; width: 14px; height: 14px; cursor: pointer; }
+input[type=checkbox] { accent-color: #FFE000; width: 14px; height: 14px; cursor: pointer; }
 
 @keyframes loading {
   0% { width: 0% }
@@ -162,16 +162,16 @@ input[type=checkbox] { accent-color: #F5C400; width: 14px; height: 14px; cursor:
   font-size: 12px; white-space: nowrap; cursor: pointer;
   flex-shrink: 0; transition: all 0.15s; font-family: inherit;
 }
-.stf-chip:hover { border-color: #F5C400; background: #FFF9E6; }
+.stf-chip:hover { border-color: #FFE000; background: #FFF9E6; }
 .stf-chip.stf-active {
-  background: #111; border-color: #111; color: #F5C400; font-weight: 700;
+  background: #111; border-color: #111; color: #FFE000; font-weight: 700;
 }
 .stf-count {
   background: rgba(0,0,0,0.08); border-radius: 999px;
   padding: 0 5px; font-size: 10px; line-height: 16px;
   min-width: 16px; text-align: center; color: #555;
 }
-.stf-chip.stf-active .stf-count { background: rgba(245,196,0,0.2); color: #F5C400; }
+.stf-chip.stf-active .stf-count { background: rgba(245,196,0,0.2); color: #FFE000; }
 
 /* ── Sidebar ── */
 .shirt-type-sidebar { display: none; }
