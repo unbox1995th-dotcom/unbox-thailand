@@ -9,12 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "next": "15.1.0",
     "react": "^18",
-    "react-dom": "^18",
-    "@supabase/supabase-js": "^2.45.0"
+    "react-dom": "^18"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
