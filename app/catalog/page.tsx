@@ -297,7 +297,7 @@ export default function CatalogPage() {
             {/* Layout: sidebar ซ้าย + content ขวา — ทุก tab */}
             <div className="shirt-layout-wrapper">
 
-              {/* Sidebar ประเภทเสื้อ — ทุก tab */}
+              {/* Sidebar ประเภทเสื้อ — แสดงทุก tab */}
               {shirtTypes.length > 0 && (
                 <>
                   {/* Mobile: horizontal scroll bar */}
@@ -309,7 +309,7 @@ export default function CatalogPage() {
                       🗂️ ทั้งหมด
                       <span className="stf-count">{filteredByNav.length}</span>
                     </button>
-                    {shirtTypes.filter(type => (shirtTypeCounts[type.slug] ?? 0) > 0).map((type) => {
+                    {shirtTypes.map((type) => {
                       const isActive = selectedShirtType === type.slug
                       const count = shirtTypeCounts[type.slug] ?? 0
                       return (
@@ -334,7 +334,7 @@ export default function CatalogPage() {
                       </span>
                     </button>
                     <div style={{ height: 1, background: '#cdd0da', margin: '4px 0' }} />
-                    {shirtTypes.filter(type => (shirtTypeCounts[type.slug] ?? 0) > 0).map((type) => {
+                    {shirtTypes.map((type) => {
                       const count = shirtTypeCounts[type.slug] ?? 0
                       const isActive = selectedShirtType === type.slug
                       return (
