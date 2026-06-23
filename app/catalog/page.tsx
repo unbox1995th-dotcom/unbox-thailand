@@ -187,7 +187,7 @@ export default function CatalogPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#FFE000'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#111' : '#111', border: `1px solid ${toast.type === 'ok' ? '#FFE000' : '#FFE000'}`, color: toast.type === 'ok' ? '#FFE000' : '#fff', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
         </div>
       )}
@@ -263,7 +263,7 @@ export default function CatalogPage() {
           {adminUser && (
             <div style={{ background: 'rgba(245,196,0,0.07)', borderBottom: '1px solid rgba(245,196,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
+                <span style={{ fontSize: 11, color: '#111', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
                 {activeNav === 'new' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อใหม่</button>}
                 {activeNav === 'collar' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มคอเสื้อ</button>}
                 {activeNav === 'promotion' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มโปรโมชั่น</button>}
@@ -487,7 +487,7 @@ export default function CatalogPage() {
 function LoadingScreen() {
   return (
     <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
+      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>กำลังโหลดข้อมูลจาก Supabase...</div>
       <div style={{ width: 160, height: 3, background: '#1c1c1c', borderRadius: 2, overflow: 'hidden' }}>
         <div style={{ height: '100%', background: '#FFE000', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
@@ -648,7 +648,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
             {shirt.product_type && <div style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
             {(shirt as any).shirt_type && (shirt as any).shirt_type_name && (
               <div style={{ marginBottom: 8 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
                   {(shirt as any).shirt_type_icon || '👕'} {(shirt as any).shirt_type_name}
                 </span>
               </div>
@@ -838,7 +838,7 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
                 {f.shirt_type && (
                   <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 11, color: '#555' }}>Preview:</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11 }}>
                       {shirtTypes.find(t => t.slug === f.shirt_type)?.icon} {shirtTypes.find(t => t.slug === f.shirt_type)?.name}
                     </span>
                   </div>
@@ -1167,7 +1167,7 @@ function CustomerMgr({ customers, setCustomers, notify }: {
         : <div style={{ display: 'grid', gap: 10 }}>
           {list.map((c) => (
             <div key={c.id} style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#FFE000,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#FFE000,#111)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1256,7 +1256,7 @@ function AuthShell({ title, badge, sub, children, shopSettings }: { title: strin
           {shopSettings?.logo_url ? (
             <img src={shopSettings.logo_url} alt="logo" style={{ width: 50, height: 50, borderRadius: 12, objectFit: 'contain', background: '#FFE000', margin: '0 auto 14px', display: 'block' }} />
           ) : (
-            <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>
+            <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>
               {shopSettings?.shop_name?.charAt(0) || 'S'}
             </div>
           )}
@@ -1271,7 +1271,7 @@ function AuthShell({ title, badge, sub, children, shopSettings }: { title: strin
 }
 
 function ErrMsg({ msg }: { msg: string }) {
-  return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(245,196,0,0.1)', borderRadius: 5, border: '1px solid rgba(245,196,0,0.25)' }}>{msg}</div>
+  return <div style={{ color: '#111', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(0,0,0,0.05)', borderRadius: 5, border: '1px solid rgba(0,0,0,0.2)' }}>{msg}</div>
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -1292,7 +1292,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
               📞 ช่องทางการติดต่อ
@@ -1306,7 +1306,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>กำลังโหลด...</div>
           ) : !contact ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#111' }}>ไม่สามารถโหลดข้อมูลได้</div>
           ) : (
             <>
               {/* Facebook */}
@@ -1528,7 +1528,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
 
     // header
     const grad = ctx.createLinearGradient(0, 0, W, 0)
-    grad.addColorStop(0, '#cc0000')
+    grad.addColorStop(0, '#111')
     grad.addColorStop(1, '#880000')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, W, titleH)
@@ -1574,7 +1574,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {/* Header — ซ่อนเมื่อคำนวณแล้ว */}
           {!calculated && (
             <>
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
@@ -1672,8 +1672,8 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
 
                 {/* โปรโมชั่น */}
                 {activePromo && (
-                  <div style={{ background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
-                    <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
+                  <div style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(245,196,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+                    <div style={{ fontSize: 12, color: '#111', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       {activePromo.type === 'free' && (
                         <button className={promoChoice === 'free' ? 'btn-red sm' : 'btn-outline sm'} style={{ flex: 1 }}
@@ -1723,7 +1723,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {calculated && (
             <div style={{ padding: '16px 20px' }}>
               {/* ปุ่มปิด */}
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+              <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>📋 สรุปราคาเบื้องต้น</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn-outline sm" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => reset()}>← แก้ไข</button>
@@ -1743,7 +1743,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                 ] as any[]).filter(Boolean).map(([label, val]: [string, string]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
-                    <span style={{ color: String(val).startsWith('-') ? '#6fdf6f' : String(val).startsWith('🎁') ? '#ff6060' : '#fff' }}>{val}</span>
+                    <span style={{ color: String(val).startsWith('-') ? '#FFE000' : String(val).startsWith('🎁') ? '#111' : '#fff' }}>{val}</span>
                   </div>
                 ))}
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#111' }}>
@@ -1751,7 +1751,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                   <span>{isCustomShipping ? `฿${subtotal.toLocaleString()} + ขนส่ง` : `฿${grandTotal.toLocaleString()}`}</span>
                 </div>
                 {promoChoice === 'free' && bonusQty > 0 && (
-                  <div style={{ background: 'rgba(245,196,0,0.1)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#ff6060' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.05)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#111' }}>
                     🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
                   </div>
                 )}
@@ -1850,8 +1850,8 @@ function ContactAdminModal({ notify, onClose }: {
   }
 
   const inp: React.CSSProperties = {
-    background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.3)',
-    color: '#fff', padding: '8px 10px', borderRadius: 6,
+    background: '#fff', border: '1px solid rgba(0,0,0,0.2)',
+    color: '#111', padding: '8px 10px', borderRadius: 6,
     fontFamily: 'inherit', fontSize: 13, width: '100%',
   }
 
@@ -1925,7 +1925,7 @@ function ContactAdminModal({ notify, onClose }: {
 
             {/* Phone */}
             <div style={{ background: '#FFE000', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#111', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#FFE000"/></svg>
                 เบอร์โทรศัพท์
               </div>
@@ -1942,8 +1942,8 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Address */}
-            <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>📍 ที่อยู่หน้าร้าน</div>
+            <div style={{ background: '#f5f5f5', border: '1px solid #ddd', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#111', marginBottom: 10 }}>📍 ที่อยู่หน้าร้าน</div>
               <textarea
                 style={{ ...inp, minHeight: 70, resize: 'vertical' as const }}
                 value={f.address}
@@ -1978,7 +1978,7 @@ function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
             <img src={shopSettings.logo_url} alt="logo"
               style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(245,196,0,0.5)', margin: '0 auto' }} />
           ) : (
-            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
+            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
           )}
         </div>
         {/* Name */}
@@ -2059,7 +2059,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
               {logoUrl ? (
                 <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(245,196,0,0.4)', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
+                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
               )}
               <div style={{ flex: 1 }}>
                 <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL โลโก้ หรืออัปโหลด..." />
@@ -2088,7 +2088,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
             {logoUrl ? (
               <img src={logoUrl} alt="preview" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px', display: 'block' }} />
             ) : (
-              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
+              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
             )}
             <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'ชื่อร้าน'}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'คำอธิบาย'}</div>
