@@ -61,7 +61,7 @@ export default function CatalogPage() {
   const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [showShopAdmin, setShowShopAdmin] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
-  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: 'main', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
+  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: '', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -96,7 +96,7 @@ export default function CatalogPage() {
           db.from('shipping_rules').select('*').order('sort_order'),
           db.from('shirt_types').select('*').order('sort_order'),
         ])
-      const { data: ss } = await db.from('shop_settings').select('*').eq('id', 'main').single()
+      const { data: ss } = await db.from('shop_settings').select('*').limit(1).single()
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
@@ -1272,7 +1272,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').eq('id', 'main').single()
+    db.from('contact_settings').select('*').limit(1).single()
       .then(({ data }) => { if (data) setContact(data); setLoading(false) })
   }, [])
 
@@ -1418,7 +1418,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
   const [contact, setContact] = useState<any>(null)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').eq('id','main').single()
+    db.from('contact_settings').select('*').limit(1).single()
       .then(({ data }) => { if (data) setContact(data) })
   }, [])
 
@@ -1801,7 +1801,7 @@ function ContactAdminModal({ notify, onClose }: {
   const qrInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').eq('id', 'main').single()
+    db.from('contact_settings').select('*').limit(1).single()
       .then(({ data }) => {
         if (data) setF({
           facebook_url: data.facebook_url || '',
@@ -1831,7 +1831,7 @@ function ContactAdminModal({ notify, onClose }: {
     setSaving(true)
     const { error } = await supabase
       .from('contact_settings')
-      .upsert({ id: 'main', ...f, updated_at: new Date().toISOString() })
+      .upsert({ ...f, updated_at: new Date().toISOString() })
     if (error) notify('บันทึกไม่สำเร็จ: ' + error.message, 'err')
     else { notify('บันทึกข้อมูลติดต่อแล้ว ✓'); onClose() }
     setSaving(false)
@@ -2013,7 +2013,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
   const handleSave = async () => {
     setSaving(true)
     const { error } = await db.from('shop_settings').upsert({
-      id: 'main', shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
+      id: shopSettings.id || undefined, shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
     })
     if (error) { notify('บันทึกไม่สำเร็จ: ' + error.message, 'err') }
     else {
