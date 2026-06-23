@@ -885,7 +885,7 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTyp
           <div style={{ fontWeight: 700, fontSize: 16 }}>⚙ จัดการประเภทสินค้า</div>
           <button className="btn-outline sm" onClick={onClose}>✕</button>
         </div>
-        <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid #ddd', paddingBottom: 12, flexWrap: 'wrap' }}>
           {TABS.map(([id, lbl]) => (
             <div key={id} className={`nav-item${tab === id ? ' active' : ''}`} style={{ padding: '5px 12px', borderRadius: 5, fontSize: 12 }} onClick={() => setTab(id as any)}>{lbl}</div>
           ))}
