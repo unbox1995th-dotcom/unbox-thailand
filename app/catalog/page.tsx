@@ -2038,7 +2038,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
   const inp: React.CSSProperties = {
     background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)',
-    color: '#111', padding: '8px 10px', borderRadius: 6,
+    color: '#fff', padding: '8px 10px', borderRadius: 6,
     fontFamily: 'inherit', fontSize: 13, width: '100%',
   }
 
