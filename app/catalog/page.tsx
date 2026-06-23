@@ -3,12 +3,11 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase, db, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
+import { supabase, uploadBase64Image, deleteImage, logDeletion } from '@/lib/supabase'
 import type { Shirt, Banner, Collar, ProductType, Customer } from '@/lib/supabase'
 
 type ShopSettings = { id: string; shop_name: string; shop_subtitle: string; logo_url: string | null }
 type FabricType = { id: string; name: string; sort_order: number }
-type ShirtType = { id: string; name: string; slug: string; icon: string; sort_order: number }
 type Promotion = { id: string; name: string; is_active: boolean; min_qty: number; type: string; free_qty: number; discount_qty: number; discount_pct: number; discount_thb: number; sort_order: number }
 type ShippingRule = { id: string; name: string; min_qty: number; max_qty: number | null; price: number; sort_order: number }
 type CollarWithPrice = { id: string; name: string; price: number; sort_order: number }
@@ -22,8 +21,9 @@ const ADMIN_ACCOUNTS: Record<string, string> = {
 
 const NAV_ITEMS = [
   { id: 'new', label: 'แบบเสื้อใหม่', badge: 'New' },
-  { id: 'promotion', label: 'โปรโมชั่น' },
   { id: 'collar', label: 'คอเสื้อทั้งหมด' },
+  { id: 'promotion', label: 'โปรโมชั่น' },
+  { id: 'other', label: 'แบบเสื้ออื่นๆ' },
   { id: 'fabric', label: 'เนื้อผ้า' },
   { id: 'photo', label: 'ภาพถ่ายงานจริง' },
   { id: 'all', label: 'สินค้าทั้งหมด' },
@@ -47,8 +47,6 @@ export default function CatalogPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [shippingRules, setShippingRules] = useState<ShippingRule[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [shirtTypes, setShirtTypes] = useState<ShirtType[]>([])
-  const [selectedShirtType, setSelectedShirtType] = useState<string | null>(null)
 
   const [editShirt, setEditShirt] = useState<Shirt | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -61,7 +59,7 @@ export default function CatalogPage() {
   const [showContactAdmin, setShowContactAdmin] = useState(false)
   const [showShopAdmin, setShowShopAdmin] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
-  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: '', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
+  const [shopSettings, setShopSettings] = useState<ShopSettings>({ id: 'main', shop_name: 'อีโวสปอร์ต', shop_subtitle: 'รวมแบบเสื้อและสินค้าทั้งหมด', logo_url: null })
   const [toast, setToast] = useState<Toast | null>(null)
 
   const [dragId, setDragId] = useState<string | null>(null)
@@ -84,19 +82,18 @@ export default function CatalogPage() {
 
   useEffect(() => {
     ;(async () => {
-      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }, { data: st }] =
+      const [{ data: b }, { data: s }, { data: c }, { data: p }, { data: cu }, { data: ft }, { data: promo }, { data: ship }] =
         await Promise.all([
-          db.from('banners').select('*').order('sort_order'),
-          db.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
-          db.from('collars').select('*').order('sort_order'),
-          db.from('product_types').select('*').order('sort_order'),
-          db.from('customers').select('*').order('joined_at', { ascending: false }),
-          db.from('fabric_types').select('*').order('sort_order'),
-          db.from('promotions').select('*').order('sort_order'),
-          db.from('shipping_rules').select('*').order('sort_order'),
-          db.from('shirt_types').select('*').order('sort_order'),
+          supabase.from('banners').select('*').order('sort_order'),
+          supabase.from('shirts').select('*').order('sort_order').order('created_at', { ascending: false }),
+          supabase.from('collars').select('*').order('sort_order'),
+          supabase.from('product_types').select('*').order('sort_order'),
+          supabase.from('customers').select('*').order('joined_at', { ascending: false }),
+          supabase.from('fabric_types').select('*').order('sort_order'),
+          supabase.from('promotions').select('*').order('sort_order'),
+          supabase.from('shipping_rules').select('*').order('sort_order'),
         ])
-      const { data: ss } = await db.from('shop_settings').select('*').limit(1).single()
+      const { data: ss } = await supabase.from('shop_settings').select('*').eq('id', 'main').single()
       if (b) setBanners(b)
       if (s) setShirts(s)
       if (c) setCollars(c)
@@ -105,13 +102,12 @@ export default function CatalogPage() {
       if (ft) setFabricTypes(ft as FabricType[])
       if (promo) setPromotions(promo as Promotion[])
       if (ship) setShippingRules(ship as ShippingRule[])
-      if (st) setShirtTypes(st as ShirtType[])
       if (ss) setShopSettings(ss)
       setReady(true)
     })()
   }, [])
 
-  const filteredByNav = shirts.filter((s) => {
+  const filtered = shirts.filter((s) => {
     if (activeNav === 'all') return s.category === 'new' || s.category === 'other'
     if (activeNav === 'new') return s.category === 'new'
     if (activeNav === 'collar') return s.category === 'collar'
@@ -121,18 +117,6 @@ export default function CatalogPage() {
     if (activeNav === 'photo') return s.category === 'photo'
     return true
   })
-
-  const filtered = filteredByNav.filter((s) => {
-    if (!selectedShirtType) return true
-    return (s as any).shirt_type === selectedShirtType
-  })
-
-  // นับจำนวนเสื้อแต่ละประเภทตาม nav ปัจจุบัน
-  const shirtTypeCounts = filteredByNav.reduce((acc: Record<string, number>, s) => {
-    const t = (s as any).shirt_type
-    if (t) acc[t] = (acc[t] ?? 0) + 1
-    return acc
-  }, {})
 
   const canDrag = !!adminUser && activeNav !== 'all'
 
@@ -159,7 +143,7 @@ export default function CatalogPage() {
     saveSortTimer.current = setTimeout(async () => {
       const updates = shirts.map((s, i) => ({ id: s.id, sort_order: i }))
       for (const u of updates) {
-        await db.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
+        await supabase.from('shirts').update({ sort_order: u.sort_order }).eq('id', u.id)
       }
       notify('บันทึกลำดับแล้ว')
     }, 800)
@@ -176,7 +160,7 @@ export default function CatalogPage() {
   )
   if (view === 'register') return (
     <Register onSave={async (data) => {
-      const { data: newCust, error } = await db.from('customers').insert([data]).select().single()
+      const { data: newCust, error } = await supabase.from('customers').insert([data]).select().single()
       if (error) { notify('สมัครสมาชิกไม่สำเร็จ: ' + error.message, 'err'); return }
       setCustomers((prev) => [newCust, ...prev])
       setView('cust-login')
@@ -185,28 +169,22 @@ export default function CatalogPage() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#FFE000'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, background: toast.type === 'ok' ? '#0c2210' : '#220c0c', border: `1px solid ${toast.type === 'ok' ? '#266626' : '#c00'}`, color: toast.type === 'ok' ? '#6fdf6f' : '#ff8080', padding: '11px 18px', borderRadius: 7, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 24px rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
           {toast.type === 'ok' ? '✓' : '✕'} {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '2px solid #111' }}>
+      <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {shopSettings.logo_url ? (
-              <img src={shopSettings.logo_url} alt="logo" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain', background: '#FFE000' }} />
-            ) : (
-              <div style={{ width: 44, height: 44, background: '#FFE000', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#111' }}>U</div>
-            )}
+            <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: '#fff' }}>S</div>
             <div>
-              <a href="https://www.facebook.com/unbox.sports" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: 15, color: '#111', textDecoration: 'none' }}>
-                {shopSettings.shop_name || 'UNBOX เสื้อพิมพ์ลายราคาถูกจากโรงงาน'}
-              </a>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>รวมแบบเสื้อและสินค้าทั้งหมด</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 9, color: '#999', letterSpacing: 2 }}>SHIRT CATALOG</span>
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: 2 }}>SHIRT CATALOG</span>
                 <span style={{ fontSize: 9, color: '#3d9a3d', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#3d9a3d', display: 'inline-block' }} />
                   Supabase Connected
@@ -217,20 +195,20 @@ export default function CatalogPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {adminUser ? (
               <>
-                <span style={{ background: '#111', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#FFE000' }}>ADMIN</span>
-                <span style={{ fontSize: 12, color: '#555' }}>{adminUser}</span>
+                <span style={{ background: 'linear-gradient(90deg,#c00,#800)', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#fff' }}>ADMIN</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{adminUser}</span>
                 <button className="btn-outline sm" onClick={() => setShowCustMgr(!showCustMgr)}>{showCustMgr ? '← กลับ' : `สมาชิก (${customers.length})`}</button>
                 <button className="btn-outline sm" onClick={() => { setAdminUser(null); setShowCustMgr(false); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : custUser ? (
               <>
-                <span style={{ fontSize: 12, color: '#555' }}>👤 {custUser.name}</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>👤 {custUser.name}</span>
                 <button className="btn-outline sm" onClick={() => { setCustUser(null); notify('ออกจากระบบแล้ว', 'err') }}>ออก</button>
               </>
             ) : (
               <>
-                <button className="btn-red sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
-                <button className="btn-outline sm" onClick={() => setView('admin-login')}>Admin</button>
+                <button className="btn-outline sm" onClick={() => setView('cust-login')}>เข้าสู่ระบบ</button>
+                <button className="btn-red sm" onClick={() => setView('admin-login')}>Admin</button>
               </>
             )}
           </div>
@@ -247,21 +225,19 @@ export default function CatalogPage() {
 
       {!showCustMgr && (
         <>
-          <div style={{ background: '#fff', borderBottom: '2px solid #111', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto' }}>
+          <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 100, overflowX: 'auto' }}>
             <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', padding: '0 16px' }}>
               {NAV_ITEMS.map((n) => (
-                <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => { setActiveNav(n.id); setSelectedShirtType(null) }}>
+                <div key={n.id} className={`nav-item${activeNav === n.id ? ' active' : ''}`} onClick={() => setActiveNav(n.id)}>
                   {n.label}
-                  {n.badge && <span style={{ display: 'inline-block', background: '#FFE000', color: '#111', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 700, marginLeft: 6, verticalAlign: 'middle' }}>{n.badge}</span>}
+                  {n.badge && <span style={{ display: 'inline-block', background: '#c00', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 10, fontWeight: 700, marginLeft: 6, verticalAlign: 'middle' }}>{n.badge}</span>}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Filter bar ประเภทเสื้อ — แสดงเฉพาะ tab แบบเสื้อใหม่ */}
-
           {adminUser && (
-            <div style={{ background: 'rgba(245,196,0,0.07)', borderBottom: '1px solid rgba(245,196,0,0.18)', padding: '9px 20px' }}>
+            <div style={{ background: 'rgba(200,0,0,0.07)', borderBottom: '1px solid rgba(200,0,0,0.18)', padding: '9px 20px' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: '#ff6060', fontWeight: 700 }}>⚙ Admin Mode — บันทึกสู่ Supabase อัตโนมัติ</span>
                 {activeNav === 'new' && <button className="btn-red sm" onClick={() => setShowAdd(true)}>+ เพิ่มแบบเสื้อใหม่</button>}
@@ -274,9 +250,8 @@ export default function CatalogPage() {
                 <button className="btn-outline sm" onClick={() => setShowSettings(true)}>จัดการประเภท</button>
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
-                
-                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#111', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
-                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#FFE000'; (e.currentTarget as HTMLAnchorElement).style.color='#FFE000' }}
+                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#f5f5f5', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#c00'; (e.currentTarget as HTMLAnchorElement).style.color='#c00' }}
                   onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
                   📥 Export ภาพ
                 </a>
@@ -293,74 +268,6 @@ export default function CatalogPage() {
                 <span style={{ fontSize: 14 }}>☰</span> กดค้างที่การ์ดแล้วลากเพื่อเรียงลำดับ — บันทึกอัตโนมัติ
               </div>
             )}
-
-            {/* Layout: sidebar ซ้าย + content ขวา — ทุก tab */}
-            <div className="shirt-layout-wrapper">
-
-              {/* Sidebar ประเภทเสื้อ — แสดงทุก tab */}
-              {shirtTypes.length > 0 && (
-                <>
-                  {/* Mobile: horizontal scroll bar */}
-                  <div className="shirt-type-mobile-filter">
-                    <button
-                      onClick={() => setSelectedShirtType(null)}
-                      className={`stf-chip${selectedShirtType === null ? ' stf-active' : ''}`}
-                    >
-                      🗂️ ทั้งหมด
-                      <span className="stf-count">{filteredByNav.length}</span>
-                    </button>
-                    {shirtTypes.map((type) => {
-                      const isActive = selectedShirtType === type.slug
-                      const count = shirtTypeCounts[type.slug] ?? 0
-                      return (
-                        <button key={type.id} onClick={() => setSelectedShirtType(isActive ? null : type.slug)} className={`stf-chip${isActive ? ' stf-active' : ''}`}>
-                          {type.icon || '👕'} {type.name}
-                          {count > 0 && <span className="stf-count">{count}</span>}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Desktop: sidebar */}
-                <div style={{ background: '#e5e8ef', border: '2px solid #FFE000', borderRadius: 10, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 3 }} className="shirt-type-sidebar">
-                    <div style={{ fontSize: 10, color: '#999', letterSpacing: 1, fontWeight: 700, marginBottom: 6, paddingLeft: 4 }}>กรองประเภทเสื้อ</div>
-                    <button
-                      onClick={() => setSelectedShirtType(null)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: 'none', background: selectedShirtType === null ? '#FFE000' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: selectedShirtType === null ? 700 : 500, transition: 'all 0.15s', marginBottom: 2 }}
-                    >
-                      <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
-                      <span style={{ background: selectedShirtType === null ? '#111' : '#cdd0da', color: selectedShirtType === null ? '#FFE000' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
-                        {filteredByNav.length}
-                      </span>
-                    </button>
-                    <div style={{ height: 1, background: '#cdd0da', margin: '4px 0' }} />
-                    {shirtTypes.map((type) => {
-                      const count = shirtTypeCounts[type.slug] ?? 0
-                      const isActive = selectedShirtType === type.slug
-                      return (
-                        <button
-                          key={type.id}
-                          onClick={() => setSelectedShirtType(isActive ? null : type.slug)}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '6px 10px', borderRadius: 7, border: isActive ? 'none' : '1px solid #cdd0da', background: isActive ? '#FFE000' : '#fff', color: '#111', fontSize: 12, cursor: 'pointer', textAlign: 'left', width: '100%', fontWeight: isActive ? 700 : 400, transition: 'all 0.15s', marginBottom: 2 }}
-                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#eef0f4' }}
-                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = '#fff' }}
-                        >
-                          <span style={{ display: 'flex', alignItems: 'flex-start', gap: 4, flex: 1 }}>
-                            <span className="sidebar-emoji" style={{ flexShrink: 0, fontSize: 14 }}>{type.icon || '👕'}</span>
-                            <span style={{ fontSize: 12, lineHeight: 1.4 }}>{type.name}</span>
-                          </span>
-                          {count > 0 && (
-                            <span style={{ background: isActive ? '#111' : '#cdd0da', color: isActive ? '#FFE000' : '#444', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>{count}</span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-
-              {/* Content area */}
-              <div style={{ flex: 1, minWidth: 0 }}>
             {filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '70px 20px' }}>
                 <div style={{ fontSize: 50, marginBottom: 16, opacity: .2 }}>👕</div>
@@ -379,7 +286,7 @@ export default function CatalogPage() {
                     onImageClick={(url) => setLightboxUrl(url)}
                     onDelete={async () => {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
-                      await db.from('shirts').delete().eq('id', s.id)
+                      await supabase.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
                       notify('ลบรูปแล้ว', 'err')
                     }}
@@ -399,13 +306,13 @@ export default function CatalogPage() {
                     onEdit={() => setEditShirt(s)}
                     onDelete={async () => {
                       await logDeletion({ table_name: 'shirts', record_id: s.id, record_name: s.name, image_url: s.image_url, deleted_by: adminUser || 'admin' })
-                      await db.from('shirts').delete().eq('id', s.id)
+                      await supabase.from('shirts').delete().eq('id', s.id)
                       setShirts((prev) => prev.filter((x) => x.id !== s.id))
                       notify('ลบสินค้าแล้ว', 'err')
                     }}
                     onDupe={async () => {
                       const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = s
-                      const { data } = await db.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
+                      const { data } = await supabase.from('shirts').insert([{ ...rest, name: s.name + ' (สำเนา)' }]).select().single()
                       if (data) { setShirts((prev) => [data, ...prev]); notify('คัดลอกสำเร็จ') }
                     }}
                     onContact={() => setShowContact(true)}
@@ -415,8 +322,6 @@ export default function CatalogPage() {
                 ))}
               </div>
             )}
-              </div>{/* end content area */}
-            </div>{/* end sidebar+content flex */}
           </div>
         </>
       )}
@@ -427,18 +332,18 @@ export default function CatalogPage() {
 
       {/* Modals */}
       {showAdd && (
-        <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
+        <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
           category={activeNav === 'all' ? 'new' : activeNav}
           onSave={async (data, imgFile) => {
             let image_url = null
             if (imgFile) image_url = await uploadBase64Image(imgFile)
-            const { data: newShirt } = await db.from('shirts').insert([{ ...data, image_url }]).select().single()
+            const { data: newShirt } = await supabase.from('shirts').insert([{ ...data, image_url }]).select().single()
             if (newShirt) { setShirts((prev) => [newShirt, ...prev]); setShowAdd(false); notify('เพิ่มแบบเสื้อแล้ว — บันทึกสู่ Supabase') }
           }}
           onClose={() => setShowAdd(false)} />
       )}
       {editShirt && (
-        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
+        <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes}
           onSave={async (data, imgFile) => {
             let image_url = editShirt.image_url
             if (imgFile) {
@@ -448,13 +353,13 @@ export default function CatalogPage() {
                 image_url = newUrl
               }
             }
-            const { data: updated } = await db.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
+            const { data: updated } = await supabase.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
             if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
           }}
           onClose={() => setEditShirt(null)} />
       )}
       {showSettings && (
-        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes} promotions={promotions} setPromotions={setPromotions} shippingRules={shippingRules} setShippingRules={setShippingRules} shirtTypes={shirtTypes} setShirtTypes={setShirtTypes}
+        <SettingsModal collars={collars} setCollars={setCollars} prodTypes={prodTypes} setProdTypes={setProdTypes} fabricTypes={fabricTypes} setFabricTypes={setFabricTypes} promotions={promotions} setPromotions={setPromotions} shippingRules={shippingRules} setShippingRules={setShippingRules}
           onClose={() => setShowSettings(false)} notify={notify} />
       )}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
@@ -486,11 +391,11 @@ export default function CatalogPage() {
 /* ── Loading ── */
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+      <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff' }}>S</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>กำลังโหลดข้อมูลจาก Supabase...</div>
       <div style={{ width: 160, height: 3, background: '#1c1c1c', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: '#FFE000', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
+        <div style={{ height: '100%', background: '#c00', animation: 'loading 1.2s ease-in-out infinite', borderRadius: 2 }} />
       </div>
     </div>
   )
@@ -515,7 +420,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
     if (!file.type.startsWith('image/')) return
     const url = await uploadBase64Image(await fileToBase64(file), 'banners')
     if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); return }
-    const { data } = await db.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
+    const { data } = await supabase.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
     if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
   }
 
@@ -533,7 +438,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
                 <button onClick={() => setCur((c) => (c - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>‹</button>
                 <button onClick={() => setCur((c) => (c + 1) % banners.length)} style={{ position: 'absolute', right: isAdmin ? 130 : 12, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 15 }}>›</button>
                 <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#FFE000' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
+                  {banners.map((_, i) => <div key={i} onClick={() => setCur(i)} style={{ width: i === idx ? 22 : 7, height: 7, borderRadius: 4, background: i === idx ? '#c00' : 'rgba(255,255,255,0.35)', cursor: 'pointer', transition: 'all .3s' }} />)}
                 </div>
               </>
             )}
@@ -542,7 +447,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
                 <button className="btn-red sm" onClick={() => ref.current?.click()}>+ เพิ่ม</button>
                 <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.65)' }} onClick={async () => {
                   const b = banners[idx]
-                  await db.from('banners').delete().eq('id', b.id)
+                  await supabase.from('banners').delete().eq('id', b.id)
                   setBanners((prev) => prev.filter((_, i) => i !== idx))
                   setCur(0); notify('ลบ Banner แล้ว', 'err')
                 }}>ลบ</button>
@@ -556,8 +461,8 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
             <div style={{ fontSize: 32 }}>🖼</div>
-            <div style={{ color: '#FFE000', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
-            <div style={{ fontSize: 11, color: '#aaa' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 14 }}>ลาก-วางรูป Banner หรือคลิกเลือกไฟล์</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         ) : (
           <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>ยังไม่มี Banner</div>
@@ -607,13 +512,13 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
       style={{
         opacity: isDragging ? 0.4 : 1,
         transform: isDragOver ? 'scale(1.03)' : 'none',
-        border: isDragOver ? '2px dashed #FFE000' : undefined,
+        border: isDragOver ? '2px dashed #c00' : undefined,
         cursor: canDrag ? 'grab' : 'default',
         transition: 'opacity 0.15s, transform 0.15s, border 0.15s',
       }}
     >
       {canDrag && (
-        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: '#888', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>⠿</div>
+        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, color: 'rgba(255,255,255,0.45)', fontSize: 16, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>⠿</div>
       )}
       <div style={{ aspectRatio: '1', background: '#1a1a1a', position: 'relative', overflow: 'hidden', cursor: shirt.image_url ? 'zoom-in' : 'default' }}
         onClick={() => shirt.image_url && onImageClick?.(shirt.image_url)}>
@@ -627,33 +532,26 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 7px', fontSize: 11, color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }}>🔍</div>
         )}
         <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {shirt.category === 'new' && <span style={{ background: '#FFE000', color: '#111', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
+          {shirt.category === 'new' && <span style={{ background: '#c00', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>NEW</span>}
           {shirt.is_promo && <span style={{ background: '#e07800', color: '#fff', fontSize: 9, padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>โปร</span>}
         </div>
       </div>
       <div style={{ padding: '13px 14px 12px' }}>
         {shirt.category === 'fabric' ? (
           <>
-            <div style={{ background: '#FFE000', borderRadius: 6, padding: '5px 10px', marginBottom: 8, display: 'inline-block' }}>
+            <div style={{ background: '#c00', borderRadius: 6, padding: '5px 10px', marginBottom: 8, display: 'inline-block' }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</span>
             </div>
-            {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.7)', background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 4 }}><span style={{ color: '#111', fontWeight: 700 }}>คุณสมบัติผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.collar_type}</span></div>}
-            {shirt.product_type && <div style={{ fontSize: 11, background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 8 }}><span style={{ color: '#111', fontWeight: 700 }}>ประเภทผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.product_type}</span></div>}
+            {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.7)', background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 4 }}><span style={{ color: '#ff4444', fontWeight: 700 }}>คุณสมบัติผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.collar_type}</span></div>}
+            {shirt.product_type && <div style={{ fontSize: 11, background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 8 }}><span style={{ color: '#ff4444', fontWeight: 700 }}>ประเภทผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.product_type}</span></div>}
             <div style={{ fontWeight: 700, fontSize: 15, color: Number(shirt.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.4)' }}>{Number(shirt.price) > 0 ? `+ ${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : 'ไม่บวกเพิ่ม'}</div>
           </>
         ) : (
           <>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
-            {shirt.collar_type && <div style={{ fontSize: 11, color: '#999', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
-            {shirt.product_type && <div style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
-            {(shirt as any).shirt_type && (shirt as any).shirt_type_name && (
-              <div style={{ marginBottom: 8 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
-                  {(shirt as any).shirt_type_icon || '👕'} {(shirt as any).shirt_type_name}
-                </span>
-              </div>
-            )}
-            <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#111' : '#aaa' }}>{Number(shirt.price) > 0 ? `${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : '—'}</div>
+            {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
+            {shirt.product_type && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginBottom: 8 }}>ประเภท: {shirt.product_type}</div>}
+            <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.3)' }}>{Number(shirt.price) > 0 ? `${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : '—'}</div>
           </>
         )}
         {showActionBtns && (
@@ -701,13 +599,13 @@ function PhotoCard({ shirt, isAdmin, onEdit, onDelete, onImageClick }: {
 }
 
 /* ── Shirt Modal ── */
-function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, category, onSave, onClose }: {
-  initial?: Shirt, collars: Collar[], prodTypes: ProductType[], fabricTypes: FabricType[], shirtTypes: ShirtType[],
+function ShirtModal({ initial, collars, prodTypes, fabricTypes, category, onSave, onClose }: {
+  initial?: Shirt, collars: Collar[], prodTypes: ProductType[], fabricTypes: FabricType[],
   category?: string,
   onSave: (data: Partial<Shirt>, img: string | null) => Promise<void>,
   onClose: () => void
 }) {
-  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false, shirt_type: (initial as any)?.shirt_type || 'football' })
+  const [f, setF] = useState({ name: initial?.name || '', collar_type: initial?.collar_type || '', product_type: initial?.product_type || 'ไมโครโพลีเอสเตอร์ (Micro Polyester)', price: initial?.price || 0, category: initial?.category || category || 'new', is_promo: initial?.is_promo || false })
   const [imgPreview, setImgPreview] = useState<string | null>(initial?.image_url || null)
   const [newImgData, setNewImgData] = useState<string | null>(null)
   const [ov, setOv] = useState(false)
@@ -743,8 +641,8 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
             onDrop={(e) => { e.preventDefault(); setOv(false); if (e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]) }}
             onClick={() => ref.current?.click()}>
             <div style={{ fontSize: 28 }}>📷</div>
-            <div style={{ color: '#FFE000', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
-            <div style={{ fontSize: 11, color: '#aaa' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
+            <div style={{ color: '#c00', fontWeight: 700, fontSize: 13 }}>ลาก-วางรูปภาพ หรือคลิกเลือก</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>JPG · PNG · WEBP — อัปโหลดสู่ Supabase Storage</div>
           </div>
         )}
         <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) loadImg(e.target.files[0]); e.target.value = '' }} />
@@ -828,23 +726,6 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
               <input type="checkbox" checked={f.is_promo} onChange={(e) => set('is_promo', e.target.checked)} />
               <span style={{ fontSize: 13 }}>แสดงในหมวดโปรโมชั่น</span>
             </label>
-            {shirtTypes.length > 0 && (
-              <div>
-                <div className="section-label">ประเภทเสื้อ (สำหรับ Filter)</div>
-                <select className="select-d" value={f.shirt_type} onChange={(e) => set('shirt_type', e.target.value)}>
-                  <option value="">— ไม่ระบุประเภท —</option>
-                  {shirtTypes.map((t) => <option key={t.id} value={t.slug}>{t.icon} {t.name}</option>)}
-                </select>
-                {f.shirt_type && (
-                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: '#555' }}>Preview:</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11 }}>
-                      {shirtTypes.find(t => t.slug === f.shirt_type)?.icon} {shirtTypes.find(t => t.slug === f.shirt_type)?.name}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
           </>)}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
@@ -859,21 +740,19 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
 }
 
 /* ── Settings Modal ── */
-function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, promotions, setPromotions, shippingRules, setShippingRules, shirtTypes, setShirtTypes, onClose, notify }: {
+function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTypes, setFabricTypes, promotions, setPromotions, shippingRules, setShippingRules, onClose, notify }: {
   collars: Collar[], setCollars: React.Dispatch<React.SetStateAction<Collar[]>>,
   prodTypes: ProductType[], setProdTypes: React.Dispatch<React.SetStateAction<ProductType[]>>,
   fabricTypes: FabricType[], setFabricTypes: React.Dispatch<React.SetStateAction<FabricType[]>>,
   promotions: Promotion[], setPromotions: React.Dispatch<React.SetStateAction<Promotion[]>>,
   shippingRules: ShippingRule[], setShippingRules: React.Dispatch<React.SetStateAction<ShippingRule[]>>,
-  shirtTypes: ShirtType[], setShirtTypes: React.Dispatch<React.SetStateAction<ShirtType[]>>,
   onClose: () => void, notify: (m: string, t?: 'ok' | 'err') => void
 }) {
-  const [tab, setTab] = useState<'collar'|'prod'|'fabric'|'price'|'promo'|'ship'|'shirttype'>('collar')
+  const [tab, setTab] = useState<'collar'|'prod'|'fabric'|'price'|'promo'|'ship'>('collar')
   const TABS = [
     ['collar', `ประเภทคอเสื้อ (${collars.length})`],
     ['prod', `ประเภทสินค้า (${prodTypes.length})`],
     ['fabric', `ประเภทเนื้อผ้า (${fabricTypes.length})`],
-    ['shirttype', `🏷️ ประเภทเสื้อ (${shirtTypes.length})`],
     ['price', 'ราคาคอเสื้อ'],
     ['promo', 'โปรโมชั่น'],
     ['ship', 'ค่าขนส่ง'],
@@ -893,7 +772,6 @@ function SettingsModal({ collars, setCollars, prodTypes, setProdTypes, fabricTyp
         {tab === 'collar' && <SupabaseTypeList table="collars" items={collars} setItems={setCollars} ph="เพิ่มประเภทคอเสื้อ..." notify={notify} />}
         {tab === 'prod' && <SupabaseTypeList table="product_types" items={prodTypes} setItems={setProdTypes} ph="เพิ่มประเภทสินค้า..." notify={notify} />}
         {tab === 'fabric' && <SupabaseTypeList table="fabric_types" items={fabricTypes} setItems={setFabricTypes as any} ph="เพิ่มประเภทเนื้อผ้า..." notify={notify} />}
-        {tab === 'shirttype' && <ShirtTypeManager shirtTypes={shirtTypes} setShirtTypes={setShirtTypes} notify={notify} />}
         {tab === 'price' && <CollarPriceList collars={collars as CollarWithPrice[]} setCollars={setCollars as any} notify={notify} />}
         {tab === 'promo' && <PromotionList promotions={promotions} setPromotions={setPromotions} notify={notify} />}
         {tab === 'ship' && <ShippingList shippingRules={shippingRules} setShippingRules={setShippingRules} notify={notify} />}
@@ -913,17 +791,17 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
 
   const add = async () => {
     if (!nv.trim()) return
-    const { data } = await db.from(table).insert([{ name: nv.trim(), sort_order: items.length }]).select().single()
+    const { data } = await supabase.from(table).insert([{ name: nv.trim(), sort_order: items.length }]).select().single()
     if (data) { setItems((prev: any[]) => [...prev, data]); setNv(''); notify('เพิ่มสำเร็จ') }
   }
   const save = async (i: number) => {
     const item = items[i]
-    await db.from(table).update({ name: ev }).eq('id', item.id)
+    await supabase.from(table).update({ name: ev }).eq('id', item.id)
     setItems((prev: any[]) => prev.map((x, j) => j === i ? { ...x, name: ev } : x))
     setEi(null); notify('บันทึกแล้ว')
   }
   const del = async (i: number) => {
-    await db.from(table).delete().eq('id', items[i].id)
+    await supabase.from(table).delete().eq('id', items[i].id)
     setItems((prev: any[]) => prev.filter((_, j) => j !== i)); notify('ลบแล้ว', 'err')
   }
 
@@ -960,7 +838,7 @@ function CollarPriceList({ collars, setCollars, notify }: {
   const [editing, setEditing] = useState<Record<string, string>>({})
   const save = async (col: CollarWithPrice) => {
     const price = Number(editing[col.id] ?? col.price)
-    await db.from('collars').update({ price }).eq('id', col.id)
+    await supabase.from('collars').update({ price }).eq('id', col.id)
     setCollars((prev: any[]) => prev.map((x) => x.id === col.id ? { ...x, price } : x))
     setEditing((prev) => { const n = { ...prev }; delete n[col.id]; return n })
     notify('บันทึกราคาแล้ว')
@@ -975,7 +853,7 @@ function CollarPriceList({ collars, setCollars, notify }: {
             <input className="input-d" type="number" value={editing[col.id] ?? col.price ?? 0}
               onChange={(e) => setEditing((prev) => ({ ...prev, [col.id]: e.target.value }))}
               style={{ width: 90, textAlign: 'right' }} />
-            <span style={{ fontSize: 11, color: '#aaa', whiteSpace: 'nowrap' }}>THB</span>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>THB</span>
             <button className="btn-red sm" onClick={() => save(col)}>บันทึก</button>
           </div>
         ))}
@@ -998,21 +876,21 @@ function PromotionList({ promotions, setPromotions, notify }: {
   const save = async () => {
     if (!f.name.trim()) return
     if (editId) {
-      await db.from('promotions').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      await supabase.from('promotions').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
       setPromotions((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
       notify('บันทึกโปรโมชั่นแล้ว')
     } else {
-      const { data } = await db.from('promotions').insert([{ ...f, sort_order: promotions.length }]).select().single()
+      const { data } = await supabase.from('promotions').insert([{ ...f, sort_order: promotions.length }]).select().single()
       if (data) { setPromotions((prev) => [...prev, data as Promotion]); notify('เพิ่มโปรโมชั่นแล้ว') }
     }
     setShowAdd(false); setEditId(null); setF(empty)
   }
   const del = async (id: string) => {
-    await db.from('promotions').delete().eq('id', id)
+    await supabase.from('promotions').delete().eq('id', id)
     setPromotions((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
   }
   const toggleActive = async (p: Promotion) => {
-    await db.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id)
+    await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id)
     setPromotions((prev) => prev.map((x) => x.id === p.id ? { ...x, is_active: !p.is_active } : x))
   }
 
@@ -1058,12 +936,12 @@ function PromotionList({ promotions, setPromotions, notify }: {
       )}
       <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {promotions.map((p) => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #FFE000' : '1px solid transparent' }}>
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #c00' : '1px solid transparent' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
             </div>
-            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#FFE000' : '#333', color: p.is_active ? '#111' : '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
+            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#c00' : '#333', color: '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
             <button className="btn-outline sm" onClick={() => { setEditId(p.id); setShowAdd(false); setF({ name: p.name, is_active: p.is_active, min_qty: p.min_qty, type: p.type, free_qty: p.free_qty, discount_qty: p.discount_qty, discount_pct: p.discount_pct, discount_thb: p.discount_thb }) }}>แก้ไข</button>
             <button className="btn-ghost" onClick={() => del(p.id)}>ลบ</button>
           </div>
@@ -1088,17 +966,17 @@ function ShippingList({ shippingRules, setShippingRules, notify }: {
   const save = async () => {
     if (!f.name.trim()) return
     if (editId) {
-      await db.from('shipping_rules').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
+      await supabase.from('shipping_rules').update({ ...f, updated_at: new Date().toISOString() }).eq('id', editId)
       setShippingRules((prev) => prev.map((x) => x.id === editId ? { ...x, ...f } : x))
       notify('บันทึกแล้ว')
     } else {
-      const { data } = await db.from('shipping_rules').insert([{ ...f, sort_order: shippingRules.length }]).select().single()
+      const { data } = await supabase.from('shipping_rules').insert([{ ...f, sort_order: shippingRules.length }]).select().single()
       if (data) { setShippingRules((prev) => [...prev, data as ShippingRule]); notify('เพิ่มช่องทางขนส่งแล้ว') }
     }
     setShowAdd(false); setEditId(null); setF(empty)
   }
   const del = async (id: string) => {
-    await db.from('shipping_rules').delete().eq('id', id)
+    await supabase.from('shipping_rules').delete().eq('id', id)
     setShippingRules((prev) => prev.filter((x) => x.id !== id)); notify('ลบแล้ว', 'err')
   }
 
@@ -1158,7 +1036,7 @@ function CustomerMgr({ customers, setCustomers, notify }: {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 18 }}>ข้อมูลสมาชิก</div>
-          <div style={{ fontSize: 11, color: '#aaa', marginTop: 3 }}>Supabase Database · {customers.length} คน</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>Supabase Database · {customers.length} คน</div>
         </div>
         <input className="input-d" style={{ width: 260 }} placeholder="ค้นหาชื่อ / อีเมล / Facebook..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
@@ -1166,8 +1044,8 @@ function CustomerMgr({ customers, setCustomers, notify }: {
         ? <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>ไม่พบสมาชิก</div>
         : <div style={{ display: 'grid', gap: 10 }}>
           {list.map((c) => (
-            <div key={c.id} style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#FFE000,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
+            <div key={c.id} style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#c00,#800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', flexShrink: 0 }}>{(c.name || '?')[0].toUpperCase()}</div>
               <div style={{ flex: 1, minWidth: 180 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1178,7 +1056,7 @@ function CustomerMgr({ customers, setCustomers, notify }: {
                 </div>
               </div>
               <button className="btn-ghost" onClick={async () => {
-                await db.from('customers').delete().eq('id', c.id)
+                await supabase.from('customers').delete().eq('id', c.id)
                 setCustomers((prev) => prev.filter((x) => x.id !== c.id))
                 notify('ลบสมาชิกแล้ว', 'err')
               }}>✕ ลบ</button>
@@ -1250,13 +1128,13 @@ function Register({ customers, onSave, onBack }: {
 
 function AuthShell({ title, badge, sub, children }: { title: string, badge?: string, sub?: string, children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '36px 32px', width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
-          {badge && <div style={{ display: 'inline-block', background: '#FFE000', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#111', marginBottom: 10 }}>{badge}</div>}
+          <div style={{ width: 50, height: 50, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 14px' }}>S</div>
+          {badge && <div style={{ display: 'inline-block', background: '#c00', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#fff', marginBottom: 10 }}>{badge}</div>}
           <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>{title}</div>
-          {sub && <div style={{ fontSize: 11, color: '#aaa', marginTop: 5 }}>{sub}</div>}
+          {sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 5 }}>{sub}</div>}
         </div>
         {children}
       </div>
@@ -1265,7 +1143,7 @@ function AuthShell({ title, badge, sub, children }: { title: string, badge?: str
 }
 
 function ErrMsg({ msg }: { msg: string }) {
-  return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(245,196,0,0.1)', borderRadius: 5, border: '1px solid rgba(245,196,0,0.25)' }}>{msg}</div>
+  return <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5, border: '1px solid rgba(200,0,0,0.25)' }}>{msg}</div>
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -1278,7 +1156,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').limit(1).single()
+    supabase.from('contact_settings').select('*').eq('id', 'main').single()
       .then(({ data }) => { if (data) setContact(data); setLoading(false) })
   }, [])
 
@@ -1286,7 +1164,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
               📞 ช่องทางการติดต่อ
@@ -1298,7 +1176,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 
         <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>กำลังโหลด...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
           ) : !contact ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#ff6060' }}>ไม่สามารถโหลดข้อมูลได้</div>
           ) : (
@@ -1363,7 +1241,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   {contact.phone1 && (
                     <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
@@ -1374,7 +1252,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                   )}
                   {contact.phone2 && (
                     <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
+                      onMouseOver={e => (e.currentTarget.style.borderColor = '#c00')}
                       onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
@@ -1424,7 +1302,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
   const [contact, setContact] = useState<any>(null)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').limit(1).single()
+    supabase.from('contact_settings').select('*').eq('id','main').single()
       .then(({ data }) => { if (data) setContact(data) })
   }, [])
 
@@ -1568,7 +1446,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {/* Header — ซ่อนเมื่อคำนวณแล้ว */}
           {!calculated && (
             <>
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: 'linear-gradient(135deg,#c00,#800)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
@@ -1589,7 +1467,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                     {selectedShirt ? selectedShirt.name : 'ไม่ได้เลือกแบบ'}
                   </div>
                   {!useCollar && Number(shirtPrice) > 0 && (
-                    <div style={{ fontSize: 12, color: '#111', marginTop: 2 }}>฿{shirtPrice.toLocaleString()}/ตัว</div>
+                    <div style={{ fontSize: 12, color: '#ff4444', marginTop: 2 }}>฿{shirtPrice.toLocaleString()}/ตัว</div>
                   )}
                   {useCollar && (
                     <div style={{ fontSize: 11, color: '#ffaa44', marginTop: 4 }}>
@@ -1605,7 +1483,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                       onChange={(e) => { setUseCollar(e.target.checked); setCollarId(''); reset() }} />
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>เปลี่ยนคอเสื้อ</div>
-                      {!useCollar && <div style={{ fontSize: 11, color: '#aaa' }}>ใช้ราคาจากคอเสื้อที่เลือกแทน</div>}
+                      {!useCollar && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ใช้ราคาจากคอเสื้อที่เลือกแทน</div>}
                     </div>
                   </label>
                   {useCollar && (
@@ -1627,7 +1505,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                       onChange={(e) => { setAddPants(e.target.checked); reset() }} />
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>เพิ่มกางเกงพิมพ์ลาย</div>
-                      {!addPants && <div style={{ fontSize: 11, color: '#aaa' }}>บวกราคากางเกงต่อตัว</div>}
+                      {!addPants && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>บวกราคากางเกงต่อตัว</div>}
                     </div>
                   </label>
                   {addPants && (
@@ -1666,7 +1544,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
 
                 {/* โปรโมชั่น */}
                 {activePromo && (
-                  <div style={{ background: 'rgba(245,196,0,0.1)', border: '1px solid rgba(245,196,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
+                  <div style={{ background: 'rgba(200,0,0,0.1)', border: '1px solid rgba(200,0,0,0.3)', borderRadius: 8, padding: '10px 14px' }}>
                     <div style={{ fontSize: 12, color: '#ff6060', fontWeight: 700, marginBottom: 8 }}>🎉 {activePromo.name} — สั่ง {activePromo.min_qty}+ ตัว</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       {activePromo.type === 'free' && (
@@ -1717,7 +1595,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {calculated && (
             <div style={{ padding: '16px 20px' }}>
               {/* ปุ่มปิด */}
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+              <div style={{ background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>📋 สรุปราคาเบื้องต้น</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn-outline sm" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => reset()}>← แก้ไข</button>
@@ -1725,7 +1603,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                 </div>
               </div>
 
-              <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0 0 10px 10px', padding: '14px 16px', display: 'grid', gap: 8 }}>
+              <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0 0 10px 10px', padding: '14px 16px', display: 'grid', gap: 8 }}>
                 {([
                   !useCollar && ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : 'เลือกตามแบบ (฿0)'],
                   useCollar && collar && ['คอเสื้อ', `${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)`],
@@ -1740,16 +1618,16 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                     <span style={{ color: String(val).startsWith('-') ? '#6fdf6f' : String(val).startsWith('🎁') ? '#ff6060' : '#fff' }}>{val}</span>
                   </div>
                 ))}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#111' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#ff4444' }}>
                   <span>รวมทั้งหมด</span>
                   <span>{isCustomShipping ? `฿${subtotal.toLocaleString()} + ขนส่ง` : `฿${grandTotal.toLocaleString()}`}</span>
                 </div>
                 {promoChoice === 'free' && bonusQty > 0 && (
-                  <div style={{ background: 'rgba(245,196,0,0.1)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#ff6060' }}>
+                  <div style={{ background: 'rgba(200,0,0,0.1)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#ff6060' }}>
                     🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
                   </div>
                 )}
-                <div style={{ fontSize: 10, color: '#111' }}>*ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้านหรือ Admin</div>
+                <div style={{ fontSize: 10, color: '#ff4444' }}>*ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้านหรือ Admin</div>
 
                 {/* ช่องทางติดต่อ */}
                 <div id="summary-card-inner" style={{ display: 'grid', gap: 8, marginTop: 6 }}>
@@ -1807,7 +1685,7 @@ function ContactAdminModal({ notify, onClose }: {
   const qrInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    db.from('contact_settings').select('*').limit(1).single()
+    supabase.from('contact_settings').select('*').eq('id', 'main').single()
       .then(({ data }) => {
         if (data) setF({
           facebook_url: data.facebook_url || '',
@@ -1837,7 +1715,7 @@ function ContactAdminModal({ notify, onClose }: {
     setSaving(true)
     const { error } = await supabase
       .from('contact_settings')
-      .upsert({ ...f, updated_at: new Date().toISOString() })
+      .upsert({ id: 'main', ...f, updated_at: new Date().toISOString() })
     if (error) notify('บันทึกไม่สำเร็จ: ' + error.message, 'err')
     else { notify('บันทึกข้อมูลติดต่อแล้ว ✓'); onClose() }
     setSaving(false)
@@ -1859,7 +1737,7 @@ function ContactAdminModal({ notify, onClose }: {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>กำลังโหลด...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>กำลังโหลด...</div>
         ) : (
           <div style={{ display: 'grid', gap: 14 }}>
 
@@ -1918,9 +1796,9 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Phone */}
-            <div style={{ background: '#FFE000', borderRadius: 10, padding: 14 }}>
+            <div style={{ background: '#c00', borderRadius: 10, padding: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#FFE000"/></svg>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="white"/><path d="M14.5 13.5l-1.3 1.3c-2-.5-3.7-2.1-4.2-4.1L10.3 9.4a.5.5 0 000-.7L8.6 7a.5.5 0 00-.7 0L6.5 8.4C6.2 11.7 9.2 15 12.6 14.5l1.3-1.3a.5.5 0 000-.7z" fill="#c00"/></svg>
                 เบอร์โทรศัพท์
               </div>
               <div style={{ display: 'grid', gap: 8 }}>
@@ -1936,7 +1814,7 @@ function ContactAdminModal({ notify, onClose }: {
             </div>
 
             {/* Address */}
-            <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14 }}>
+            <div style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>📍 ที่อยู่หน้าร้าน</div>
               <textarea
                 style={{ ...inp, minHeight: 70, resize: 'vertical' as const }}
@@ -1970,21 +1848,21 @@ function WelcomeModal({ shopSettings, onBrowse, onAdmin }: {
         <div style={{ marginBottom: 20 }}>
           {shopSettings.logo_url ? (
             <img src={shopSettings.logo_url} alt="logo"
-              style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(245,196,0,0.5)', margin: '0 auto' }} />
+              style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(200,0,0,0.5)', margin: '0 auto' }} />
           ) : (
-            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
+            <div style={{ width: 90, height: 90, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 36, color: '#fff', margin: '0 auto' }}>S</div>
           )}
         </div>
         {/* Name */}
         <div style={{ fontWeight: 800, fontSize: 22, color: '#fff', marginBottom: 8 }}>
           {shopSettings.shop_name || 'อีโวสปอร์ต'}
         </div>
-        <div style={{ fontSize: 13, color: '#888', marginBottom: 28 }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 28 }}>
           {shopSettings.shop_subtitle || 'รวมแบบเสื้อและสินค้าทั้งหมด'}
         </div>
         {/* Buttons */}
         <button onClick={onBrowse}
-          style={{ width: '100%', background: '#FFE000', color: '#111', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           👕 เข้าชมแบบเสื้อ
         </button>
         <button onClick={onAdmin}
@@ -2018,8 +1896,8 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
   const handleSave = async () => {
     setSaving(true)
-    const { error } = await db.from('shop_settings').upsert({
-      id: shopSettings.id || undefined, shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
+    const { error } = await supabase.from('shop_settings').upsert({
+      id: 'main', shop_name: name, shop_subtitle: subtitle, logo_url: logoUrl || null, updated_at: new Date().toISOString()
     })
     if (error) { notify('บันทึกไม่สำเร็จ: ' + error.message, 'err') }
     else {
@@ -2032,7 +1910,7 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
   const inp: React.CSSProperties = {
     background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.13)',
-    color: '#111', padding: '8px 10px', borderRadius: 6,
+    color: '#f5f5f5', padding: '8px 10px', borderRadius: 6,
     fontFamily: 'inherit', fontSize: 13, width: '100%',
   }
 
@@ -2051,9 +1929,9 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
             <div className="section-label" style={{ textAlign: 'left', marginBottom: 8 }}>โลโก้ร้าน</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               {logoUrl ? (
-                <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(245,196,0,0.4)', flexShrink: 0 }} />
+                <img src={logoUrl} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(200,0,0,0.4)', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
+                <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 28, color: '#fff', flexShrink: 0 }}>S</div>
               )}
               <div style={{ flex: 1 }}>
                 <input style={{ ...inp, marginBottom: 6 }} value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="URL โลโก้ หรืออัปโหลด..." />
@@ -2078,11 +1956,11 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
 
           {/* Preview */}
           <div style={{ background: '#0d0d0d', borderRadius: 10, padding: 16, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 10, color: '#aaa', marginBottom: 12, letterSpacing: 1 }}>PREVIEW</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 12, letterSpacing: 1 }}>PREVIEW</div>
             {logoUrl ? (
               <img src={logoUrl} alt="preview" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px', display: 'block' }} />
             ) : (
-              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#FFE000,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
+              <div style={{ width: 60, height: 60, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 24, color: '#fff', margin: '0 auto 8px' }}>S</div>
             )}
             <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', marginBottom: 4 }}>{name || 'ชื่อร้าน'}</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subtitle || 'คำอธิบาย'}</div>
@@ -2092,186 +1970,6 @@ function ShopAdminModal({ shopSettings, setShopSettings, notify, onClose }: {
             {saving ? '⏳ กำลังบันทึก...' : '💾 บันทึกหน้าต้อนรับ'}
           </button>
         </div>
-      </div>
-    </div>
-  )
-}
-
-
-/* ── ShirtTypeManager — จัดการประเภทเสื้อใน SettingsModal ── */
-const EMOJI_PICKS = ['⚽','🏀','🏐','🏈','🎾','🏸','🏃','🚴','🧗','🏊','🏫','🎓','🏢','🏛️','🏭','👔','👕','🧥','🥼','🦺','🐓','🐟','🚗','🏎️','✈️','👥','🤝','👑','🌟','✨','🏆','🥇','🔥','💎']
-
-function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
-  shirtTypes: ShirtType[], setShirtTypes: React.Dispatch<React.SetStateAction<ShirtType[]>>,
-  notify: (m: string, t?: 'ok' | 'err') => void
-}) {
-  const [newName, setNewName] = useState('')
-  const [newSlug, setNewSlug] = useState('')
-  const [newIcon, setNewIcon] = useState('👕')
-  const [showPicker, setShowPicker] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editIcon, setEditIcon] = useState('')
-  const [editSlug, setEditSlug] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [dragId, setDragId] = useState<string | null>(null)
-  const [dragOverId, setDragOverId] = useState<string | null>(null)
-  const sortTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const saveOrder = (list: ShirtType[]) => {
-    if (sortTimer.current) clearTimeout(sortTimer.current)
-    sortTimer.current = setTimeout(async () => {
-      for (let i = 0; i < list.length; i++) {
-        await db.from('shirt_types').update({ sort_order: i }).eq('id', list[i].id)
-      }
-      notify('บันทึกลำดับแล้ว')
-    }, 600)
-  }
-
-  const moveItem = (fromIdx: number, toIdx: number) => {
-    if (toIdx < 0 || toIdx >= shirtTypes.length) return
-    const arr = [...shirtTypes]
-    const [moved] = arr.splice(fromIdx, 1)
-    arr.splice(toIdx, 0, moved)
-    setShirtTypes(arr)
-    saveOrder(arr)
-  }
-
-  const handleDragOver = (overId: string) => {
-    if (!dragId || dragId === overId) return
-    setDragOverId(overId)
-    setShirtTypes(prev => {
-      const arr = [...prev]
-      const from = arr.findIndex(t => t.id === dragId)
-      const to = arr.findIndex(t => t.id === overId)
-      if (from === -1 || to === -1) return prev
-      const [moved] = arr.splice(from, 1)
-      arr.splice(to, 0, moved)
-      return arr
-    })
-  }
-
-  const handleDragEnd = () => {
-    setDragId(null)
-    setDragOverId(null)
-    saveOrder(shirtTypes)
-  }
-
-  const handleAdd = async () => {
-    if (!newName.trim() || !newSlug.trim()) { notify('กรุณากรอกชื่อและ slug', 'err'); return }
-    setSaving(true)
-    const { data, error } = await db.from('shirt_types').insert([{ name: newName.trim(), slug: newSlug.trim(), icon: newIcon, sort_order: shirtTypes.length }]).select().single()
-    if (error) notify('เพิ่มไม่สำเร็จ: ' + error.message, 'err')
-    else { setShirtTypes(prev => [...prev, data as ShirtType]); setNewName(''); setNewSlug(''); setNewIcon('👕'); notify('เพิ่มประเภทเสื้อสำเร็จ') }
-    setSaving(false)
-  }
-
-  const handleSaveEdit = async () => {
-    if (!editId) return
-    setSaving(true)
-    const { data, error } = await db.from('shirt_types').update({ name: editName, slug: editSlug, icon: editIcon }).eq('id', editId).select().single()
-    if (error) notify('บันทึกไม่สำเร็จ', 'err')
-    else { setShirtTypes(prev => prev.map(t => t.id === editId ? data as ShirtType : t)); setEditId(null); notify('บันทึกสำเร็จ') }
-    setSaving(false)
-  }
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`ลบ "${name}"?`)) return
-    await db.from('shirt_types').delete().eq('id', id)
-    setShirtTypes(prev => prev.filter(t => t.id !== id))
-    notify('ลบสำเร็จ', 'err')
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Add Form */}
-      <div style={{ background: '#0d0d0d', border: '1px solid #1e1e1e', borderRadius: 8, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 12, color: '#FFE000', fontWeight: 700 }}>+ เพิ่มประเภทเสื้อใหม่</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative' }}>
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowPicker(!showPicker)} style={{ fontSize: 22, background: '#1a1a1a', border: '1px solid #333', borderRadius: 6, padding: '5px 10px', cursor: 'pointer' }}>{newIcon}</button>
-            {showPicker && (
-              <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 999, background: '#111', border: '1px solid #222', borderRadius: 8, padding: 8, display: 'flex', flexWrap: 'wrap', gap: 4, width: 220 }}>
-                {EMOJI_PICKS.map(e => (
-                  <button key={e} onClick={() => { setNewIcon(e); setShowPicker(false) }} style={{ fontSize: 18, background: newIcon === e ? '#FFE000' : '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 5, padding: '3px 6px', cursor: 'pointer' }}>{e}</button>
-                ))}
-              </div>
-            )}
-          </div>
-          <input className="input-d" style={{ flex: 1, minWidth: 120 }} placeholder="ชื่อประเภท เช่น เสื้อบอล" value={newName}
-            onChange={e => { setNewName(e.target.value); setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g,'-').replace(/^-|-$/g,'')) }} />
-          <input className="input-d" style={{ flex: 1, minWidth: 100 }} placeholder="slug: football" value={newSlug} onChange={e => setNewSlug(e.target.value.toLowerCase().replace(/\s/g, '-'))} />
-          <button className="btn-red sm" disabled={saving} onClick={handleAdd}>+ เพิ่ม</button>
-        </div>
-      </div>
-
-      {/* hint */}
-      <div style={{ fontSize: 11, color: '#aaa', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span>☰</span> ลากเพื่อเรียงลำดับ &nbsp;|&nbsp; ปุ่ม ↑↓ สำหรับมือถือ
-      </div>
-
-      {/* List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflowY: 'auto' }}>
-        {shirtTypes.map((type, idx) => (
-          <div
-            key={type.id}
-            draggable
-            onDragStart={() => setDragId(type.id)}
-            onDragOver={e => { e.preventDefault(); handleDragOver(type.id) }}
-            onDragEnd={handleDragEnd}
-            style={{
-              background: '#0d0d0d',
-              border: dragOverId === type.id ? '1px dashed #FFE000' : '1px solid #1a1a1a',
-              borderRadius: 8,
-              padding: '10px 12px',
-              opacity: dragId === type.id ? 0.4 : 1,
-              cursor: 'grab',
-              transition: 'opacity 0.15s, border 0.15s',
-            }}
-          >
-            {editId === type.id ? (
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input className="input-d" style={{ width: 46, textAlign: 'center', fontSize: 18, padding: '4px' }} value={editIcon} onChange={e => setEditIcon(Array.from(e.target.value).slice(0,2).join(''))} maxLength={4} title="พิมพ์ emoji" />
-                <input className="input-d" style={{ flex: 1, minWidth: 100 }} value={editName} onChange={e => setEditName(e.target.value)} placeholder="ชื่อ" />
-                <input className="input-d" style={{ flex: 1, minWidth: 80 }} value={editSlug} onChange={e => setEditSlug(e.target.value)} placeholder="slug" />
-                <button className="btn-red sm" disabled={saving} onClick={handleSaveEdit}>💾 บันทึก</button>
-                <button className="btn-outline sm" onClick={() => setEditId(null)}>ยกเลิก</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                {/* drag handle + info */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 16, cursor: 'grab', userSelect: 'none' }}>⠿</span>
-                  <span style={{ fontSize: 20 }}>{type.icon || '👕'}</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{type.name}</div>
-                    <div style={{ fontSize: 10, color: '#555' }}>slug: {type.slug} · ลำดับ {idx + 1}</div>
-                  </div>
-                </div>
-                {/* actions */}
-                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                  {/* ↑↓ สำหรับมือถือ */}
-                  <button
-                    className="btn-outline sm"
-                    disabled={idx === 0}
-                    onClick={() => moveItem(idx, idx - 1)}
-                    style={{ padding: '4px 8px', opacity: idx === 0 ? 0.3 : 1 }}
-                    title="เลื่อนขึ้น"
-                  >↑</button>
-                  <button
-                    className="btn-outline sm"
-                    disabled={idx === shirtTypes.length - 1}
-                    onClick={() => moveItem(idx, idx + 1)}
-                    style={{ padding: '4px 8px', opacity: idx === shirtTypes.length - 1 ? 0.3 : 1 }}
-                    title="เลื่อนลง"
-                  >↓</button>
-                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }}>✏</button>
-                  <button className="btn-ghost sm" onClick={() => handleDelete(type.id, type.name)}>✕</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
       </div>
     </div>
   )
