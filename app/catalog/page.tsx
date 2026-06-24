@@ -910,12 +910,6 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
                 {collars.map((col) => <option key={col.id} value={col.name}>{col.name}</option>)}
               </select>
             </div>
-            <div><div className="section-label">ประเภทสินค้า</div>
-              <select className="select-d" value={f.product_type} onChange={(e) => set('product_type', e.target.value)}>
-                <option value="">— เลือกประเภทสินค้า —</option>
-                {prodTypes.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
             <div><div className="section-label">ราคา (THB)</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input className="input-d" type="number" value={f.price} onChange={(e) => set('price', e.target.value)} placeholder="0" style={{ flex: 1 }} />
