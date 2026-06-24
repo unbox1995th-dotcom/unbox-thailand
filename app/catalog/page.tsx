@@ -430,9 +430,10 @@ export default function CatalogPage() {
         <ShirtModal collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
           category={activeNav === 'all' ? 'new' : activeNav}
           onSave={async (data, imgFile) => {
-            let image_url = null
-            if (imgFile) image_url = await uploadBase64Image(imgFile)
-            const { data: newShirt } = await db.from('shirts').insert([{ ...data, image_url }]).select().single()
+            let image_url: string | null = null
+            if (imgFile && imgFile !== '__remove__') image_url = await uploadBase64Image(imgFile)
+            const { placeholder_icon, ...shirtData } = data as any
+            const { data: newShirt } = await db.from('shirts').insert([{ ...shirtData, image_url, placeholder_icon: placeholder_icon || null }]).select().single()
             if (newShirt) { setShirts((prev) => [newShirt, ...prev]); setShowAdd(false); notify('เพิ่มแบบเสื้อแล้ว — บันทึกสู่ Supabase') }
           }}
           onClose={() => setShowAdd(false)} />
@@ -440,15 +441,18 @@ export default function CatalogPage() {
       {editShirt && (
         <ShirtModal initial={editShirt} collars={collars} prodTypes={prodTypes} fabricTypes={fabricTypes} shirtTypes={shirtTypes}
           onSave={async (data, imgFile) => {
-            let image_url = editShirt.image_url
-            if (imgFile) {
+            const { placeholder_icon, ...shirtData } = data as any
+            let image_url: string | null | undefined = editShirt.image_url
+            let newPlaceholderIcon: string | null = null
+            if (imgFile === '__remove__') {
+              image_url = null
+              newPlaceholderIcon = placeholder_icon || null
+            } else if (imgFile) {
               const newUrl = await uploadBase64Image(imgFile)
-              if (newUrl) {
-                // ไม่ลบรูปเก่า — เก็บไว้ใน Storage ตลอด
-                image_url = newUrl
-              }
+              if (newUrl) image_url = newUrl
+              newPlaceholderIcon = null
             }
-            const { data: updated } = await db.from('shirts').update({ ...data, image_url, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
+            const { data: updated } = await db.from('shirts').update({ ...shirtData, image_url, placeholder_icon: newPlaceholderIcon, updated_at: new Date().toISOString() }).eq('id', editShirt.id).select().single()
             if (updated) { setShirts((prev) => prev.map((x) => x.id === editShirt.id ? updated : x)); setEditShirt(null); notify('บันทึกการแก้ไขแล้ว') }
           }}
           onClose={() => setEditShirt(null)} />
