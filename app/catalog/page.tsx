@@ -940,7 +940,7 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
               ? <><input className="input-d" value={ev} onChange={(e) => setEv(e.target.value)} style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && save(i)} />
                 <button className="btn-red sm" onClick={() => save(i)}>บันทึก</button>
                 <button className="btn-outline sm" onClick={() => setEi(null)}>ยกเลิก</button></>
-              : <><span style={{ flex: 1, fontSize: 13 }}>{item.name}</span>
+              : <><span style={{ flex: 1, fontSize: 13, color: '#fff' }}>{item.name}</span>
                 <button className="btn-outline sm" onClick={() => { setEi(i); setEv(item.name) }}>แก้ไข</button>
                 <button className="btn-ghost" onClick={() => del(i)}>ลบ</button></>
             }
@@ -971,7 +971,7 @@ function CollarPriceList({ collars, setCollars, notify }: {
       <div style={{ maxHeight: 340, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {collars.map((col) => (
           <div key={col.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '7px 12px', borderRadius: 5 }}>
-            <span style={{ flex: 1, fontSize: 13 }}>{col.name}</span>
+            <span style={{ flex: 1, fontSize: 13, color: '#fff' }}>{col.name}</span>
             <input className="input-d" type="number" value={editing[col.id] ?? col.price ?? 0}
               onChange={(e) => setEditing((prev) => ({ ...prev, [col.id]: e.target.value }))}
               style={{ width: 90, textAlign: 'right' }} />
@@ -1060,7 +1060,7 @@ function PromotionList({ promotions, setPromotions, notify }: {
         {promotions.map((p) => (
           <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #FFE000' : '1px solid transparent' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{p.name}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
             </div>
             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#FFE000' : '#333', color: p.is_active ? '#111' : '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
@@ -1134,7 +1134,7 @@ function ShippingList({ shippingRules, setShippingRules, notify }: {
         {shippingRules.map((r) => (
           <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{r.name}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{r.name}</div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{r.min_qty}{r.max_qty != null ? `–${r.max_qty}` : '+'} ตัว · ฿{Number(r.price).toLocaleString()}</div>
             </div>
             <button className="btn-outline sm" onClick={() => { setEditId(r.id); setShowAdd(false); setF({ name: r.name, min_qty: r.min_qty, max_qty: r.max_qty, price: r.price }) }}>แก้ไข</button>
