@@ -635,38 +635,38 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
         {shirt.category === 'fabric' ? (
           <>
             <div style={{ background: '#FFE000', borderRadius: 6, padding: '5px 10px', marginBottom: 8, display: 'inline-block' }}>
-              <span style={{ fontWeight: 700, fontSize: 14, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</span>
+              <span style={{ fontWeight: 700, fontSize: 14, color: '#111', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</span>
             </div>
-            {shirt.collar_type && <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.7)', background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 4 }}><span style={{ color: '#111', fontWeight: 700 }}>คุณสมบัติผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.collar_type}</span></div>}
-            {shirt.product_type && <div style={{ fontSize: 11, background: '#111', borderRadius: 4, padding: '4px 8px', marginBottom: 8 }}><span style={{ color: '#111', fontWeight: 700 }}>ประเภทผ้า:</span> <span style={{ color: 'rgba(255,255,255,0.6)' }}>{shirt.product_type}</span></div>}
-            <div style={{ fontWeight: 700, fontSize: 15, color: Number(shirt.price) > 0 ? '#ff4444' : 'rgba(255,255,255,0.4)' }}>{Number(shirt.price) > 0 ? `+ ${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : 'ไม่บวกเพิ่ม'}</div>
+            {shirt.collar_type && <div style={{ fontSize: 11, color: '#fff', background: '#1a1a1a', borderRadius: 4, padding: '4px 8px', marginBottom: 4 }}><span style={{ color: '#FFE000', fontWeight: 700 }}>คุณสมบัติผ้า:</span> <span style={{ color: '#fff' }}>{shirt.collar_type}</span></div>}
+            {shirt.product_type && <div style={{ fontSize: 11, color: '#fff', background: '#1a1a1a', borderRadius: 4, padding: '4px 8px', marginBottom: 8 }}><span style={{ color: '#FFE000', fontWeight: 700 }}>ประเภทผ้า:</span> <span style={{ color: '#fff' }}>{shirt.product_type}</span></div>}
+            <div style={{ fontWeight: 700, fontSize: 15, color: Number(shirt.price) > 0 ? '#FFE000' : 'rgba(255,255,255,0.4)' }}>{Number(shirt.price) > 0 ? `+ ${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : 'ไม่บวกเพิ่ม'}</div>
           </>
         ) : (
           <>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#fff', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
-            {shirt.collar_type && <div style={{ fontSize: 11, color: '#999', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
-            {shirt.product_type && <div style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#FFE000', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
+            {shirt.collar_type && <div style={{ fontSize: 11, color: '#fff', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
+            {shirt.product_type && <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
             {(shirt as any).shirt_type && (shirt as any).shirt_type_name && (
               <div style={{ marginBottom: 8 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(245,196,0,0.3)', color: '#8B6F00', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(255,224,0,0.1)', border: '1px solid rgba(255,224,0,0.4)', color: '#FFE000', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
                   {(shirt as any).shirt_type_icon || '👕'} {(shirt as any).shirt_type_name}
                 </span>
               </div>
             )}
-            <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#111' : '#aaa' }}>{Number(shirt.price) > 0 ? `${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : '—'}</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: Number(shirt.price) > 0 ? '#FFE000' : 'rgba(255,255,255,0.3)' }}>{Number(shirt.price) > 0 ? `${Number(shirt.price).toLocaleString()}.- บาท/ตัว` : '—'}</div>
           </>
         )}
         {showActionBtns && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
             <button className="btn-red sm" style={{ flex: 1 }} onClick={onContact}>📞 สนใจสั่งซื้อ</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={() => onCalculate?.(shirt.id)}>🧮 คำนวณราคา</button>
+            <button style={{ flex: 1, background: '#fff', color: '#111', border: 'none', padding: '6px 4px', borderRadius: 5, fontSize: 11, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => onCalculate?.(shirt.id)}>🧮 คำนวณราคา</button>
           </div>
         )}
         {isAdmin && (
           <div style={{ display: 'flex', gap: 5, marginTop: 10 }}>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
-            <button className="btn-outline sm" style={{ flex: 1 }} onClick={onDupe}>⧉ คัดลอก</button>
-            <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕</button>
+            <button style={{ flex: 1, background: '#FFE000', color: '#111', border: 'none', padding: '5px 2px', borderRadius: 5, fontSize: 10, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={onEdit}>✏ แก้ไข</button>
+            <button style={{ flex: 1, background: '#fff', color: '#111', border: 'none', padding: '5px 2px', borderRadius: 5, fontSize: 10, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={onDupe}>⧉ คัดลอก</button>
+            <button style={{ flex: 1, background: '#111', color: '#FFE000', border: '1px solid #FFE000', padding: '5px 2px', borderRadius: 5, fontSize: 10, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={onDelete}>✕</button>
           </div>
         )}
       </div>
