@@ -505,21 +505,101 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
   const [ov, setOv] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
 
+  // preview state ก่อน upload
+  const [preview, setPreview] = useState<{ file: File; dataUrl: string } | null>(null)
+  const [offsetX, setOffsetX] = useState(50) // % 0-100
+  const [offsetY, setOffsetY] = useState(50)
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     if (banners.length < 2) return
     const t = setInterval(() => setCur((c) => (c + 1) % banners.length), 4500)
     return () => clearInterval(t)
   }, [banners.length])
 
-  const handleFile = async (file: File) => {
+  const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
-    const url = await uploadBase64Image(await fileToBase64(file), 'banners')
-    if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); return }
-    const { data } = await db.from('banners').insert([{ name: file.name, image_url: url, sort_order: banners.length }]).select().single()
-    if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPreview({ file, dataUrl: e.target?.result as string })
+      setOffsetX(50); setOffsetY(50)
+    }
+    reader.readAsDataURL(file)
   }
 
+  const handleSave = async () => {
+    if (!preview) return
+    setSaving(true)
+    const url = await uploadBase64Image(await fileToBase64(preview.file), 'banners')
+    if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); setSaving(false); return }
+    const { data } = await db.from('banners').insert([{ name: preview.file.name, image_url: url, sort_order: banners.length }]).select().single()
+    if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
+    setPreview(null); setSaving(false)
+  }
+
+  const handleCancel = () => { setPreview(null) }
+
   const idx = banners.length > 0 ? cur % banners.length : 0
+
+  // ── Preview Editor Modal ──
+  if (preview) return (
+    <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: 20 }}>
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ color: '#FFE000', fontWeight: 700, fontSize: 14 }}>🖼 ปรับตำแหน่งภาพ Banner</span>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>ยังไม่ได้อัปโหลด — กดบันทึกเพื่อยืนยัน</span>
+        </div>
+
+        {/* Preview */}
+        <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', paddingTop: 'clamp(120px, 28vw, 380px)', height: 0, marginBottom: 16, border: '2px solid #FFE000' }}>
+          <img src={preview.dataUrl} alt="preview"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${offsetX}% ${offsetY}%` }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.35),transparent)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.6)', color: '#FFE000', fontSize: 11, padding: '3px 10px', borderRadius: 6, fontWeight: 700 }}>PREVIEW</div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 16, marginBottom: 14, display: 'grid', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#FFE000', fontWeight: 700, marginBottom: 6, letterSpacing: 1 }}>↔ ตำแหน่งซ้าย-ขวา ({offsetX}%)</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => setOffsetX(0)} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '4px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>← ซ้าย</button>
+              <input type="range" min={0} max={100} value={offsetX} onChange={e => setOffsetX(Number(e.target.value))}
+                style={{ flex: 1, accentColor: '#FFE000' }} />
+              <button onClick={() => setOffsetX(100)} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '4px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>ขวา →</button>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: '#FFE000', fontWeight: 700, marginBottom: 6, letterSpacing: 1 }}>↕ ตำแหน่งบน-ล่าง ({offsetY}%)</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => setOffsetY(0)} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '4px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>↑ บน</button>
+              <input type="range" min={0} max={100} value={offsetY} onChange={e => setOffsetY(Number(e.target.value))}
+                style={{ flex: 1, accentColor: '#FFE000' }} />
+              <button onClick={() => setOffsetY(100)} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '4px 10px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>↓ ล่าง</button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => { setOffsetX(50); setOffsetY(50) }} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '5px 14px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>⊙ กึ่งกลาง</button>
+            <button onClick={() => { setOffsetX(0); setOffsetY(50) }} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '5px 14px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>⬅ ชิดซ้าย</button>
+            <button onClick={() => { setOffsetX(100); setOffsetY(50) }} style={{ background: '#1a1a1a', color: '#fff', border: '1px solid #333', padding: '5px 14px', borderRadius: 5, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>➡ ชิดขวา</button>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={handleSave} disabled={saving}
+            style={{ background: '#FFE000', color: '#111', border: 'none', padding: '10px 28px', borderRadius: 7, fontWeight: 700, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, fontFamily: 'inherit' }}>
+            {saving ? 'กำลังบันทึก...' : '💾 บันทึก Banner'}
+          </button>
+          <button onClick={handleCancel} disabled={saving}
+            style={{ background: '#fff', color: '#111', border: '1px solid #ddd', padding: '10px 20px', borderRadius: 7, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+            ✕ ยกเลิก
+          </button>
+        </div>
+        <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = '' }} />
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
