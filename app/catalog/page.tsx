@@ -127,8 +127,8 @@ export default function CatalogPage() {
     return (s as any).shirt_type === selectedShirtType
   })
 
-  // นับจำนวนเสื้อแต่ละประเภทจากทุก shirt (ไม่ขึ้นกับ nav)
-  const shirtTypeCounts = shirts.reduce((acc: Record<string, number>, s) => {
+  // นับจำนวนเสื้อแต่ละประเภทจาก category 'new' เท่านั้น แสดงเหมือนกันทุก tab
+  const shirtTypeCounts = shirts.filter(s => s.category === 'new').reduce((acc: Record<string, number>, s) => {
     const t = (s as any).shirt_type
     if (t) acc[t] = (acc[t] ?? 0) + 1
     return acc
@@ -330,7 +330,7 @@ export default function CatalogPage() {
                     >
                       <span><span className="sidebar-emoji">🗂️ </span>ทั้งหมด</span>
                       <span style={{ background: selectedShirtType === null ? '#111' : 'rgba(255,255,255,0.15)', color: selectedShirtType === null ? '#FFE000' : '#fff', borderRadius: 999, padding: '1px 6px', fontSize: 10, fontWeight: 700 }}>
-                        {shirts.length}
+                        {shirts.filter(s => s.category === 'new').length}
                       </span>
                     </button>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.12)', margin: '4px 0' }} />
