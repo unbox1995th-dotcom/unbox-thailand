@@ -275,9 +275,9 @@ export default function CatalogPage() {
                 <button className="btn-outline sm" onClick={() => setShowContactAdmin(true)}>📞 ช่องทางติดต่อ</button>
                 <button className="btn-outline sm" onClick={() => setShowShopAdmin(true)}>🏪 หน้าต้อนรับ</button>
                 
-                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: 'transparent', color: '#111', border: '1px solid rgba(255,255,255,0.22)', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s' }}
-                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='#FFE000'; (e.currentTarget as HTMLAnchorElement).style.color='#FFE000' }}
-                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor='rgba(255,255,255,0.22)'; (e.currentTarget as HTMLAnchorElement).style.color='#f5f5f5' }}>
+                <a href={`/export?admin=${encodeURIComponent(adminUser || '')}`} style={{ background: '#111', color: '#FFE000', border: '1px solid #FFE000', padding: '5px 12px', borderRadius: 5, fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'all .18s', fontWeight: 700 }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.background='#FFE000'; (e.currentTarget as HTMLAnchorElement).style.color='#111' }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.background='#111'; (e.currentTarget as HTMLAnchorElement).style.color='#FFE000' }}>
                   📥 Export ภาพ
                 </a>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginLeft: 'auto' }}>
