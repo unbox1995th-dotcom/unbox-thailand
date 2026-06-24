@@ -692,8 +692,8 @@ function PhotoCard({ shirt, isAdmin, onEdit, onDelete, onImageClick }: {
       )}
       {isAdmin && (
         <div style={{ display: 'flex', gap: 5, padding: '8px 10px' }}>
-          <button className="btn-outline sm" style={{ flex: 1 }} onClick={onEdit}>✏ แก้ไข</button>
-          <button className="btn-ghost" style={{ flex: 1 }} onClick={onDelete}>✕</button>
+          <button style={{ flex: 1, background: '#FFE000', color: '#111', border: 'none', padding: '5px 8px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={onEdit}>✏ แก้ไข</button>
+          <button style={{ flex: 1, background: '#fff', color: '#111', border: '1px solid #ddd', padding: '5px 8px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={onDelete}>✕ ลบ</button>
         </div>
       )}
     </div>
