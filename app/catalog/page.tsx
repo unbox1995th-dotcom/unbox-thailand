@@ -1423,14 +1423,14 @@ function ContactModal({ onClose }: { onClose: () => void }) {
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={{ maxWidth: 460, padding: 0, overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FFE000', padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 17, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontWeight: 700, fontSize: 17, color: '#111', display: 'flex', alignItems: 'center', gap: 8 }}>
               📞 ช่องทางการติดต่อ
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
+            <div style={{ fontSize: 11, color: '#111', marginTop: 3 }}>สนใจสั่งซื้อ ติดต่อเราได้เลย</div>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={onClose} style={{ background: 'rgba(0,0,0,0.15)', border: 'none', color: '#111', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
         <div style={{ padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1499,24 +1499,20 @@ function ContactModal({ onClose }: { onClose: () => void }) {
               {(contact.phone1 || contact.phone2) && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   {contact.phone1 && (
-                    <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
-                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                    <a href={`tel:${contact.phone1}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#111', border: 'none', textDecoration: 'none' }}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
-                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone1}</div>
+                        <div style={{ fontSize: 10, color: '#fff', marginBottom: 2 }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 700, color: '#FFE000', fontSize: 13 }}>{contact.phone1}</div>
                       </div>
                     </a>
                   )}
                   {contact.phone2 && (
-                    <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'border-color .15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#FFE000')}
-                      onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
+                    <a href={`tel:${contact.phone2}`} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 10, background: '#111', border: 'none', textDecoration: 'none' }}>
                       <span style={{ fontSize: 20 }}>📱</span>
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>โทรศัพท์</div>
-                        <div style={{ fontWeight: 600, color: '#ffaa44', fontSize: 13 }}>{contact.phone2}</div>
+                        <div style={{ fontSize: 10, color: '#fff', marginBottom: 2 }}>โทรศัพท์</div>
+                        <div style={{ fontWeight: 700, color: '#FFE000', fontSize: 13 }}>{contact.phone2}</div>
                       </div>
                     </a>
                   )}
@@ -1705,31 +1701,31 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {/* Header — ซ่อนเมื่อคำนวณแล้ว */}
           {!calculated && (
             <>
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: '#FFE000', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>🧮 คำนวณราคาเบื้องต้น</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#111' }}>🧮 คำนวณราคาเบื้องต้น</div>
+                  <div style={{ fontSize: 11, color: '#111', marginTop: 2 }}>
                     {useCollar
                       ? addPants ? '((คอเสื้อ+ผ้า)×จำนวน)+(กางเกง×จำนวน)+ขนส่ง' : '((คอเสื้อ+ผ้า)×จำนวน)+ขนส่ง'
                       : addPants ? '((ราคา+ผ้า)×จำนวน)+(กางเกง×จำนวน)+ขนส่ง' : '((ราคา+ผ้า)×จำนวน)+ขนส่ง'}
                   </div>
                 </div>
-                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                <button onClick={onClose} style={{ background: 'rgba(0,0,0,0.15)', border: 'none', color: '#111', width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
 
               <div style={{ padding: '16px 20px', display: 'grid', gap: 14 }}>
 
                 {/* เลือกแบบ — read-only label */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', padding: '10px 14px' }}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>แบบที่เลือก</div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: useCollar ? 'rgba(255,255,255,0.3)' : '#fff' }}>
+                <div style={{ background: '#111', borderRadius: 8, border: 'none', padding: '10px 14px' }}>
+                  <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>แบบที่เลือก</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#FFE000' }}>
                     {selectedShirt ? selectedShirt.name : 'ไม่ได้เลือกแบบ'}
                   </div>
                   {!useCollar && Number(shirtPrice) > 0 && (
-                    <div style={{ fontSize: 12, color: '#111', marginTop: 2 }}>฿{shirtPrice.toLocaleString()}/ตัว</div>
+                    <div style={{ fontSize: 12, color: '#FFE000', marginTop: 2 }}>฿{shirtPrice.toLocaleString()}/ตัว</div>
                   )}
                   {useCollar && (
-                    <div style={{ fontSize: 11, color: '#ffaa44', marginTop: 4 }}>
+                    <div style={{ fontSize: 11, color: '#D80000', marginTop: 4, fontWeight: 700 }}>
                       ⚠️ ราคาจากแบบนี้ถูกแทนที่ด้วยคอเสื้อที่เลือก
                     </div>
                   )}
