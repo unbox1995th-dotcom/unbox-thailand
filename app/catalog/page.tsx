@@ -941,8 +941,8 @@ function SupabaseTypeList({ table, items, setItems, ph, notify }: {
                 <button className="btn-red sm" onClick={() => save(i)}>บันทึก</button>
                 <button className="btn-outline sm" onClick={() => setEi(null)}>ยกเลิก</button></>
               : <><span style={{ flex: 1, fontSize: 13, color: '#fff' }}>{item.name}</span>
-                <button className="btn-outline sm" onClick={() => { setEi(i); setEv(item.name) }}>แก้ไข</button>
-                <button className="btn-ghost" onClick={() => del(i)}>ลบ</button></>
+                <button style={{ background: '#FFE000', color: '#111', border: 'none', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => { setEi(i); setEv(item.name) }}>แก้ไข</button>
+                <button style={{ background: '#fff', color: '#111', border: '1px solid #ddd', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => del(i)}>ลบ</button></>
             }
           </div>
         ))}
@@ -1020,8 +1020,8 @@ function PromotionList({ promotions, setPromotions, notify }: {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>โปรโมชั่นที่ active จะนำมาคำนวณราคา</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>โปรโมชั่นที่ active จะนำมาคำนวณราคา</div>
         <button className="btn-red sm" onClick={() => { setShowAdd(true); setEditId(null); setF(empty) }}>+ เพิ่ม</button>
       </div>
       {(showAdd || editId) && (
@@ -1048,7 +1048,7 @@ function PromotionList({ promotions, setPromotions, notify }: {
           {f.type === 'discount_thb' && <div><div className="section-label">ลด (บาท)</div><input className="input-d" type="number" value={f.discount_thb} onChange={(e) => set('discount_thb', Number(e.target.value))} /></div>}
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />
-            <span style={{ fontSize: 13 }}>เปิดใช้งานโปรโมชั่นนี้</span>
+            <span style={{ fontSize: 13, color: '#fff' }}>เปิดใช้งานโปรโมชั่นนี้</span>
           </label>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn-red sm" onClick={save}>💾 บันทึก</button>
@@ -1058,17 +1058,17 @@ function PromotionList({ promotions, setPromotions, notify }: {
       )}
       <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 5 }}>
         {promotions.map((p) => (
-          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #FFE000' : '1px solid transparent' }}>
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5, border: p.is_active ? '1px solid #FFE000' : '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{p.name}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>สั่ง {p.min_qty}+ ตัว · {TYPE_LABELS[p.type]}{p.type==='free'?` ${p.free_qty} ตัว`:p.type==='discount_qty'?` ${p.discount_qty} ตัว`:p.type==='discount_pct'?` ${p.discount_pct}%`:` ฿${p.discount_thb}`}</div>
             </div>
-            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#FFE000' : '#333', color: p.is_active ? '#111' : '#fff', cursor: 'pointer' }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
-            <button className="btn-outline sm" onClick={() => { setEditId(p.id); setShowAdd(false); setF({ name: p.name, is_active: p.is_active, min_qty: p.min_qty, type: p.type, free_qty: p.free_qty, discount_qty: p.discount_qty, discount_pct: p.discount_pct, discount_thb: p.discount_thb }) }}>แก้ไข</button>
-            <button className="btn-ghost" onClick={() => del(p.id)}>ลบ</button>
+            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: p.is_active ? '#FFE000' : '#333', color: p.is_active ? '#111' : '#fff', cursor: 'pointer', fontWeight: 700 }} onClick={() => toggleActive(p)}>{p.is_active ? 'เปิด' : 'ปิด'}</span>
+            <button style={{ background: '#FFE000', color: '#111', border: 'none', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => { setEditId(p.id); setShowAdd(false); setF({ name: p.name, is_active: p.is_active, min_qty: p.min_qty, type: p.type, free_qty: p.free_qty, discount_qty: p.discount_qty, discount_pct: p.discount_pct, discount_thb: p.discount_thb }) }}>แก้ไข</button>
+            <button style={{ background: '#fff', color: '#111', border: '1px solid #ddd', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => del(p.id)}>ลบ</button>
           </div>
         ))}
-        {promotions.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13, padding: 20 }}>ยังไม่มีโปรโมชั่น</div>}
+        {promotions.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13, padding: 20 }}>ยังไม่มีโปรโมชั่น</div>}
       </div>
     </div>
   )
@@ -1104,8 +1104,8 @@ function ShippingList({ shippingRules, setShippingRules, notify }: {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>ค่าขนส่ง 0 บาท = ไม่คิดค่าจัดส่ง</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>ค่าขนส่ง 0 บาท = ไม่คิดค่าจัดส่ง</div>
         <button className="btn-red sm" onClick={() => { setShowAdd(true); setEditId(null); setF(empty) }}>+ เพิ่ม</button>
       </div>
       {(showAdd || editId) && (
@@ -1134,11 +1134,11 @@ function ShippingList({ shippingRules, setShippingRules, notify }: {
         {shippingRules.map((r) => (
           <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1a1a1a', padding: '8px 12px', borderRadius: 5 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{r.name}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{r.min_qty}{r.max_qty != null ? `–${r.max_qty}` : '+'} ตัว · ฿{Number(r.price).toLocaleString()}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{r.name}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{r.min_qty}{r.max_qty != null ? `–${r.max_qty}` : '+'} ตัว · ฿{Number(r.price).toLocaleString()}</div>
             </div>
-            <button className="btn-outline sm" onClick={() => { setEditId(r.id); setShowAdd(false); setF({ name: r.name, min_qty: r.min_qty, max_qty: r.max_qty, price: r.price }) }}>แก้ไข</button>
-            <button className="btn-ghost" onClick={() => del(r.id)}>ลบ</button>
+            <button style={{ background: '#FFE000', color: '#111', border: 'none', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => { setEditId(r.id); setShowAdd(false); setF({ name: r.name, min_qty: r.min_qty, max_qty: r.max_qty, price: r.price }) }}>แก้ไข</button>
+            <button style={{ background: '#fff', color: '#111', border: '1px solid #ddd', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => del(r.id)}>ลบ</button>
           </div>
         ))}
       </div>
@@ -2271,8 +2271,8 @@ function ShirtTypeManager({ shirtTypes, setShirtTypes, notify }: {
                     style={{ padding: '4px 8px', opacity: idx === shirtTypes.length - 1 ? 0.3 : 1 }}
                     title="เลื่อนลง"
                   >↓</button>
-                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }}>✏</button>
-                  <button className="btn-ghost sm" onClick={() => handleDelete(type.id, type.name)}>✕</button>
+                  <button className="btn-outline sm" onClick={() => { setEditId(type.id); setEditName(type.name); setEditSlug(type.slug); setEditIcon(type.icon || '👕') }} style={{ background: '#FFE000', color: '#111', border: 'none', fontWeight: 700 }}>✏</button>
+                  <button onClick={() => handleDelete(type.id, type.name)} style={{ background: '#fff', color: '#111', border: '1px solid #ddd', padding: '5px 8px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>✕</button>
                 </div>
               </div>
             )}
