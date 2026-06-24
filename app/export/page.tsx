@@ -58,7 +58,7 @@ export default function ExportPage() {
   const [title, setTitle] = useState('คอเสื้อและสินค้าทั้งหมด')
   const [subtitle, setSubtitle] = useState('Collar and All Product.')
   const [brandText, setBrandText] = useState('FB : เสื้อกีฬาพิมพ์ลาย EVO SPORT ขอนแก่น')
-  const [accentColor, setAccentColor] = useState('#cc0000')
+  const [accentColor, setAccentColor] = useState('#FFE000')
   const [bgColor, setBgColor] = useState('#0a0a0a')
   const [layoutMode, setLayoutMode] = useState('auto')
   const [sizeId, setSizeId] = useState('9:16')
@@ -166,75 +166,64 @@ export default function ExportPage() {
     ctx.fillStyle = '#ffffff'
     ctx.font = `700 ${Math.round(headerH * 0.38)}px 'Noto Sans Thai', sans-serif`
     ctx.fillText(title, titleX, headerH * 0.52)
-    ctx.fillStyle = 'rgba(255,255,255,0.45)'
+    ctx.fillStyle = accentColor
     ctx.font = `400 ${Math.round(headerH * 0.22)}px 'Noto Sans Thai', sans-serif`
     ctx.fillText(subtitle, titleX, headerH * 0.82)
 
+    const gridY = headerH + pad
+    const gridH = CH - headerH - footerH - pad * 2
+    const gridW = CW - pad * 2
     const cols = getCols(items.length)
     const rows = Math.ceil(items.length / cols)
-    const gapX = Math.round(CW * 0.014), gapY = Math.round(CH * 0.012)
-    const gridTop = headerH + gapY, gridBottom = CH - footerH - gapY
-    const cardW = (CW - pad * 2 - gapX * (cols - 1)) / cols
-    const cardH = Math.min((gridBottom - gridTop - gapY * (rows - 1)) / rows, cardW * 1.5)
-    const imgFrac = (showName || showPrice) ? 0.64 : 1
-    const imgH = cardH * imgFrac, labelH = cardH - imgH
+    const gapX = Math.round(CW * 0.012)
+    const gapY = Math.round(CH * 0.01)
+    const cardW = Math.floor((gridW - gapX * (cols - 1)) / cols)
+    const cardH = Math.floor((gridH - gapY * (rows - 1)) / rows)
+    const labelH = Math.round(cardH * 0.22)
+    const imgH = cardH - labelH
 
-    items.forEach((shirt, i) => {
-      const col = i % cols, row = Math.floor(i / cols)
+    await Promise.all(items.map(async (shirt, idx) => {
+      const col = idx % cols
+      const row = Math.floor(idx / cols)
       const x = pad + col * (cardW + gapX)
-      const y = gridTop + row * (cardH + gapY)
+      const y = gridY + row * (cardH + gapY)
+      const img = imgs[idx]
 
       ctx.fillStyle = '#1a1a1a'
-      rr(ctx, x, y, cardW, cardH, 14); ctx.fill()
-      ctx.strokeStyle = accentColor
-      ctx.lineWidth = Math.round(CW * 0.0022)
-      rr(ctx, x, y, cardW, cardH, 14); ctx.stroke()
+      rr(ctx, x, y, cardW, cardH, 8); ctx.fill()
 
-      const img = imgs[i]
-      ctx.save()
-      rr(ctx, x, y, cardW, imgH, 14); ctx.clip()
       if (img) {
-        const sc = Math.max(cardW / img.naturalWidth, imgH / img.naturalHeight)
-        const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc
+        ctx.save()
+        rr(ctx, x, y, cardW, imgH, 8); ctx.clip()
+        const scale = Math.max(cardW / img.naturalWidth, imgH / img.naturalHeight)
+        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale
         ctx.drawImage(img, x + (cardW - dw) / 2, y + (imgH - dh) / 2, dw, dh)
-      } else {
-        ctx.fillStyle = '#2a2a2a'; ctx.fillRect(x, y, cardW, imgH)
-        ctx.fillStyle = 'rgba(255,255,255,0.08)'
-        ctx.font = `${Math.round(imgH * 0.3)}px sans-serif`
-        ctx.textAlign = 'center'
-        ctx.fillText('👕', x + cardW / 2, y + imgH / 2 + imgH * 0.08)
+        ctx.restore()
       }
-      ctx.restore()
 
+      ctx.fillStyle = '#111111'
+      rrBottom(ctx, x, y + imgH, cardW, labelH, 8); ctx.fill()
+
+      const labelY = y + imgH
       if (showNumbers) {
-        const bR = Math.round(cardW * 0.11)
-        const bx = x + bR + Math.round(cardW * 0.06), by = y + bR + Math.round(cardH * 0.03)
         ctx.fillStyle = accentColor
-        ctx.beginPath(); ctx.arc(bx, by, bR, 0, Math.PI * 2); ctx.fill()
-        ctx.fillStyle = '#fff'
-        ctx.font = `700 ${Math.round(bR * 0.95)}px sans-serif`
+        ctx.font = `700 ${Math.round(labelH * 0.32)}px 'Noto Sans Thai', sans-serif`
         ctx.textAlign = 'center'
-        ctx.fillText(`${i + 1}`, bx, by + Math.round(bR * 0.36))
+        ctx.fillText(`${idx + 1}`, x + cardW / 2, labelY + labelH * 0.42)
       }
-
-      if (showName || showPrice) {
-        const labelY = y + imgH
-        ctx.fillStyle = '#111111'
-        rrBottom(ctx, x, labelY, cardW, labelH, 14); ctx.fill()
+      if (showPrice && shirt.price) {
+        ctx.fillStyle = '#FFE000'
+        ctx.font = `700 ${Math.round(labelH * 0.28)}px 'Noto Sans Thai', sans-serif`
         ctx.textAlign = 'center'
-        if (showPrice && shirt.price) {
-          ctx.fillStyle = '#ffffff'
-          ctx.font = `700 ${Math.round(labelH * 0.38)}px 'Noto Sans Thai', sans-serif`
-          ctx.fillText(`${Number(shirt.price).toLocaleString()} .-`, x + cardW / 2, labelY + labelH * 0.52)
-        }
-        if (showName && shirt.name) {
-          ctx.fillStyle = 'rgba(255,255,255,0.5)'
-          ctx.font = `400 ${Math.round(labelH * 0.24)}px 'Noto Sans Thai', sans-serif`
-          const nm = shirt.name.length > 16 ? shirt.name.slice(0, 15) + '…' : shirt.name
-          ctx.fillText(nm, x + cardW / 2, labelY + labelH * 0.88)
-        }
+        ctx.fillText(`${Number(shirt.price).toLocaleString()} THB`, x + cardW / 2, labelY + labelH * (showNumbers ? 0.75 : 0.55))
       }
-    })
+      if (showName && shirt.name) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.font = `400 ${Math.round(labelH * 0.24)}px 'Noto Sans Thai', sans-serif`
+        const nm = shirt.name.length > 16 ? shirt.name.slice(0, 15) + '…' : shirt.name
+        ctx.fillText(nm, x + cardW / 2, labelY + labelH * 0.88)
+      }
+    }))
 
     ctx.fillStyle = '#111111'; ctx.fillRect(0, CH - footerH, CW, footerH)
     ctx.fillStyle = accentColor; ctx.fillRect(0, CH - footerH, CW, Math.round(CH * 0.003))
@@ -263,19 +252,19 @@ export default function ExportPage() {
   // ── Login gate ──
   if (!adminUser) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Noto Sans Thai','Sarabun',sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap'); *{box-sizing:border-box;margin:0;padding:0} .inp{background:#1a1a1a;border:1px solid rgba(255,255,255,0.13);color:#f5f5f5;padding:10px 12px;border-radius:5px;font-family:inherit;font-size:14px;width:100%;display:block;margin-bottom:12px} .inp:focus{outline:none;border-color:#c00}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap'); *{box-sizing:border-box;margin:0;padding:0} .inp{background:#1a1a1a;border:1px solid rgba(255,255,255,0.13);color:#f5f5f5;padding:10px 12px;border-radius:5px;font-family:inherit;font-size:14px;width:100%;display:block;margin-bottom:12px} .inp:focus{outline:none;border-color:#FFE000}`}</style>
       <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '36px 32px', width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 22, color: '#fff', margin: '0 auto 14px' }}>S</div>
-          <div style={{ display: 'inline-block', background: '#c00', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#fff', marginBottom: 10 }}>ADMIN ONLY</div>
+          <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 22, color: '#111', margin: '0 auto 14px' }}>S</div>
+          <div style={{ display: 'inline-block', background: '#FFE000', fontSize: 9, padding: '2px 10px', borderRadius: 3, fontWeight: 700, letterSpacing: 2, color: '#111', marginBottom: 10 }}>ADMIN ONLY</div>
           <div style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>Export Tool</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>เข้าสู่ระบบ Admin เพื่อใช้งาน</div>
         </div>
         <input className="inp" placeholder="Name ID เช่น ceo edit00" value={loginId} onChange={e => setLoginId(e.target.value)} />
         <input className="inp" type="password" placeholder="Password" value={loginPw} onChange={e => setLoginPw(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr('') } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') } }} />
-        {loginErr && <div style={{ color: '#ff6060', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(200,0,0,0.1)', borderRadius: 5 }}>{loginErr}</div>}
-        <button style={{ width: '100%', background: '#c00', color: '#fff', border: 'none', padding: '11px', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 14 }}
+        {loginErr && <div style={{ color: '#111', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: '#FFE000', borderRadius: 5 }}>{loginErr}</div>}
+        <button style={{ width: '100%', background: '#111', color: '#FFE000', border: 'none', padding: '11px', borderRadius: 5, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 14 }}
           onClick={() => { if (ADMIN_ACCOUNTS[loginId] === loginPw) { setAdminUser(loginId); setLoginErr('') } else setLoginErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง') }}>
           เข้าสู่ระบบ
         </button>
@@ -291,26 +280,26 @@ export default function ExportPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
-        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#c00;border-radius:2px}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#FFE000;border-radius:2px}
         .tab{padding:10px 14px;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,0.45);border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap}
-        .tab:hover{color:#fff}.tab.on{color:#fff;border-bottom-color:#c00}
+        .tab:hover{color:#fff}.tab.on{color:#FFE000;border-bottom-color:#FFE000}
         .card{background:#161616;border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
-        .card:hover{border-color:rgba(200,0,0,0.5);transform:translateY(-2px)}
-        .card.sel{border-color:#c00;box-shadow:0 0 0 2px rgba(200,0,0,0.25)}
+        .card:hover{border-color:rgba(255,224,0,0.5);transform:translateY(-2px)}
+        .card.sel{border-color:#FFE000;box-shadow:0 0 0 2px rgba(255,224,0,0.25)}
         .chk{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .18s;z-index:2}
-        .card.sel .chk{background:#c00;border-color:#c00}
+        .card.sel .chk{background:#FFE000;border-color:#FFE000;color:#111}
         .inp{background:#1a1a1a;border:1px solid rgba(255,255,255,0.13);color:#f5f5f5;padding:7px 10px;border-radius:5px;font-family:inherit;font-size:12px;width:100%}
-        .inp:focus{outline:none;border-color:#c00}
-        .btn-r{background:#c00;color:#fff;border:none;padding:10px 18px;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;transition:background .18s}
-        .btn-r:hover{background:#e00}.btn-r:disabled{opacity:.5;cursor:not-allowed}
+        .inp:focus{outline:none;border-color:#FFE000}
+        .btn-r{background:#111;color:#FFE000;border:2px solid #FFE000;padding:10px 18px;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;transition:all .18s}
+        .btn-r:hover{background:#FFE000;color:#111}.btn-r:disabled{opacity:.5;cursor:not-allowed}
         .btn-o{background:transparent;color:#f5f5f5;border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;transition:all .18s}
-        .btn-o:hover{border-color:#c00;color:#c00}
+        .btn-o:hover{border-color:#FFE000;color:#FFE000}
         .pill{padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px;font-weight:500;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);transition:all .18s;background:transparent;font-family:inherit}
-        .pill:hover{border-color:#c00;color:#c00}.pill.on{background:#c00;border-color:#c00;color:#fff}
+        .pill:hover{border-color:#FFE000;color:#FFE000}.pill.on{background:#FFE000;border-color:#FFE000;color:#111;font-weight:700}
         .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-        .sl{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
+        .sl{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px}
         .tog{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.6)}
-        input[type=checkbox]{accent-color:#c00;width:14px;height:14px;cursor:pointer}
+        input[type=checkbox]{accent-color:#FFE000;width:14px;height:14px;cursor:pointer}
         @media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.main-layout{grid-template-columns:1fr!important}}
         @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
       `}</style>
@@ -319,16 +308,14 @@ export default function ExportPage() {
       <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 20px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* ✅ ปุ่มกลับ — ส่ง admin param กลับไปด้วย ไม่ logout */}
             <span onClick={() => goBack(adminUser)} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>← กลับ</span>
             <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
-            <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#c00,#800)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff' }}>S</div>
+            <div style={{ width: 28, height: 28, background: '#FFE000', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#111' }}>S</div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Export Tool</div>
-            <span style={{ background: 'linear-gradient(90deg,#c00,#800)', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#fff' }}>ADMIN</span>
+            <span style={{ background: '#FFE000', fontSize: 10, padding: '2px 8px', borderRadius: 3, fontWeight: 700, letterSpacing: 1, color: '#111' }}>ADMIN</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{adminUser}</span>
-            {/* ✅ ปุ่มออก — กลับ catalog พร้อม session ไม่ logout */}
             <button className="btn-o" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => goBack(adminUser)}>ออก</button>
           </div>
         </div>
@@ -339,26 +326,27 @@ export default function ExportPage() {
 
           {/* LEFT — card grid */}
           <div>
-            <div style={{ background: '#111', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', marginBottom: 14, overflowX: 'auto' }}>
-              <div style={{ display: 'flex', minWidth: 'max-content' }}>
-                {TABS.map(t => (
-                  <div key={t.id} className={`tab${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>
-                    {t.label}
-                    {t.badge && <span style={{ background: '#c00', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 8, fontWeight: 700, marginLeft: 5 }}>{t.badge}</span>}
-                  </div>
-                ))}
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '0 10px' }}>
-                  <button className="btn-o" onClick={() => setSelected(new Set(shirts.map(s => s.id)))} style={{ padding: '3px 10px', fontSize: 10 }}>เลือกทั้งหมด</button>
-                  <button className="btn-o" onClick={() => setSelected(new Set())} style={{ padding: '3px 10px', fontSize: 10 }}>ยกเลิก</button>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 16, overflowX: 'auto' }}>
+              {TABS.map(t => (
+                <div key={t.id} className={`tab${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>
+                  {t.label}{t.badge && <span style={{ marginLeft: 5, background: '#FFE000', color: '#111', fontSize: 9, padding: '1px 5px', borderRadius: 8, fontWeight: 700 }}>{t.badge}</span>}
                 </div>
-              </div>
+              ))}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-              <span>ทั้งหมด <b style={{ color: '#fff' }}>{shirts.length}</b></span>
-              <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
-              <span>เลือก <b style={{ color: '#c00' }}>{selected.size}</b></span>
-              {selected.size > 0 && <span style={{ color: 'rgba(255,255,255,0.3)' }}>{getCols(selected.size)} คอลัมน์ · {Math.ceil(selected.size / getCols(selected.size))} แถว</span>}
+            {/* Toolbar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                <span>ทั้งหมด <b style={{ color: '#fff' }}>{shirts.length}</b></span>
+                <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
+                <span>เลือก <b style={{ color: '#FFE000' }}>{selected.size}</b></span>
+                {selected.size > 0 && <span style={{ color: 'rgba(255,255,255,0.3)' }}>{getCols(selected.size)} คอลัมน์ · {Math.ceil(selected.size / getCols(selected.size))} แถว</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn-o" onClick={() => setSelected(new Set(shirts.map(s => s.id)))} style={{ padding: '3px 10px', fontSize: 10 }}>เลือกทั้งหมด</button>
+                <button className="btn-o" onClick={() => setSelected(new Set())} style={{ padding: '3px 10px', fontSize: 10 }}>ยกเลิก</button>
+              </div>
             </div>
 
             {loading ? (
@@ -378,8 +366,8 @@ export default function ExportPage() {
                     </div>
                     {(s.name || s.price) && (
                       <div style={{ padding: '8px 10px' }}>
-                        {s.name && <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>}
-                        {s.price && <div style={{ fontSize: 11, color: '#ff4444', fontWeight: 700 }}>{Number(s.price).toLocaleString()} THB</div>}
+                        {s.name && <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#fff' }}>{s.name}</div>}
+                        {s.price && <div style={{ fontSize: 11, color: '#FFE000', fontWeight: 700 }}>{Number(s.price).toLocaleString()} THB</div>}
                       </div>
                     )}
                   </div>
@@ -423,15 +411,15 @@ export default function ExportPage() {
             <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 14, display: 'grid', gap: 10 }}>
               <div className="sl">ข้อความ</div>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>หัวเรื่อง</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>หัวเรื่อง</div>
                 <input className="inp" value={title} onChange={e => setTitle(e.target.value)} />
               </div>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>คำบรรยาย</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>คำบรรยาย</div>
                 <input className="inp" value={subtitle} onChange={e => setSubtitle(e.target.value)} />
               </div>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Footer</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Footer</div>
                 <input className="inp" value={brandText} onChange={e => setBrandText(e.target.value)} />
               </div>
             </div>
@@ -441,11 +429,11 @@ export default function ExportPage() {
               <div className="sl">สีธีม</div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Accent</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Accent</div>
                   <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} style={{ width: 40, height: 30, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Background</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Background</div>
                   <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} style={{ width: 40, height: 30, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'transparent' }} />
                 </div>
               </div>
