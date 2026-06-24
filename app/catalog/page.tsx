@@ -532,7 +532,8 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
     setSaving(true)
     const url = await uploadBase64Image(await fileToBase64(preview.file), 'banners')
     if (!url) { notify('อัปโหลดรูปไม่สำเร็จ', 'err'); setSaving(false); return }
-    const { data } = await db.from('banners').insert([{ name: preview.file.name, image_url: url, sort_order: banners.length }]).select().single()
+    const position = `${offsetX}% ${offsetY}%`
+    const { data } = await db.from('banners').insert([{ name: preview.file.name, image_url: url, object_position: position, sort_order: banners.length }]).select().single()
     if (data) { setBanners((prev) => [...prev, data]); notify('เพิ่ม Banner แล้ว') }
     setPreview(null); setSaving(false)
   }
@@ -606,7 +607,7 @@ function BannerSection({ banners, setBanners, isAdmin, notify }: {
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: 20 }}>
         {banners.length > 0 ? (
           <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', paddingTop: 'clamp(120px, 28vw, 380px)', height: 0 }}>
-            <img src={banners[idx].image_url} alt="banner" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={banners[idx].image_url} alt="banner" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: (banners[idx] as any).object_position || '50% 50%' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right,rgba(0,0,0,0.45),transparent)' }} />
             {banners.length > 1 && (
               <>
