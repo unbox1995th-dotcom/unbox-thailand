@@ -1850,15 +1850,15 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
           {calculated && (
             <div style={{ padding: '16px 20px' }}>
               {/* ปุ่มปิด */}
-              <div style={{ background: 'linear-gradient(135deg,#FFE000,#111)', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>📋 สรุปราคาเบื้องต้น</div>
+              <div style={{ background: '#FFE000', borderRadius: '8px 8px 0 0', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#111' }}>📋 สรุปราคาเบื้องต้น</div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn-outline sm" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => reset()}>← แก้ไข</button>
-                  <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                  <button className="btn-outline sm" style={{ background: 'rgba(0,0,0,0.1)', border: '1px solid rgba(0,0,0,0.2)', color: '#111' }} onClick={() => reset()}>← แก้ไข</button>
+                  <button onClick={onClose} style={{ background: 'rgba(0,0,0,0.15)', border: 'none', color: '#111', width: 28, height: 28, borderRadius: '50%', cursor: 'pointer', fontSize: 13 }}>✕</button>
                 </div>
               </div>
 
-              <div style={{ background: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0 0 10px 10px', padding: '14px 16px', display: 'grid', gap: 8 }}>
+              <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '0 0 10px 10px', padding: '14px 16px', display: 'grid', gap: 8 }}>
                 {([
                   !useCollar && ['แบบที่เลือก', selectedShirt ? `${selectedShirt.name} (฿${shirtPrice.toLocaleString()}/ตัว)` : 'เลือกตามแบบ (฿0)'],
                   useCollar && collar && ['คอเสื้อ', `${collar.name} (฿${collarPrice.toLocaleString()}/ตัว)`],
@@ -1869,20 +1869,20 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                   ['ค่าขนส่ง', isCustomShipping ? 'สอบถาม Admin' : shippingPrice > 0 ? `+฿${shippingPrice.toLocaleString()}` : shipping ? 'ฟรี' : 'ยังไม่เลือก'],
                 ] as any[]).filter(Boolean).map(([label, val]: [string, string]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
-                    <span style={{ color: String(val).startsWith('-') ? '#FFE000' : String(val).startsWith('🎁') ? '#111' : '#fff' }}>{val}</span>
+                    <span style={{ color: '#555' }}>{label}</span>
+                    <span style={{ color: '#111', fontWeight: 600 }}>{val}</span>
                   </div>
                 ))}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#111' }}>
+                <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 22, color: '#111' }}>
                   <span>รวมทั้งหมด</span>
                   <span>{isCustomShipping ? `฿${subtotal.toLocaleString()} + ขนส่ง` : `฿${grandTotal.toLocaleString()}`}</span>
                 </div>
                 {promoChoice === 'free' && bonusQty > 0 && (
-                  <div style={{ background: 'rgba(0,0,0,0.05)', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#111' }}>
+                  <div style={{ background: '#f5f5f5', borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#111' }}>
                     🎁 ร้านจะทำเสื้อให้ {qty + bonusQty} ตัว (สั่ง {qty} + แถม {bonusQty})
                   </div>
                 )}
-                <div style={{ fontSize: 10, color: '#111' }}>*ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้านหรือ Admin</div>
+                <div style={{ fontSize: 10, color: '#888' }}>*ราคาประมาณการ กรุณายืนยันราคาจริงกับทางร้านหรือ Admin</div>
 
                 {/* ช่องทางติดต่อ */}
                 <div id="summary-card-inner" style={{ display: 'grid', gap: 8, marginTop: 6 }}>
@@ -1905,7 +1905,7 @@ function PriceCalculator({ shirts, collars, promotions, shippingRules, initShirt
                   )}
                   {contact?.phone1 && (
                     <a href={`tel:${contact.phone1}`}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)', color: '#ffaa44', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', borderRadius: 8, background: '#111', border: 'none', color: '#FFE000', textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
                       📱 โทร {contact.phone1}
                     </a>
                   )}
