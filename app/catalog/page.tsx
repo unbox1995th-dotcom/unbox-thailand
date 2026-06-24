@@ -702,7 +702,7 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           ? <img src={shirt.image_url} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
               onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
               onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: 44 }}>👕</div>
+          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.08)', fontSize: (shirt as any).placeholder_icon ? 64 : 44 }}>{(shirt as any).placeholder_icon || '👕'}</div>
         }
         {shirt.image_url && (
           <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '3px 7px', fontSize: 11, color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }}>🔍</div>
@@ -724,9 +724,15 @@ function ShirtCard({ shirt, isAdmin, canDrag, isDragging, isDragOver, onDragStar
           </>
         ) : (
           <>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#FFE000', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
-            {shirt.collar_type && <div style={{ fontSize: 11, color: '#fff', marginBottom: 2 }}>คอ: {shirt.collar_type}</div>}
-            {shirt.product_type && <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
+            {shirt.category !== 'collar' && (
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#FFE000', lineHeight: 1.3 }}>{shirt.name || 'ไม่มีชื่อ'}</div>
+            )}
+            {shirt.collar_type && (
+              <div style={{ fontSize: shirt.category === 'collar' ? 14 : 11, color: '#fff', marginBottom: shirt.category === 'collar' ? 6 : 2, fontWeight: shirt.category === 'collar' ? 700 : 400 }}>
+                {shirt.category === 'collar' ? shirt.collar_type : `คอ: ${shirt.collar_type}`}
+              </div>
+            )}
+            {shirt.category !== 'collar' && shirt.product_type && <div style={{ fontSize: 11, color: '#fff', marginBottom: 4 }}>ประเภท: {shirt.product_type}</div>}
             {(shirt as any).shirt_type && (shirt as any).shirt_type_name && (
               <div style={{ marginBottom: 8 }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(255,224,0,0.1)', border: '1px solid rgba(255,224,0,0.4)', color: '#FFE000', borderRadius: 4, padding: '1px 8px', fontSize: 11, fontWeight: 500 }}>
@@ -802,6 +808,23 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
     r.readAsDataURL(file)
   }
 
+  const [removedImg, setRemovedImg] = useState(false)
+  const [placeholderIcon, setPlaceholderIcon] = useState<string>('')
+
+  const handleRemoveImg = () => {
+    setImgPreview(null)
+    setNewImgData('__remove__')
+    setRemovedImg(true)
+    setPlaceholderIcon('👕')
+  }
+
+  const handleRestoreImg = () => {
+    setImgPreview(initial?.image_url || null)
+    setNewImgData(null)
+    setRemovedImg(false)
+    setPlaceholderIcon('')
+  }
+
   return (
     <div className="modal-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
@@ -815,7 +838,31 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
         {imgPreview ? (
           <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', height: 170, marginBottom: 16 }}>
             <img src={imgPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <button className="btn-red sm" style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => { setImgPreview(null); setNewImgData('__remove__') }}>เปลี่ยนรูป</button>
+            <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 6 }}>
+              <button className="btn-red sm" onClick={() => { setImgPreview(null); setNewImgData(null); setRemovedImg(false) }}>เปลี่ยนรูป</button>
+              <button style={{ background: '#fff', color: '#111', border: 'none', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={handleRemoveImg}>🗑 ลบรูป</button>
+            </div>
+          </div>
+        ) : removedImg ? (
+          <div style={{ marginBottom: 16, border: '2px dashed #FFE000', borderRadius: 8, padding: 14, background: '#1a1a1a' }}>
+            <div style={{ fontSize: 11, color: '#FFE000', fontWeight: 700, marginBottom: 10 }}>เลือกไอคอนแทนรูปภาพ (หรือไม่เลือกก็ได้)</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              {['👕', '👖', '🩱', '🧥', '🎽', '🩴', '👟', '🧢', '⚽', '🏀', '🎁', '📦'].map(icon => (
+                <button key={icon} onClick={() => setPlaceholderIcon(icon === placeholderIcon ? '' : icon)}
+                  style={{ width: 40, height: 40, fontSize: 20, borderRadius: 8, border: `2px solid ${placeholderIcon === icon ? '#FFE000' : 'rgba(255,255,255,0.15)'}`, background: placeholderIcon === icon ? 'rgba(255,224,0,0.1)' : 'transparent', cursor: 'pointer' }}>
+                  {icon}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', borderRadius: 8, height: 60, fontSize: 32 }}>
+                {placeholderIcon || <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>ไม่มีรูป</span>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button style={{ background: '#FFE000', color: '#111', border: 'none', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }} onClick={() => ref.current?.click()}>📷 อัปโหลดรูปใหม่</button>
+                <button style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', padding: '5px 12px', borderRadius: 5, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }} onClick={handleRestoreImg}>↩ คืนรูปเดิม</button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className={`drag-zone${ov ? ' ov' : ''}`} style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
@@ -929,7 +976,12 @@ function ShirtModal({ initial, collars, prodTypes, fabricTypes, shirtTypes, cate
           </>)}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-          <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => { setSaving(true); await onSave(f, newImgData); setSaving(false) }}>
+          <button className="btn-red" style={{ flex: 1 }} disabled={saving} onClick={async () => {
+            setSaving(true)
+            const saveData = removedImg ? { ...f, placeholder_icon: placeholderIcon || null } : f
+            await onSave(saveData, newImgData)
+            setSaving(false)
+          }}>
             {saving ? '⏳ กำลังอัปโหลด...' : '💾 บันทึก'}
           </button>
           <button className="btn-outline" style={{ flex: 1 }} onClick={onClose}>ยกเลิก</button>
