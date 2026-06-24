@@ -1026,14 +1026,14 @@ function PromotionList({ promotions, setPromotions, notify }: {
       </div>
       {(showAdd || editId) && (
         <div style={{ background: '#1a1a1a', borderRadius: 8, padding: 14, marginBottom: 12, display: 'grid', gap: 10 }}>
-          <div><div className="section-label">ชื่อโปรโมชั่น</div>
+          <div><div className="section-label" style={{ color: '#FFE000' }}>ชื่อโปรโมชั่น</div>
             <input className="input-d" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="เช่น โปร 15 ตัว แถม 1" />
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ flex: 1 }}><div className="section-label">จำนวนขั้นต่ำ (ตัว)</div>
+            <div style={{ flex: 1 }}><div className="section-label" style={{ color: '#FFE000' }}>จำนวนขั้นต่ำ (ตัว)</div>
               <input className="input-d" type="number" value={f.min_qty} onChange={(e) => set('min_qty', Number(e.target.value))} />
             </div>
-            <div style={{ flex: 1 }}><div className="section-label">ประเภทโปรโมชั่น</div>
+            <div style={{ flex: 1 }}><div className="section-label" style={{ color: '#FFE000' }}>ประเภทโปรโมชั่น</div>
               <select className="select-d" value={f.type} onChange={(e) => set('type', e.target.value)}>
                 <option value="free">แถมฟรี (ตัว)</option>
                 <option value="discount_qty">ลดจำนวน (ตัว)</option>
@@ -1042,10 +1042,10 @@ function PromotionList({ promotions, setPromotions, notify }: {
               </select>
             </div>
           </div>
-          {f.type === 'free' && <div><div className="section-label">จำนวนแถมฟรี (ตัว)</div><input className="input-d" type="number" value={f.free_qty} onChange={(e) => set('free_qty', Number(e.target.value))} /></div>}
-          {f.type === 'discount_qty' && <div><div className="section-label">ลดจำนวน (ตัว)</div><input className="input-d" type="number" value={f.discount_qty} onChange={(e) => set('discount_qty', Number(e.target.value))} /></div>}
-          {f.type === 'discount_pct' && <div><div className="section-label">ลด (%)</div><input className="input-d" type="number" value={f.discount_pct} onChange={(e) => set('discount_pct', Number(e.target.value))} /></div>}
-          {f.type === 'discount_thb' && <div><div className="section-label">ลด (บาท)</div><input className="input-d" type="number" value={f.discount_thb} onChange={(e) => set('discount_thb', Number(e.target.value))} /></div>}
+          {f.type === 'free' && <div><div className="section-label" style={{ color: '#FFE000' }}>จำนวนแถมฟรี (ตัว)</div><input className="input-d" type="number" value={f.free_qty} onChange={(e) => set('free_qty', Number(e.target.value))} /></div>}
+          {f.type === 'discount_qty' && <div><div className="section-label" style={{ color: '#FFE000' }}>ลดจำนวน (ตัว)</div><input className="input-d" type="number" value={f.discount_qty} onChange={(e) => set('discount_qty', Number(e.target.value))} /></div>}
+          {f.type === 'discount_pct' && <div><div className="section-label" style={{ color: '#FFE000' }}>ลด (%)</div><input className="input-d" type="number" value={f.discount_pct} onChange={(e) => set('discount_pct', Number(e.target.value))} /></div>}
+          {f.type === 'discount_thb' && <div><div className="section-label" style={{ color: '#FFE000' }}>ลด (บาท)</div><input className="input-d" type="number" value={f.discount_thb} onChange={(e) => set('discount_thb', Number(e.target.value))} /></div>}
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={f.is_active} onChange={(e) => set('is_active', e.target.checked)} />
             <span style={{ fontSize: 13, color: '#fff' }}>เปิดใช้งานโปรโมชั่นนี้</span>
