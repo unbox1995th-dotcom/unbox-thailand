@@ -14,10 +14,10 @@ type ShippingRule = { id: string; name: string; min_qty: number; max_qty: number
 type CollarWithPrice = { id: string; name: string; price: number; sort_order: number }
 
 const ADMIN_ACCOUNTS: Record<string, string> = {
-  'ceo edit00': '00000000', 'ceo edit01': '00001111', 'ceo edit02': '00002222',
-  'ceo edit03': '00003333', 'ceo edit04': '00004444', 'ceo edit05': '00005555',
-  'ceo edit06': '00006666', 'ceo edit07': '00007777', 'ceo edit08': '00008888',
-  'ceo edit09': '00009999',
+  'unbox_th1': '11111unbox', 'unbox_th2': '22222unbox', 'unbox_th3': '33333unbox',
+  'unbox_th4': '44444unbox', 'unbox_th5': '55555unbox', 'ceo_unbox6': 'unboxth66666',
+  'ceo_unbox7': 'unboxth77777', 'ceo_unbox8': 'unboxth88888', 'ceo_unbox9': 'unboxth99999',
+  'ceo_unbox0': 'unboxth00000',
 }
 
 const NAV_ITEMS = [
